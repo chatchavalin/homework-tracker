@@ -942,17 +942,18 @@ const LINETIME  = () => localStorage.getItem('ht_linetime') || '07:00';
 let USE_LOCAL = false;
 
 async function init() {
+  try {
   document.getElementById('loading-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
 
   // Load saved settings
-  const lt = LINETOKEN();
-  if (lt) document.getElementById('line-token-inp').value = lt;
-  document.getElementById('line-time-inp').value = LINETIME();
+  const lineTime = document.getElementById('line-time-inp');
+  if (lineTime) lineTime.value = LINETIME();
 
-  // Try Supabase, fall back to localStorage
+  // Try Supabase with 6s timeout, fall back to localStorage
   try {
-    await loadAll();
+    const timeout = new Promise((_,reject) => setTimeout(() => reject(new Error('timeout')), 6000));
+    await Promise.race([loadAll(), timeout]);
     USE_LOCAL = false;
     setSyncStatus(true);
     setupRealtime();
@@ -961,7 +962,8 @@ async function init() {
     USE_LOCAL = true;
     setSyncStatus(false);
     loadFromLocal();
-    toast('📱 โหมดออฟไลน์ — ข้อมูลเก็บในเครื่องนี้');
+    if (e.message === 'timeout') toast('⏱ โหลดช้า — ใช้โหมดออฟไลน์');
+    else toast('📱 โหมดออฟไลน์ — ข้อมูลเก็บในเครื่องนี้');
   }
 
   scheduleLineCheck();
@@ -971,6 +973,14 @@ async function init() {
   applyLang();
   updateParentStatus();
   updateOfflineChip();
+  } catch(initErr) {
+    console.error('INIT CRASH:', initErr);
+    // Force show app even if crash
+    document.getElementById('loading-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    loadFromLocal();
+    renderAll();
+  }
 }
 
 /* ═══════════════════════════════════════
@@ -1648,11 +1658,9 @@ function saveApiKey() {
 }
 
 function saveLineSettings() {
-  const token = document.getElementById('line-token-inp').value.trim();
-  const time  = document.getElementById('line-time-inp').value;
-  localStorage.setItem('ht_linetoken', token);
+  const time = document.getElementById('line-time-inp')?.value || '07:00';
   localStorage.setItem('ht_linetime', time);
-  toast(`✅ บันทึกการตั้งค่า Line แล้ว — แจ้งเตือนทุกวันเวลา ${time}`);
+  toast(`✅ บันทึกเวลาแจ้งเตือน ${time} แล้ว`);
 }
 
 async function clearAllData() {
