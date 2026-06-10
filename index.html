@@ -402,9 +402,9 @@ input,textarea,select{font-family:inherit}
           <span style="font-size:0.72rem;font-weight:600;color:var(--muted)">ฟรี</span>
         </div>
         <div class="info-box" style="margin-bottom:10px">
-          ✅ ใช้ Gemini 2.0 Flash — ฟรี ไม่ต้องใส่บัตรเครดิต<br>
-          Key ถูกตั้งค่าไว้แล้ว พร้อมใช้งานทันที<br><br>
-          💡 <strong>Gemini ทำงานได้ทุกที่</strong> — ไม่ขึ้นกับ Supabase
+          ✅ ใช้ Gemini 2.0 Flash — <strong>ฟรี</strong> ไม่ต้องใส่บัตรเครดิต<br>
+          ⚠️ ต้องใส่ key ทุกครั้งที่เปิดอุปกรณ์ใหม่<br>
+          Key เก็บในเครื่องนี้เท่านั้น ไม่อัปโหลดไปที่ใด
         </div>
         <div class="settings-row">
           <label class="settings-label">เปลี่ยน API Key (ถ้าต้องการ)</label>
@@ -483,8 +483,7 @@ let parsedResults = [];
 let currentImgB64 = null;
 let isSyncing = false;
 
-const GEMINI_KEY = 'AQ.Ab8RN6IuB0ATVPXKVnCfVSetR9ujDk_o_iHkZ6LNjhsmvAd1gQ';
-const APIKEY  = () => localStorage.getItem('ht_apikey') || GEMINI_KEY;
+const APIKEY  = () => localStorage.getItem('ht_apikey') || '';
 const LINETOKEN = () => localStorage.getItem('ht_linetoken') || '';
 const LINETIME  = () => localStorage.getItem('ht_linetime') || '07:00';
 
@@ -637,10 +636,15 @@ function renderHeader() {
   document.getElementById('prog-fill').style.width = pct + '%';
   document.getElementById('prog-pct').textContent  = pct + '%';
 
-  // API key indicator — always set since Gemini key is built in
+  // API key indicator
   const apiBtn = document.getElementById('api-btn');
-  apiBtn.textContent = '🤖 Gemini ✓';
-  apiBtn.classList.add('set');
+  if (APIKEY()) {
+    apiBtn.textContent = '🤖 Gemini ✓';
+    apiBtn.classList.add('set');
+  } else {
+    apiBtn.textContent = '🤖 ใส่ Key';
+    apiBtn.classList.remove('set');
+  }
 }
 
 /* ═══════════════════════════════════════
@@ -903,7 +907,8 @@ function handleImgs(input) {
       loaded++;
       if (loaded === files.length) {
         const pb = document.getElementById('parse-btn');
-        pb.style.display = 'flex'; pb.disabled = false;
+        pb.style.display = 'flex'; pb.disabled = !APIKEY();
+        if (!APIKEY()) toast('⚠️ ใส่ Gemini API Key ก่อน (ไปที่ ⚙️ ตั้งค่า)');
         const txt = document.getElementById('parse-btn-txt');
         txt.textContent = files.length > 1
           ? `✨ อ่าน ${files.length} รูปด้วย AI`
