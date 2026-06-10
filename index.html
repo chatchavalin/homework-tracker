@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>📚 Homework Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<!-- Supabase JS -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --bg:       #f5f3ef;
+  --surface:  #ffffff;
+  --surface2: #f9f7f4;
+  --border:   #e8e4dc;
+  --text:     #1a1a2e;
+  --muted:    #8a8aa0;
+  --high:     #e05252;
+  --med:      #f5a623;
+  --low:      #3ecf8e;
+  --blue:     #3b82f6;
+  --navy:     #1a1a2e;
+  --r:        16px;
+  --r-sm:     10px;
+  --shadow:   0 2px 12px rgba(26,26,46,0.07);
+  --shadow-md:0 6px 24px rgba(26,26,46,0.11);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+input,textarea,select{font-family:inherit}
+
+/* Layout */
+#app{max-width:480px;margin:0 auto;height:100vh;display:flex;flex-direction:column;position:relative;background:var(--bg)}
+
+/* Header */
+.header{background:var(--navy);color:white;padding:14px 18px 12px;flex-shrink:0}
+.header-top{display:flex;align-items:center;justify-content:space-between}
+.header h1{font-family:'Caveat',cursive;font-size:1.55rem;font-weight:700}
+.header-date{font-size:0.72rem;opacity:0.6;font-weight:500;margin-top:1px}
+.hdr-btns{display:flex;gap:6px}
+.hdr-btn{background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;color:white;font-size:0.68rem;font-weight:700;padding:5px 9px;letter-spacing:0.02em;transition:background 0.15s}
+.hdr-btn:hover{background:rgba(255,255,255,0.2)}
+.hdr-btn.set{background:rgba(62,207,142,0.25);border-color:var(--low)}
+.hdr-btn.sync-ok{background:rgba(62,207,142,0.25);border-color:var(--low)}
+.hdr-btn.sync-err{background:rgba(224,82,82,0.25);border-color:var(--high)}
+
+/* Stats */
+.stats-strip{display:flex;gap:6px;margin-top:12px}
+.stat-pill{flex:1;background:rgba(255,255,255,0.1);border-radius:10px;padding:7px 6px;text-align:center}
+.stat-pill .n{font-size:1.2rem;font-weight:800;line-height:1}
+.stat-pill .l{font-size:0.6rem;opacity:0.65;font-weight:600;text-transform:uppercase;letter-spacing:0.04em}
+.stat-pill.urgent .n{color:#ff8a8a}
+.stat-pill.done .n{color:#6ee7b7}
+.stat-pill.pending .n{color:#fcd34d}
+
+/* Progress */
+.progress-row{margin-top:10px;display:flex;align-items:center;gap:8px}
+.progress-track{flex:1;height:5px;background:rgba(255,255,255,0.15);border-radius:10px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--low),#6ee7b7);border-radius:10px;transition:width 0.6s ease}
+.progress-pct{font-size:0.65rem;font-weight:700;opacity:0.7;white-space:nowrap}
+
+/* Sync indicator */
+.sync-bar{height:2px;background:transparent;transition:background 0.3s}
+.sync-bar.syncing{background:linear-gradient(90deg,transparent,var(--low),transparent);animation:syncpulse 1s infinite}
+@keyframes syncpulse{0%{opacity:0.4}50%{opacity:1}100%{opacity:0.4}}
+
+/* Content */
+.content{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:14px 14px 90px;scroll-behavior:smooth}
+.content::-webkit-scrollbar{width:0}
+
+/* Bottom nav */
+.bottom-nav{position:absolute;bottom:0;left:0;right:0;background:var(--surface);border-top:1.5px solid var(--border);display:flex;padding:8px 0 max(8px,env(safe-area-inset-bottom));flex-shrink:0;z-index:10}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;color:var(--muted);font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;transition:color 0.15s}
+.nav-btn .icon{font-size:1.3rem;line-height:1}
+.nav-btn.active{color:var(--navy)}
+
+/* Section label */
+.sec-label{font-size:0.68rem;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:18px 0 8px 2px;display:flex;align-items:center;gap:6px}
+.sec-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.sec-label:first-child{margin-top:2px}
+
+/* Filter tabs */
+.filter-row{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px}
+.filter-row::-webkit-scrollbar{display:none}
+.f-tab{flex-shrink:0;padding:6px 13px;border-radius:20px;font-size:0.75rem;font-weight:700;background:var(--surface);border:1.5px solid var(--border);color:var(--muted);transition:all 0.15s}
+.f-tab.active{background:var(--navy);border-color:var(--navy);color:white}
+
+/* Task card */
+.task-card{background:var(--surface);border-radius:var(--r);padding:13px 14px;margin-bottom:9px;box-shadow:var(--shadow);display:flex;gap:11px;align-items:flex-start;transition:opacity 0.2s,transform 0.15s;border-left:3.5px solid transparent;position:relative}
+.task-card.p-high{border-left-color:var(--high)}
+.task-card.p-med{border-left-color:var(--med)}
+.task-card.p-low{border-left-color:var(--low)}
+.task-card.is-done{opacity:0.45}
+.task-card:active{transform:scale(0.985)}
+.check-wrap{flex-shrink:0;margin-top:2px}
+.check{width:24px;height:24px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:0.8rem;transition:all 0.2s;cursor:pointer;color:transparent}
+.task-card.is-done .check{background:var(--low);border-color:var(--low);color:white}
+.task-body{flex:1;min-width:0}
+.task-title{font-size:0.9rem;font-weight:700;color:var(--text);line-height:1.35}
+.task-card.is-done .task-title{text-decoration:line-through}
+.task-original{font-size:0.75rem;color:var(--muted);margin-top:4px;font-weight:500;font-style:italic;line-height:1.4;border-left:2px solid var(--border);padding-left:7px}
+.task-meta{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px;align-items:center}
+.tag{font-size:0.62rem;font-weight:800;padding:2px 7px;border-radius:6px;letter-spacing:0.03em;text-transform:uppercase}
+.tag-math{background:#fff8e1;color:#b7791f}
+.tag-thai{background:#eff6ff;color:#1d4ed8}
+.tag-english{background:#ecfdf5;color:#065f46}
+.tag-science{background:#f0fdf4;color:#166534}
+.tag-social{background:#fdf2f8;color:#9d174d}
+.tag-chinese{background:#fef2f2;color:#991b1b}
+.tag-pe{background:#fff7ed;color:#9a3412}
+.tag-other{background:#f8fafc;color:#475569}
+.tag-hw{background:#ede9fe;color:#5b21b6}
+.tag-todo{background:#e0f2fe;color:#075985}
+.tag-points{background:#fef3c7;color:#92400e}
+.due-chip{font-size:0.65rem;font-weight:700;color:var(--muted);margin-left:auto;white-space:nowrap}
+.due-chip.urgent{color:var(--high)}
+.due-chip.soon{color:var(--med)}
+.task-delete{position:absolute;top:10px;right:10px;color:var(--muted);font-size:0.75rem;opacity:0;transition:opacity 0.15s;padding:4px}
+.task-card:hover .task-delete{opacity:1}
+
+/* Empty */
+.empty{text-align:center;padding:48px 24px;color:var(--muted)}
+.empty .emoji{font-size:2.5rem;margin-bottom:10px}
+.empty .msg{font-size:0.85rem;font-weight:600}
+.empty .sub{font-size:0.75rem;margin-top:4px;opacity:0.7}
+
+/* Upload */
+.upload-btns{display:flex;gap:8px;margin-bottom:14px}
+.up-btn{flex:1;padding:11px 10px;border-radius:var(--r-sm);font-size:0.8rem;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;transition:transform 0.12s,box-shadow 0.12s}
+.up-btn:active{transform:scale(0.97)}
+.up-btn.primary{background:var(--navy);color:white;box-shadow:0 3px 10px rgba(26,26,46,0.2)}
+.up-btn.secondary{background:var(--surface);color:var(--text);border:1.5px solid var(--border)}
+.img-preview{width:100%;border-radius:var(--r);max-height:260px;object-fit:cover;margin-bottom:12px;display:none}
+.parse-btn{width:100%;padding:13px;background:linear-gradient(135deg,#3b82f6,#6366f1);color:white;border-radius:var(--r-sm);font-size:0.9rem;font-weight:800;display:none;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;transition:opacity 0.2s}
+.parse-btn:disabled{opacity:0.6;cursor:not-allowed}
+.parse-btn.visible{display:flex}
+.parsed-preview{background:var(--surface2);border-radius:var(--r);padding:14px;margin-bottom:12px;display:none;border:1.5px solid var(--border)}
+.parsed-preview.visible{display:block}
+.parsed-header{font-size:0.75rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px}
+.parsed-item{background:var(--surface);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:7px;border:1.5px solid var(--border);display:flex;gap:8px;align-items:flex-start}
+.parsed-item input[type=checkbox]{margin-top:3px;accent-color:var(--navy)}
+.parsed-item-body{flex:1}
+.parsed-item-title{font-size:0.83rem;font-weight:700}
+.parsed-item-orig{font-size:0.72rem;color:var(--muted);font-style:italic;margin-top:2px}
+.parsed-item-tags{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap}
+.confirm-btn{width:100%;padding:13px;background:var(--low);color:white;border-radius:var(--r-sm);font-size:0.88rem;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity 0.2s}
+.confirm-btn:disabled{opacity:0.6}
+
+/* Manual form */
+.manual-form{background:var(--surface);border-radius:var(--r);padding:16px;box-shadow:var(--shadow);margin-bottom:14px}
+.form-row{margin-bottom:12px}
+.form-label{font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:5px;display:block}
+.form-input{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:0.88rem;font-weight:500;color:var(--text);background:var(--surface);outline:none;transition:border-color 0.15s}
+.form-input:focus{border-color:var(--blue)}
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.type-toggle{display:flex;border:1.5px solid var(--border);border-radius:var(--r-sm);overflow:hidden}
+.type-btn{flex:1;padding:9px;font-size:0.78rem;font-weight:700;color:var(--muted);background:var(--surface);transition:all 0.15s;text-align:center}
+.type-btn.active{background:var(--navy);color:white}
+.submit-btn{width:100%;padding:12px;background:var(--navy);color:white;border-radius:var(--r-sm);font-size:0.9rem;font-weight:800;transition:opacity 0.2s}
+.submit-btn:active{opacity:0.85}
+
+/* Exam */
+.exam-card{background:var(--surface);border-radius:var(--r);padding:15px 16px;margin-bottom:10px;box-shadow:var(--shadow)}
+.exam-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.exam-name{font-size:0.95rem;font-weight:800;line-height:1.2}
+.exam-countdown{font-size:0.7rem;font-weight:700;background:#fdeaea;color:var(--high);padding:3px 9px;border-radius:8px;white-space:nowrap}
+.exam-countdown.soon{background:#fff7ed;color:#c2410c}
+.exam-countdown.far{background:#e8faf2;color:#065f46}
+.exam-progress{background:var(--border);border-radius:20px;height:7px;overflow:hidden;margin-bottom:6px}
+.exam-bar{height:100%;background:linear-gradient(90deg,var(--low),#6ee7b7);border-radius:20px;transition:width 0.6s ease}
+.exam-pct{font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:10px}
+.topic-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:0.83rem;font-weight:600}
+.topic-item:last-child{border-bottom:none}
+.topic-item input[type=checkbox]{accent-color:var(--navy);width:16px;height:16px}
+.topic-done{text-decoration:line-through;color:var(--muted)}
+.add-topic-row{display:flex;gap:7px;margin-top:10px}
+.add-topic-input{flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.8rem;outline:none}
+.add-topic-input:focus{border-color:var(--blue)}
+.add-topic-btn{padding:8px 12px;background:var(--navy);color:white;border-radius:8px;font-size:0.78rem;font-weight:700}
+.exam-date-row{font-size:0.72rem;color:var(--muted);font-weight:600;margin-bottom:10px}
+.new-exam-form{background:var(--surface);border-radius:var(--r);padding:15px 16px;margin-bottom:14px;box-shadow:var(--shadow);border:1.5px dashed var(--border)}
+.new-exam-title{font-size:0.8rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px}
+.exam-delete{font-size:0.72rem;color:var(--muted);padding:2px 6px;border-radius:6px;background:var(--surface2);margin-left:4px}
+
+/* Settings tab */
+.settings-card{background:var(--surface);border-radius:var(--r);padding:16px;box-shadow:var(--shadow);margin-bottom:12px}
+.settings-title{font-size:0.88rem;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.settings-row{margin-bottom:10px}
+.settings-label{font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:5px;display:block}
+.settings-input{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:0.82rem;color:var(--text);background:var(--surface);outline:none;transition:border-color 0.15s}
+.settings-input:focus{border-color:var(--blue)}
+.settings-btn{width:100%;padding:11px;border-radius:var(--r-sm);font-size:0.85rem;font-weight:800;margin-top:6px;transition:opacity 0.2s}
+.settings-btn:active{opacity:0.85}
+.settings-btn.primary{background:var(--navy);color:white}
+.settings-btn.danger{background:#fdeaea;color:var(--high);border:1.5px solid #fca5a5}
+.settings-btn.success{background:#e8faf2;color:#065f46;border:1.5px solid #6ee7b7}
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px}
+.status-dot.ok{background:var(--low)}
+.status-dot.err{background:var(--high)}
+.status-dot.off{background:var(--muted)}
+.info-box{background:var(--surface2);border-radius:var(--r-sm);padding:10px 12px;font-size:0.75rem;color:var(--muted);font-weight:500;line-height:1.5;margin-top:8px}
+.info-box a{color:var(--blue);text-decoration:none}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(26,26,46,0.5);z-index:100;display:none;align-items:flex-end;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:20px 20px 0 0;padding:22px 20px 36px;width:100%;max-width:480px;box-shadow:var(--shadow-md);position:relative}
+.modal-title{font-size:1.05rem;font-weight:800;margin-bottom:6px}
+.modal-sub{font-size:0.78rem;color:var(--muted);margin-bottom:16px;line-height:1.5}
+.modal-input{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:0.85rem;outline:none;margin-bottom:10px;font-family:monospace}
+.modal-input:focus{border-color:var(--blue)}
+.modal-save{width:100%;padding:12px;background:var(--navy);color:white;border-radius:var(--r-sm);font-size:0.9rem;font-weight:800}
+.modal-close{position:absolute;top:14px;right:16px;font-size:1.2rem;color:var(--muted);padding:4px}
+
+/* Toast */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(30px);background:var(--navy);color:white;padding:10px 18px;border-radius:20px;font-size:0.82rem;font-weight:700;box-shadow:var(--shadow-md);opacity:0;transition:all 0.25s;z-index:99;white-space:nowrap;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Spinner */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:18px;height:18px;border:2.5px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0}
+.spinner.dark{border-color:rgba(26,26,46,0.2);border-top-color:var(--navy)}
+
+/* Loading screen */
+.loading-screen{position:fixed;inset:0;background:var(--navy);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;gap:16px;color:white}
+.loading-screen h2{font-family:'Caveat',cursive;font-size:1.8rem;font-weight:700}
+.loading-screen p{font-size:0.8rem;opacity:0.6}
+
+/* Tab panels */
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+.hidden{display:none!important}
+.mt-2{margin-top:8px}
+</style>
+</head>
+<body>
+
+<!-- Loading screen -->
+<div class="loading-screen" id="loading-screen">
+  <div style="font-size:2.5rem">📚</div>
+  <h2>Homework Tracker</h2>
+  <div class="spinner"></div>
+  <p>กำลังโหลดข้อมูล...</p>
+</div>
+
+<div id="app" style="display:none">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <h1>📚 การบ้านของฉัน</h1>
+        <div class="header-date" id="hdr-date"></div>
+      </div>
+      <div class="hdr-btns">
+        <button class="hdr-btn" id="sync-btn" onclick="showTab('settings')">⚡ Sync</button>
+        <button class="hdr-btn" id="api-btn" onclick="showTab('settings')">🔑 AI</button>
+      </div>
+    </div>
+    <div class="stats-strip">
+      <div class="stat-pill urgent"><div class="n" id="s-urgent">0</div><div class="l">ด่วน</div></div>
+      <div class="stat-pill pending"><div class="n" id="s-pending">0</div><div class="l">ค้างอยู่</div></div>
+      <div class="stat-pill done"><div class="n" id="s-done">0</div><div class="l">เสร็จ</div></div>
+      <div class="stat-pill" style="background:rgba(255,255,255,0.1)"><div class="n" id="s-total" style="color:white">0</div><div class="l">ทั้งหมด</div></div>
+    </div>
+    <div class="progress-row">
+      <div class="progress-track"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+      <div class="progress-pct" id="prog-pct">0%</div>
+    </div>
+  </div>
+  <div class="sync-bar" id="sync-bar"></div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- TAB: HOMEWORK -->
+    <div class="tab-panel active" id="tab-hw">
+      <div class="filter-row">
+        <button class="f-tab active" onclick="setDateFilter('today',this)">วันนี้</button>
+        <button class="f-tab" onclick="setDateFilter('week',this)">สัปดาห์นี้</button>
+        <button class="f-tab" onclick="setDateFilter('month',this)">เดือนนี้</button>
+        <button class="f-tab" onclick="setDateFilter('all',this)">ทั้งหมด</button>
+      </div>
+      <div id="hw-list"></div>
+    </div>
+
+    <!-- TAB: TODO -->
+    <div class="tab-panel" id="tab-todo">
+      <div class="filter-row">
+        <button class="f-tab active" onclick="setTodoFilter('pending',this)">ค้างอยู่</button>
+        <button class="f-tab" onclick="setTodoFilter('done',this)">เสร็จแล้ว</button>
+        <button class="f-tab" onclick="setTodoFilter('all',this)">ทั้งหมด</button>
+      </div>
+      <div id="todo-list"></div>
+    </div>
+
+    <!-- TAB: ADD -->
+    <div class="tab-panel" id="tab-add">
+      <div class="sec-label">📷 อัปโหลดรูปสมุดการบ้าน</div>
+      <div class="upload-btns">
+        <button class="up-btn primary" onclick="document.getElementById('cam-input').click()">📷 ถ่ายรูป</button>
+        <button class="up-btn secondary" onclick="document.getElementById('file-input').click()">🖼️ เลือกรูป</button>
+      </div>
+      <input type="file" id="cam-input" accept="image/*" capture="environment" class="hidden" onchange="handleImg(this)">
+      <input type="file" id="file-input" accept="image/*" class="hidden" onchange="handleImg(this)">
+      <img id="img-preview" class="img-preview" alt="preview">
+      <button class="parse-btn" id="parse-btn" onclick="parseImage()" disabled>
+        <span id="parse-btn-txt">✨ อ่านการบ้านด้วย AI</span>
+        <div class="spinner hidden" id="parse-spinner"></div>
+      </button>
+      <div class="parsed-preview" id="parsed-preview">
+        <div class="parsed-header">✅ ตรวจสอบก่อนบันทึก</div>
+        <div id="parsed-list"></div>
+        <button class="confirm-btn mt-2" id="confirm-btn" onclick="confirmParsed()">
+          <span id="confirm-txt">💾 บันทึกที่เลือก</span>
+          <div class="spinner hidden" id="confirm-spinner"></div>
+        </button>
+      </div>
+      <div class="sec-label">✏️ เพิ่มด้วยตนเอง</div>
+      <div class="manual-form">
+        <div class="form-row">
+          <label class="form-label">ชื่องาน</label>
+          <input class="form-input" id="f-title" placeholder="เช่น ทำแบบฝึกหัดคณิตฯ หน้า 20-21">
+        </div>
+        <div class="form-row">
+          <label class="form-label">ประเภท</label>
+          <div class="type-toggle">
+            <button class="type-btn active" id="type-hw" onclick="setType('homework')">📚 การบ้าน</button>
+            <button class="type-btn" id="type-todo" onclick="setType('todo')">📋 สิ่งที่ต้องทำ</button>
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-row" style="margin-bottom:0">
+            <label class="form-label">วิชา</label>
+            <select class="form-input" id="f-subject">
+              <option value="Other">เลือกวิชา...</option>
+              <option value="Math">คณิตศาสตร์</option>
+              <option value="Thai">ภาษาไทย</option>
+              <option value="English">ภาษาอังกฤษ</option>
+              <option value="Science">วิทยาศาสตร์</option>
+              <option value="Social">สังคมศึกษา</option>
+              <option value="Chinese">ภาษาจีน</option>
+              <option value="PE">พลศึกษา</option>
+            </select>
+          </div>
+          <div class="form-row" style="margin-bottom:0">
+            <label class="form-label">คะแนน (ถ้ามี)</label>
+            <input class="form-input" id="f-points" type="number" min="0" placeholder="เช่น 10">
+          </div>
+        </div>
+        <div class="form-row mt-2">
+          <label class="form-label">วันส่ง</label>
+          <input class="form-input" id="f-due" type="date">
+        </div>
+        <button class="submit-btn" id="add-btn" onclick="addManual()">
+          <span id="add-btn-txt">+ เพิ่มงาน</span>
+          <div class="spinner hidden" id="add-spinner" style="display:inline-block;margin-left:6px"></div>
+        </button>
+      </div>
+    </div>
+
+    <!-- TAB: EXAM -->
+    <div class="tab-panel" id="tab-exam">
+      <div class="sec-label">🎯 เตรียมสอบเข้า ม.1</div>
+      <div class="new-exam-form">
+        <div class="new-exam-title">+ สร้างการสอบใหม่</div>
+        <div class="form-row">
+          <label class="form-label">ชื่อการสอบ</label>
+          <input class="form-input" id="exam-name-inp" placeholder="เช่น สอบเข้า ม.1 Triam Udom">
+        </div>
+        <div class="form-row">
+          <label class="form-label">วันสอบ</label>
+          <input class="form-input" id="exam-date-inp" type="date">
+        </div>
+        <button class="submit-btn" onclick="addExam()">+ สร้าง</button>
+      </div>
+      <div id="exam-list"></div>
+    </div>
+
+    <!-- TAB: SETTINGS -->
+    <div class="tab-panel" id="tab-settings">
+      <div class="sec-label">⚙️ การตั้งค่า</div>
+
+      <!-- Supabase status -->
+      <div class="settings-card">
+        <div class="settings-title">🗄️ Supabase (ซิงค์ครอบครัว)
+          <span id="sb-dot" class="status-dot ok"></span>
+          <span id="sb-status" style="font-size:0.72rem;font-weight:600;color:var(--muted)">เชื่อมต่อแล้ว</span>
+        </div>
+        <div class="info-box">
+          ✅ เชื่อมต่อกับ Supabase แล้ว ข้อมูลซิงค์ข้ามอุปกรณ์ทั้งหมดในครอบครัว<br>
+          <span style="opacity:0.7">Project: fpdlavhnhqrjgwjoiboe</span>
+        </div>
+      </div>
+
+      <!-- Gemini API Key -->
+      <div class="settings-card">
+        <div class="settings-title">🤖 Gemini API Key (อ่านรูปด้วย AI)
+          <span class="status-dot ok"></span>
+          <span style="font-size:0.72rem;font-weight:600;color:var(--muted)">ฟรี</span>
+        </div>
+        <div class="info-box" style="margin-bottom:10px">
+          ✅ ใช้ Gemini 2.0 Flash — ฟรี ไม่ต้องใส่บัตรเครดิต<br>
+          Key ถูกตั้งค่าไว้แล้ว พร้อมใช้งานทันที<br><br>
+          💡 <strong>Gemini ทำงานได้ทุกที่</strong> — ไม่ขึ้นกับ Supabase
+        </div>
+        <div class="settings-row">
+          <label class="settings-label">เปลี่ยน API Key (ถ้าต้องการ)</label>
+          <input class="settings-input" id="api-key-inp" type="password" placeholder="AIzaSy...">
+        </div>
+        <button class="settings-btn primary" onclick="saveApiKey()">อัปเดต API Key</button>
+        <div class="info-box">
+          รับ key ใหม่ได้ที่ <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a> → Get API Key
+        </div>
+      </div>
+
+      <!-- Line Notify -->
+      <div class="settings-card">
+        <div class="settings-title">💬 Line Notify (แจ้งเตือนเช้า)</div>
+        <div class="settings-row">
+          <label class="settings-label">Line Notify Token</label>
+          <input class="settings-input" id="line-token-inp" type="password" placeholder="วาง token ที่นี่...">
+        </div>
+        <div class="settings-row">
+          <label class="settings-label">เวลาแจ้งเตือน</label>
+          <input class="settings-input" id="line-time-inp" type="time" value="07:00">
+        </div>
+        <button class="settings-btn primary" onclick="saveLineSettings()">บันทึกการตั้งค่า Line</button>
+        <button class="settings-btn success mt-2" onclick="testLineNotify()">🔔 ทดสอบส่งข้อความ</button>
+        <div class="info-box">
+          วิธีรับ Token:<br>
+          1. ไปที่ <a href="https://notify-bot.line.me" target="_blank">notify-bot.line.me</a><br>
+          2. Login ด้วย LINE account<br>
+          3. "Generate token" → เลือก group chat ครอบครัว<br>
+          4. Copy token มาวางที่นี่<br><br>
+          ⚠️ การแจ้งเตือนอัตโนมัติต้องเปิดแอปไว้ (หรือใช้ Vercel Cron ในภายหลัง)
+        </div>
+      </div>
+
+      <!-- Danger zone -->
+      <div class="settings-card">
+        <div class="settings-title">⚠️ จัดการข้อมูล</div>
+        <button class="settings-btn success" onclick="retrySupabase()" style="margin-bottom:8px">🔄 ลองเชื่อมต่อ Supabase ใหม่</button>
+        <button class="settings-btn danger" onclick="clearAllData()">🗑 ลบข้อมูลทั้งหมด</button>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <button class="nav-btn active" id="nav-hw" onclick="showTab('hw')"><span class="icon">📚</span>การบ้าน</button>
+    <button class="nav-btn" id="nav-todo" onclick="showTab('todo')"><span class="icon">📋</span>ต้องทำ</button>
+    <button class="nav-btn" id="nav-add" onclick="showTab('add')"><span class="icon">➕</span>เพิ่มงาน</button>
+    <button class="nav-btn" id="nav-exam" onclick="showTab('exam')"><span class="icon">🎯</span>สอบ</button>
+    <button class="nav-btn" id="nav-settings" onclick="showTab('settings')"><span class="icon">⚙️</span>ตั้งค่า</button>
+  </div>
+
+</div><!-- /app -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════
+   SUPABASE CONFIG
+═══════════════════════════════════════ */
+const SUPABASE_URL = 'https://fpdlavhnhqrjgwjoiboe.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZwZGxhdmhuaHFyamd3am9pYm9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMzI4MzYsImV4cCI6MjA5NjYwODgzNn0.5RZrm8GVa7dS33YM91nmTlkoViw9IszY1F7N8ZvZAVU';
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+/* ═══════════════════════════════════════
+   LOCAL STATE (cache from Supabase)
+═══════════════════════════════════════ */
+let STATE = { tasks: [], exams: [], topics: [] };
+let currentTab   = 'hw';
+let dateFilter   = 'today';
+let todoFilter   = 'pending';
+let manualType   = 'homework';
+let parsedResults = [];
+let currentImgB64 = null;
+let isSyncing = false;
+
+const GEMINI_KEY = 'AQ.Ab8RN6IuB0ATVPXKVnCfVSetR9ujDk_o_iHkZ6LNjhsmvAd1gQ';
+const APIKEY  = () => localStorage.getItem('ht_apikey') || GEMINI_KEY;
+const LINETOKEN = () => localStorage.getItem('ht_linetoken') || '';
+const LINETIME  = () => localStorage.getItem('ht_linetime') || '07:00';
+
+/* ═══════════════════════════════════════
+   INIT
+═══════════════════════════════════════ */
+let USE_LOCAL = false;
+
+async function init() {
+  document.getElementById('loading-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+
+  // Load saved settings
+  const lt = LINETOKEN();
+  if (lt) document.getElementById('line-token-inp').value = lt;
+  document.getElementById('line-time-inp').value = LINETIME();
+
+  // Try Supabase, fall back to localStorage
+  try {
+    await loadAll();
+    USE_LOCAL = false;
+    setSyncStatus(true);
+    setupRealtime();
+  } catch(e) {
+    console.warn('Supabase unavailable:', e);
+    USE_LOCAL = true;
+    setSyncStatus(false);
+    loadFromLocal();
+    toast('📱 โหมดออฟไลน์ — ข้อมูลเก็บในเครื่องนี้');
+  }
+
+  scheduleLineCheck();
+  document.getElementById('loading-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  renderAll();
+}
+
+/* ═══════════════════════════════════════
+   LOCALSTORAGE FALLBACK
+═══════════════════════════════════════ */
+function loadFromLocal() {
+  STATE.tasks  = JSON.parse(localStorage.getItem('ht_tasks')  || '[]');
+  STATE.exams  = JSON.parse(localStorage.getItem('ht_exams')  || '[]');
+  STATE.topics = JSON.parse(localStorage.getItem('ht_topics') || '[]');
+}
+
+function saveLocal() {
+  localStorage.setItem('ht_tasks',  JSON.stringify(STATE.tasks));
+  localStorage.setItem('ht_exams',  JSON.stringify(STATE.exams));
+  localStorage.setItem('ht_topics', JSON.stringify(STATE.topics));
+}
+
+/* ═══════════════════════════════════════
+   SUPABASE LOAD
+═══════════════════════════════════════ */
+async function loadAll() {
+  setSyncing(true);
+  const [tasksRes, examsRes, topicsRes] = await Promise.all([
+    sb.from('tasks').select('*').order('created_at', { ascending: false }),
+    sb.from('exams').select('*').order('created_at', { ascending: true }),
+    sb.from('exam_topics').select('*').order('sort_order', { ascending: true }),
+  ]);
+  if (tasksRes.error)  throw tasksRes.error;
+  if (examsRes.error)  throw examsRes.error;
+  if (topicsRes.error) throw topicsRes.error;
+  STATE.tasks  = tasksRes.data  || [];
+  STATE.exams  = examsRes.data  || [];
+  STATE.topics = topicsRes.data || [];
+  saveLocal();
+  setSyncing(false);
+}
+
+/* ═══════════════════════════════════════
+   REAL-TIME SUBSCRIPTIONS
+═══════════════════════════════════════ */
+function setupRealtime() {
+  sb.channel('homework-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, async () => {
+      const r = await sb.from('tasks').select('*').order('created_at', { ascending: false });
+      if (!r.error) { STATE.tasks = r.data; renderAll(); }
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'exams' }, async () => {
+      const r = await sb.from('exams').select('*').order('created_at', { ascending: true });
+      if (!r.error) { STATE.exams = r.data; renderExams(); }
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'exam_topics' }, async () => {
+      const r = await sb.from('exam_topics').select('*').order('sort_order', { ascending: true });
+      if (!r.error) { STATE.topics = r.data; renderExams(); }
+    })
+    .subscribe();
+}
+
+/* ═══════════════════════════════════════
+   DATE HELPERS
+═══════════════════════════════════════ */
+const today   = () => { const d = new Date(); d.setHours(0,0,0,0); return d; };
+const parseD  = s  => { if (!s) return null; const d = new Date(s+'T00:00:00'); d.setHours(0,0,0,0); return d; };
+const diffD   = d  => Math.round((d - today()) / 86400000);
+
+function dueLabel(due) {
+  if (!due) return null;
+  const d = parseD(due), diff = diffD(d);
+  if (diff < 0)   return { text:`เกิน ${Math.abs(diff)}วัน`, cls:'urgent' };
+  if (diff === 0) return { text:'วันนี้!', cls:'urgent' };
+  if (diff === 1) return { text:'พรุ่งนี้', cls:'soon' };
+  if (diff <= 7)  return { text:`อีก ${diff}วัน`, cls:'soon' };
+  return { text: d.toLocaleDateString('th-TH',{day:'numeric',month:'short'}), cls:'' };
+}
+
+function inDateFilter(t) {
+  if (dateFilter === 'all') return true;
+  if (!t.due_date) return false;
+  const d = parseD(t.due_date), td = today();
+  if (dateFilter === 'today') return diffD(d) === 0;
+  if (dateFilter === 'week')  return diffD(d) >= 0 && diffD(d) <= 7;
+  if (dateFilter === 'month') return d.getMonth()===td.getMonth() && d.getFullYear()===td.getFullYear();
+  return true;
+}
+
+function calcPriority(due, points) {
+  if (points && points > 0) return 'high';
+  if (!due) return 'low';
+  const diff = diffD(parseD(due));
+  if (diff <= 1) return 'high';
+  if (diff <= 7) return 'med';
+  return 'low';
+}
+
+/* ═══════════════════════════════════════
+   RENDER HEADER
+═══════════════════════════════════════ */
+function renderHeader() {
+  const d = new Date();
+  const days = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์'];
+  document.getElementById('hdr-date').textContent =
+    `วัน${days[d.getDay()]} ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()+543}`;
+
+  const hw      = STATE.tasks.filter(t => t.type==='homework');
+  const urgent  = hw.filter(t => !t.is_done && t.priority==='high').length;
+  const pending = STATE.tasks.filter(t => !t.is_done).length;
+  const done    = STATE.tasks.filter(t => t.is_done).length;
+  const total   = STATE.tasks.length;
+
+  document.getElementById('s-urgent').textContent  = urgent;
+  document.getElementById('s-pending').textContent = pending;
+  document.getElementById('s-done').textContent    = done;
+  document.getElementById('s-total').textContent   = total;
+
+  const pct = total ? Math.round((done/total)*100) : 0;
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-pct').textContent  = pct + '%';
+
+  // API key indicator — always set since Gemini key is built in
+  const apiBtn = document.getElementById('api-btn');
+  apiBtn.textContent = '🤖 Gemini ✓';
+  apiBtn.classList.add('set');
+}
+
+/* ═══════════════════════════════════════
+   SUBJECT TAGS
+═══════════════════════════════════════ */
+const SUBJ = { Math:'คณิต',Thai:'ไทย',English:'อังกฤษ',Science:'วิทยาฯ',Social:'สังคม',Chinese:'จีน',PE:'พลศึกษา',Other:'อื่นๆ' };
+function subjectTag(s) {
+  return `<span class="tag tag-${(s||'other').toLowerCase()}">${SUBJ[s]||s||'อื่นๆ'}</span>`;
+}
+
+/* ═══════════════════════════════════════
+   TASK CARD HTML
+═══════════════════════════════════════ */
+function taskCardHTML(t) {
+  const dl = dueLabel(t.due_date);
+  const dueHTML    = dl ? `<span class="due-chip ${dl.cls}">${dl.text}</span>` : '';
+  const pointsTag  = t.points ? `<span class="tag tag-points">⭐ ${t.points}คะแนน</span>` : '';
+  const origHTML   = t.original_text && t.original_text !== t.parsed_title
+    ? `<div class="task-original">${escHtml(t.original_text)}</div>` : '';
+  return `
+  <div class="task-card p-${t.priority||'low'} ${t.is_done?'is-done':''}" id="tc-${t.id}">
+    <div class="check-wrap"><div class="check" onclick="toggleTask('${t.id}')">✓</div></div>
+    <div class="task-body">
+      <div class="task-title">${escHtml(t.parsed_title||t.original_text)}</div>
+      ${origHTML}
+      <div class="task-meta">
+        ${subjectTag(t.subject)}
+        <span class="tag ${t.type==='homework'?'tag-hw':'tag-todo'}">${t.type==='homework'?'การบ้าน':'ต้องทำ'}</span>
+        ${pointsTag}${dueHTML}
+      </div>
+    </div>
+    <button class="task-delete" onclick="deleteTask('${t.id}')">✕</button>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════
+   RENDER LISTS
+═══════════════════════════════════════ */
+function renderHW() {
+  const el = document.getElementById('hw-list');
+  let tasks = STATE.tasks.filter(t => t.type==='homework' && inDateFilter(t));
+  tasks.sort((a,b) => {
+    const po = {high:0,med:1,low:2};
+    const pd = (po[a.priority]||2)-(po[b.priority]||2);
+    if (pd) return pd;
+    if (a.due_date && b.due_date) return a.due_date.localeCompare(b.due_date);
+    return a.due_date ? -1 : b.due_date ? 1 : 0;
+  });
+  if (!tasks.length) {
+    el.innerHTML = `<div class="empty"><div class="emoji">🎉</div>
+      <div class="msg">ไม่มีการบ้าน${dateFilter==='today'?'วันนี้':''}</div>
+      <div class="sub">เพิ่มงานใหม่ที่แท็บ "เพิ่มงาน"</div></div>`; return;
+  }
+  const pending = tasks.filter(t=>!t.is_done);
+  const done    = tasks.filter(t=>t.is_done);
+  let html = pending.map(taskCardHTML).join('');
+  if (done.length) html += `<div class="sec-label">✅ เสร็จแล้ว (${done.length})</div>` + done.map(taskCardHTML).join('');
+  el.innerHTML = html;
+}
+
+function renderTodo() {
+  const el = document.getElementById('todo-list');
+  let tasks = STATE.tasks.filter(t => t.type==='todo');
+  if (todoFilter==='pending') tasks = tasks.filter(t=>!t.is_done);
+  if (todoFilter==='done')    tasks = tasks.filter(t=>t.is_done);
+  if (!tasks.length) {
+    el.innerHTML = `<div class="empty"><div class="emoji">✨</div>
+      <div class="msg">ไม่มีรายการ</div>
+      <div class="sub">เพิ่มสิ่งที่ต้องทำที่แท็บ "เพิ่มงาน"</div></div>`; return;
+  }
+  el.innerHTML = tasks.map(taskCardHTML).join('');
+}
+
+/* ═══════════════════════════════════════
+   RENDER EXAMS
+═══════════════════════════════════════ */
+function renderExams() {
+  const el = document.getElementById('exam-list');
+  if (!STATE.exams.length) {
+    el.innerHTML = `<div class="empty"><div class="emoji">📅</div>
+      <div class="msg">ยังไม่มีรายการสอบ</div>
+      <div class="sub">สร้างรายการสอบด้านบน</div></div>`; return;
+  }
+  el.innerHTML = STATE.exams.map(ex => {
+    const topics = STATE.topics.filter(t => t.exam_id === ex.id);
+    const doneT  = topics.filter(t=>t.is_done).length;
+    const pct    = topics.length ? Math.round((doneT/topics.length)*100) : 0;
+    let countdown='', ccls='';
+    if (ex.exam_date) {
+      const diff = diffD(parseD(ex.exam_date));
+      if (diff<0)       { countdown=`เกินแล้ว ${Math.abs(diff)}วัน`; }
+      else if (diff===0){ countdown='สอบวันนี้!'; }
+      else if (diff<=30){ countdown=`อีก ${diff}วัน`; ccls='soon'; }
+      else              { countdown=`อีก ${diff}วัน`; ccls='far'; }
+    }
+    const dateStr = ex.exam_date
+      ? parseD(ex.exam_date).toLocaleDateString('th-TH',{day:'numeric',month:'long',year:'numeric'}) : '';
+    const topicsHTML = topics.map((tp,i) => `
+      <div class="topic-item">
+        <input type="checkbox" ${tp.is_done?'checked':''} onchange="toggleTopic('${tp.id}','${ex.id}',${!tp.is_done})">
+        <span class="${tp.is_done?'topic-done':''}">${escHtml(tp.topic_name)}</span>
+      </div>`).join('');
+    return `
+    <div class="exam-card" id="ex-${ex.id}">
+      <div class="exam-header">
+        <div>
+          <div class="exam-name">${escHtml(ex.name)}</div>
+          ${dateStr?`<div class="exam-date-row">📅 ${dateStr}</div>`:''}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          ${countdown?`<span class="exam-countdown ${ccls}">${countdown}</span>`:''}
+          <button class="exam-delete" onclick="deleteExam('${ex.id}')">🗑</button>
+        </div>
+      </div>
+      <div class="exam-progress"><div class="exam-bar" style="width:${pct}%"></div></div>
+      <div class="exam-pct">เรียนแล้ว ${doneT}/${topics.length} หัวข้อ (${pct}%)</div>
+      ${topicsHTML}
+      <div class="add-topic-row">
+        <input class="add-topic-input" id="tp-${ex.id}" placeholder="เพิ่มหัวข้อ..." onkeydown="if(event.key==='Enter')addTopic('${ex.id}')">
+        <button class="add-topic-btn" onclick="addTopic('${ex.id}')">+</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ═══════════════════════════════════════
+   TASK ACTIONS (Supabase)
+═══════════════════════════════════════ */
+async function toggleTask(id) {
+  const t = STATE.tasks.find(x=>x.id===id); if (!t) return;
+  const newVal = !t.is_done;
+  t.is_done = newVal; renderAll();
+  if (USE_LOCAL) { saveLocal(); }
+  else {
+    const { error } = await sb.from('tasks').update({ is_done: newVal }).eq('id', id);
+    if (error) { t.is_done = !newVal; renderAll(); toast('❌ ซิงค์ไม่ได้'); return; }
+  }
+  toast(newVal ? '✅ เสร็จแล้ว!' : '↩ ยกเลิกเครื่องหมาย');
+}
+
+async function deleteTask(id) {
+  const prev = [...STATE.tasks];
+  STATE.tasks = STATE.tasks.filter(x=>x.id!==id); renderAll();
+  if (USE_LOCAL) { saveLocal(); toast('🗑 ลบงานแล้ว'); return; }
+  const { error } = await sb.from('tasks').delete().eq('id', id);
+  if (error) { STATE.tasks = prev; renderAll(); toast('❌ ลบไม่ได้'); return; }
+  toast('🗑 ลบงานแล้ว');
+}
+
+async function addManual() {
+  const title = document.getElementById('f-title').value.trim();
+  if (!title) { toast('⚠️ กรุณาใส่ชื่องาน'); return; }
+  const due    = document.getElementById('f-due').value || null;
+  const points = parseInt(document.getElementById('f-points').value) || null;
+  const subj   = document.getElementById('f-subject').value;
+  const task = {
+    id: uid(), type: manualType,
+    original_text: title, parsed_title: title,
+    subject: subj, due_date: due, points,
+    priority: calcPriority(due, points),
+    is_done: false, source: 'manual',
+    created_at: new Date().toISOString()
+  };
+  STATE.tasks.unshift(task); renderAll();
+  if (USE_LOCAL) {
+    saveLocal();
+  } else {
+    setBtnLoading('add-btn','add-btn-txt','add-spinner', true);
+    const { error } = await sb.from('tasks').insert(task);
+    setBtnLoading('add-btn','add-btn-txt','add-spinner', false);
+    if (error) {
+      STATE.tasks = STATE.tasks.filter(x=>x.id!==task.id); renderAll();
+      toast('❌ บันทึกไม่ได้: ' + error.message); return;
+    }
+  }
+  document.getElementById('f-title').value  = '';
+  document.getElementById('f-due').value    = '';
+  document.getElementById('f-points').value = '';
+  toast('✅ เพิ่มงานแล้ว');
+}
+
+/* ═══════════════════════════════════════
+   EXAM ACTIONS
+═══════════════════════════════════════ */
+async function addExam() {
+  const name = document.getElementById('exam-name-inp').value.trim();
+  const date = document.getElementById('exam-date-inp').value || null;
+  if (!name) { toast('⚠️ กรุณาใส่ชื่อการสอบ'); return; }
+  const exam = { id: uid(), name, exam_date: date, created_at: new Date().toISOString() };
+  STATE.exams.push(exam); renderExams();
+  if (USE_LOCAL) { saveLocal(); }
+  else {
+    const { error } = await sb.from('exams').insert(exam);
+    if (error) { STATE.exams = STATE.exams.filter(e=>e.id!==exam.id); renderExams(); toast('❌ ' + error.message); return; }
+  }
+  document.getElementById('exam-name-inp').value = '';
+  document.getElementById('exam-date-inp').value = '';
+  toast('🎯 สร้างรายการสอบแล้ว');
+}
+
+async function deleteExam(id) {
+  const prev = [...STATE.exams], prevT = [...STATE.topics];
+  STATE.exams  = STATE.exams.filter(e=>e.id!==id);
+  STATE.topics = STATE.topics.filter(t=>t.exam_id!==id);
+  renderExams();
+  if (USE_LOCAL) { saveLocal(); toast('🗑 ลบรายการสอบแล้ว'); return; }
+  const { error } = await sb.from('exams').delete().eq('id', id);
+  if (error) { STATE.exams = prev; STATE.topics = prevT; renderExams(); toast('❌ ลบไม่ได้'); }
+  else toast('🗑 ลบรายการสอบแล้ว');
+}
+
+async function addTopic(examId) {
+  const inp  = document.getElementById('tp-' + examId);
+  const name = inp.value.trim(); if (!name) return;
+  const topic = {
+    id: uid(), exam_id: examId, topic_name: name,
+    is_done: false, sort_order: STATE.topics.filter(t=>t.exam_id===examId).length
+  };
+  STATE.topics.push(topic); renderExams();
+  if (USE_LOCAL) { saveLocal(); inp.value = ''; return; }
+  const { error } = await sb.from('exam_topics').insert(topic);
+  if (error) { STATE.topics = STATE.topics.filter(t=>t.id!==topic.id); renderExams(); toast('❌ ' + error.message); return; }
+  inp.value = '';
+}
+
+async function toggleTopic(topicId, examId, newVal) {
+  const tp = STATE.topics.find(t=>t.id===topicId); if (!tp) return;
+  tp.is_done = newVal; renderExams();
+  if (USE_LOCAL) { saveLocal(); return; }
+  const { error } = await sb.from('exam_topics').update({ is_done: newVal }).eq('id', topicId);
+  if (error) { tp.is_done = !newVal; renderExams(); toast('❌ ซิงค์ไม่ได้'); }
+}
+
+/* ═══════════════════════════════════════
+   AI IMAGE PARSE
+═══════════════════════════════════════ */
+function handleImg(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const dataUrl = e.target.result;
+    currentImgB64 = dataUrl.split(',')[1];
+    const prev = document.getElementById('img-preview');
+    prev.src = dataUrl; prev.style.display = 'block';
+    const pb = document.getElementById('parse-btn');
+    pb.style.display = 'flex'; pb.disabled = false;
+    document.getElementById('parsed-preview').classList.remove('visible');
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+
+async function parseImage() {
+  if (!currentImgB64) return;
+  const btn = document.getElementById('parse-btn');
+  const txt = document.getElementById('parse-btn-txt');
+  const spin = document.getElementById('parse-spinner');
+  btn.disabled = true; txt.textContent = 'กำลังอ่าน...'; spin.classList.remove('hidden');
+
+  const PROMPT = `You are a homework parser for a Thai P.6 student preparing for ม.1 entrance exams.
+Extract ALL tasks from this notebook image. For each task return JSON with:
+- original_text: exact text as written (preserve Thai and English exactly, no changes)
+- parsed_title: clean concise English/Thai summary (max 80 chars)
+- type: "homework" (assignments with content to complete) or "todo" (bring items, admin, one-time actions)
+- subject: Math | Thai | English | Science | Social | Chinese | PE | Other
+- due_date: YYYY-MM-DD if a date is mentioned, else null
+- points: integer if points/marks mentioned, else null
+- priority: "high" if has points OR due within 2 days, "med" if due this week, "low" otherwise
+Return ONLY a valid JSON array. No markdown, no backticks, no explanation.`;
+
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${APIKEY()}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { inline_data: { mime_type: 'image/jpeg', data: currentImgB64 } },
+              { text: PROMPT }
+            ]
+          }],
+          generationConfig: { temperature: 0.1, maxOutputTokens: 2048 }
+        })
+      }
+    );
+    if (!res.ok) {
+      const e = await res.json().catch(()=>({}));
+      throw new Error(e.error?.message || `HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+    parsedResults = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    if (!Array.isArray(parsedResults) || !parsedResults.length) {
+      toast('⚠️ ไม่พบงานในรูปนี้'); return;
+    }
+    showParsedPreview(parsedResults);
+    toast(`🎉 พบ ${parsedResults.length} งาน!`);
+  } catch(e) {
+    console.error(e);
+    toast('❌ ' + (e.message || 'ลองใหม่อีกครั้ง'));
+  } finally {
+    btn.disabled = false;
+    txt.textContent = '✨ อ่านการบ้านด้วย AI';
+    spin.classList.add('hidden');
+  }
+}
+
+function showParsedPreview(items) {
+  document.getElementById('parsed-list').innerHTML = items.map((t,i) => `
+    <div class="parsed-item">
+      <input type="checkbox" checked id="pi-${i}">
+      <div class="parsed-item-body">
+        <div class="parsed-item-title">${escHtml(t.parsed_title)}</div>
+        ${t.original_text!==t.parsed_title?`<div class="parsed-item-orig">${escHtml(t.original_text)}</div>`:''}
+        <div class="parsed-item-tags">
+          ${subjectTag(t.subject)}
+          <span class="tag ${t.type==='homework'?'tag-hw':'tag-todo'}">${t.type==='homework'?'การบ้าน':'ต้องทำ'}</span>
+          ${t.points?`<span class="tag tag-points">⭐${t.points}</span>`:''}
+          ${t.due_date?`<span class="tag" style="background:#fff3e0;color:#e65100">📅${t.due_date}</span>`:''}
+        </div>
+      </div>
+    </div>`).join('');
+  document.getElementById('parsed-preview').classList.add('visible');
+}
+
+async function confirmParsed() {
+  const selected = parsedResults.filter((_,i) => document.getElementById('pi-'+i)?.checked);
+  if (!selected.length) { toast('⚠️ กรุณาเลือกอย่างน้อย 1 งาน'); return; }
+  const btn = document.getElementById('confirm-btn');
+  const txt = document.getElementById('confirm-txt');
+  const spin = document.getElementById('confirm-spinner');
+  btn.disabled = true; txt.textContent = 'กำลังบันทึก...'; spin.classList.remove('hidden');
+  const newTasks = selected.map(t => ({
+    id: uid(), type: t.type||'homework',
+    original_text: t.original_text||'',
+    parsed_title: t.parsed_title||t.original_text,
+    subject: t.subject||'Other',
+    due_date: t.due_date||null,
+    points: t.points||null,
+    priority: t.priority||calcPriority(t.due_date,t.points),
+    is_done: false, source: 'photo',
+    created_at: new Date().toISOString()
+  }));
+  // Optimistic
+  STATE.tasks.unshift(...newTasks); renderAll();
+  if (!USE_LOCAL) {
+    const { error } = await sb.from('tasks').insert(newTasks);
+    if (error) {
+      newTasks.forEach(t => { STATE.tasks = STATE.tasks.filter(x=>x.id!==t.id); });
+      btn.disabled = false; txt.textContent = '💾 บันทึกที่เลือก'; spin.classList.add('hidden');
+      renderAll(); toast('❌ บันทึกไม่ได้: ' + error.message); return;
+    }
+  } else {
+    saveLocal();
+  }
+  btn.disabled = false; txt.textContent = '💾 บันทึกที่เลือก'; spin.classList.add('hidden');
+  document.getElementById('parsed-preview').classList.remove('visible');
+  document.getElementById('img-preview').style.display = 'none';
+  document.getElementById('parse-btn').style.display = 'none';
+  parsedResults = [];
+  toast(`✅ บันทึก ${newTasks.length} งานแล้ว`);
+  showTab('hw');
+}
+
+/* ═══════════════════════════════════════
+   LINE NOTIFY
+═══════════════════════════════════════ */
+async function testLineNotify() {
+  const token = LINETOKEN();
+  if (!token) { toast('⚠️ ใส่ Line Notify Token ก่อน'); return; }
+  const msg = buildLineMessage();
+  await sendLineMessage(token, msg);
+}
+
+function buildLineMessage() {
+  const d = new Date();
+  const dateStr = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()+543}`;
+  const urgent  = STATE.tasks.filter(t=>!t.is_done&&t.type==='homework'&&t.priority==='high');
+  const todayTodo = STATE.tasks.filter(t=>!t.is_done&&t.type==='todo');
+  const done    = STATE.tasks.filter(t=>t.is_done).length;
+  const total   = STATE.tasks.length;
+  let msg = `\n🌅 สรุปการบ้านวันนี้ ${dateStr}\n`;
+  if (urgent.length) {
+    msg += `\n📚 การบ้านด่วน:\n`;
+    urgent.forEach(t => { msg += `• ${t.parsed_title||t.original_text}\n`; });
+  } else {
+    msg += `\n✅ ไม่มีการบ้านด่วน\n`;
+  }
+  if (todayTodo.length) {
+    msg += `\n📋 สิ่งที่ต้องทำ:\n`;
+    todayTodo.slice(0,5).forEach(t => { msg += `• ${t.parsed_title||t.original_text}\n`; });
+  }
+  msg += `\n📊 เสร็จแล้ว ${done}/${total} งาน`;
+  return msg;
+}
+
+async function sendLineMessage(token, msg) {
+  try {
+    // Use a CORS proxy since Line Notify doesn't support direct browser calls
+    const res = await fetch('https://api.allorigins.win/raw?url=' +
+      encodeURIComponent('https://notify-api.line.me/api/notify'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'message=' + encodeURIComponent(msg) + '&token=' + encodeURIComponent(token)
+    });
+    if (res.ok || res.status === 200) {
+      toast('✅ ส่งข้อความ Line แล้ว!');
+    } else {
+      // Fallback: open Line notify URL instruction
+      toast('⚠️ ลองส่งตรงไม่ได้ — ดูวิธีแก้ที่ ⚙️ ตั้งค่า');
+    }
+  } catch(e) {
+    toast('⚠️ ส่ง Line ไม่ได้จาก browser — ต้องใช้ Vercel backend');
+  }
+}
+
+function scheduleLineCheck() {
+  // Check every minute if it's time to send
+  setInterval(() => {
+    if (!LINETOKEN()) return;
+    const now   = new Date();
+    const hhmm  = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    const target = LINETIME();
+    const lastSent = localStorage.getItem('ht_lastnotify');
+    const today_ = new Date().toDateString();
+    if (hhmm === target && lastSent !== today_) {
+      localStorage.setItem('ht_lastnotify', today_);
+      sendLineMessage(LINETOKEN(), buildLineMessage());
+    }
+  }, 60000);
+}
+
+/* ═══════════════════════════════════════
+   SETTINGS ACTIONS
+═══════════════════════════════════════ */
+function saveApiKey() {
+  const key = document.getElementById('api-key-inp').value.trim();
+  localStorage.setItem('ht_apikey', key);
+  renderHeader();
+  toast(key ? '🔑 บันทึก API Key แล้ว' : '🗑 ลบ API Key แล้ว');
+}
+
+function saveLineSettings() {
+  const token = document.getElementById('line-token-inp').value.trim();
+  const time  = document.getElementById('line-time-inp').value;
+  localStorage.setItem('ht_linetoken', token);
+  localStorage.setItem('ht_linetime', time);
+  toast(`✅ บันทึกการตั้งค่า Line แล้ว — แจ้งเตือนทุกวันเวลา ${time}`);
+}
+
+async function clearAllData() {
+  if (!confirm('ลบข้อมูลทั้งหมดใช่ไหม? ไม่สามารถกู้คืนได้')) return;
+  STATE = { tasks:[], exams:[], topics:[] };
+  saveLocal();
+  if (!USE_LOCAL) {
+    setSyncing(true);
+    await sb.from('exam_topics').delete().neq('id','__none__');
+    await sb.from('exams').delete().neq('id','__none__');
+    await sb.from('tasks').delete().neq('id','__none__');
+    setSyncing(false);
+  }
+  renderAll();
+  toast('🗑 ลบข้อมูลทั้งหมดแล้ว');
+}
+
+/* ═══════════════════════════════════════
+   TAB NAVIGATION & FILTERS
+═══════════════════════════════════════ */
+function showTab(tab) {
+  currentTab = tab;
+  ['hw','todo','add','exam','settings'].forEach(t => {
+    document.getElementById('tab-'+t)?.classList.toggle('active', t===tab);
+    document.getElementById('nav-'+t)?.classList.toggle('active', t===tab);
+  });
+}
+
+function setDateFilter(f, btn) {
+  dateFilter = f;
+  document.querySelectorAll('#tab-hw .f-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); renderHW();
+}
+
+function setTodoFilter(f, btn) {
+  todoFilter = f;
+  document.querySelectorAll('#tab-todo .f-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); renderTodo();
+}
+
+function setType(t) {
+  manualType = t;
+  document.getElementById('type-hw').classList.toggle('active',   t==='homework');
+  document.getElementById('type-todo').classList.toggle('active', t==='todo');
+}
+
+/* ═══════════════════════════════════════
+   SYNC STATUS
+═══════════════════════════════════════ */
+function setSyncing(v) {
+  isSyncing = v;
+  document.getElementById('sync-bar').className = 'sync-bar' + (v?' syncing':'');
+}
+
+function setSyncStatus(ok) {
+  const dot = document.getElementById('sb-dot');
+  const lbl = document.getElementById('sb-status');
+  const btn = document.getElementById('sync-btn');
+  if (dot) dot.className = 'status-dot ' + (ok?'ok':'err');
+  if (lbl) lbl.textContent = ok ? 'เชื่อมต่อแล้ว' : 'เชื่อมต่อไม่ได้';
+  if (btn) { btn.className = 'hdr-btn ' + (ok?'sync-ok':'sync-err'); btn.textContent = ok?'⚡ Live':'⚡ Offline'; }
+}
+
+/* ═══════════════════════════════════════
+   RENDER ALL
+═══════════════════════════════════════ */
+function renderAll() {
+  renderHeader();
+  renderHW();
+  renderTodo();
+  renderExams();
+}
+
+/* ═══════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════ */
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function escHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+let _tt = null;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(_tt); _tt = setTimeout(()=>el.classList.remove('show'), 2400);
+}
+
+function setBtnLoading(btnId, txtId, spinnerId, loading) {
+  const btn  = document.getElementById(btnId);
+  const txt  = document.getElementById(txtId);
+  const spin = document.getElementById(spinnerId);
+  if (btn)  btn.disabled  = loading;
+  if (txt)  txt.textContent = loading ? 'กำลังบันทึก...' : '+ เพิ่มงาน';
+  if (spin) spin.classList.toggle('hidden', !loading);
+}
+
+/* ═══════════════════════════════════════
+   RETRY SUPABASE
+═══════════════════════════════════════ */
+async function retrySupabase() {
+  toast('🔄 กำลังเชื่อมต่อ Supabase...');
+  try {
+    await loadAll();
+    USE_LOCAL = false;
+    setSyncStatus(true);
+    setupRealtime();
+    renderAll();
+    toast('✅ เชื่อมต่อ Supabase แล้ว! ข้อมูลซิงค์แล้ว');
+  } catch(e) {
+    console.warn('Retry failed:', e);
+    setSyncStatus(false);
+    toast('❌ ยังเชื่อมต่อไม่ได้ — ใช้โหมดออฟไลน์ต่อไป');
+  }
+}
+
+/* ═══════════════════════════════════════
+   START
+═══════════════════════════════════════ */
+init();
+</script>
+</body>
+</html>
