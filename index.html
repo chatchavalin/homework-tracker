@@ -301,10 +301,10 @@ input,textarea,select{font-family:inherit}
       <div class="sec-label">📷 อัปโหลดรูปสมุดการบ้าน</div>
       <div class="upload-btns">
         <button class="up-btn primary" onclick="document.getElementById('cam-input').click()">📷 ถ่ายรูป</button>
-        <button class="up-btn secondary" onclick="document.getElementById('file-input').click()">🖼️ เลือกรูป</button>
+        <button class="up-btn secondary" onclick="document.getElementById('file-input').click()">🖼️ เลือกหลายรูป</button>
       </div>
-      <input type="file" id="cam-input" accept="image/*" capture="environment" class="hidden" onchange="handleImg(this)">
-      <input type="file" id="file-input" accept="image/*" class="hidden" onchange="handleImg(this)">
+      <input type="file" id="cam-input" accept="image/*" capture="environment" class="hidden" onchange="handleImgs(this)">
+      <input type="file" id="file-input" accept="image/*" multiple class="hidden" onchange="handleImgs(this)">
       <img id="img-preview" class="img-preview" alt="preview">
       <button class="parse-btn" id="parse-btn" onclick="parseImage()" disabled>
         <span id="parse-btn-txt">✨ อ่านการบ้านด้วย AI</span>
@@ -877,28 +877,50 @@ async function toggleTopic(topicId, examId, newVal) {
 /* ═══════════════════════════════════════
    AI IMAGE PARSE
 ═══════════════════════════════════════ */
-function handleImg(input) {
-  const file = input.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const dataUrl = e.target.result;
-    currentImgB64 = dataUrl.split(',')[1];
+let pendingImages = []; // [{b64, name}]
+
+function handleImgs(input) {
+  const files = Array.from(input.files);
+  if (!files.length) return;
+  pendingImages = [];
+  document.getElementById('parsed-preview').classList.remove('visible');
+
+  // Show first image as preview
+  const reader0 = new FileReader();
+  reader0.onload = e => {
     const prev = document.getElementById('img-preview');
-    prev.src = dataUrl; prev.style.display = 'block';
-    const pb = document.getElementById('parse-btn');
-    pb.style.display = 'flex'; pb.disabled = false;
-    document.getElementById('parsed-preview').classList.remove('visible');
+    prev.src = e.target.result;
+    prev.style.display = 'block';
   };
-  reader.readAsDataURL(file);
+  reader0.readAsDataURL(files[0]);
+
+  // Read all as base64
+  let loaded = 0;
+  files.forEach((file, i) => {
+    const r = new FileReader();
+    r.onload = e => {
+      pendingImages[i] = { b64: e.target.result.split(',')[1], name: file.name };
+      loaded++;
+      if (loaded === files.length) {
+        const pb = document.getElementById('parse-btn');
+        pb.style.display = 'flex'; pb.disabled = false;
+        const txt = document.getElementById('parse-btn-txt');
+        txt.textContent = files.length > 1
+          ? `✨ อ่าน ${files.length} รูปด้วย AI`
+          : '✨ อ่านการบ้านด้วย AI';
+      }
+    };
+    r.readAsDataURL(file);
+  });
   input.value = '';
 }
 
 async function parseImage() {
-  if (!currentImgB64) return;
-  const btn = document.getElementById('parse-btn');
-  const txt = document.getElementById('parse-btn-txt');
+  if (!pendingImages.length) return;
+  const btn  = document.getElementById('parse-btn');
+  const txt  = document.getElementById('parse-btn-txt');
   const spin = document.getElementById('parse-spinner');
-  btn.disabled = true; txt.textContent = 'กำลังอ่าน...'; spin.classList.remove('hidden');
+  btn.disabled = true; spin.classList.remove('hidden');
 
   const PROMPT = `You are a homework parser for a Thai P.6 student preparing for ม.1 entrance exams.
 Extract ALL tasks from this notebook image. For each task return JSON with:
@@ -911,35 +933,48 @@ Extract ALL tasks from this notebook image. For each task return JSON with:
 - priority: "high" if has points OR due within 2 days, "med" if due this week, "low" otherwise
 Return ONLY a valid JSON array. No markdown, no backticks, no explanation.`;
 
+  parsedResults = [];
+  const total = pendingImages.length;
+
   try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${APIKEY()}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [
-              { inline_data: { mime_type: 'image/jpeg', data: currentImgB64 } },
+    for (let i = 0; i < total; i++) {
+      txt.textContent = total > 1 ? `กำลังอ่านรูป ${i+1}/${total}...` : 'กำลังอ่าน...';
+      const img = pendingImages[i];
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${APIKEY()}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [
+              { inline_data: { mime_type: 'image/jpeg', data: img.b64 } },
               { text: PROMPT }
-            ]
-          }],
-          generationConfig: { temperature: 0.1, maxOutputTokens: 2048 }
-        })
+            ]}],
+            generationConfig: { temperature: 0.1, maxOutputTokens: 2048 }
+          })
+        }
+      );
+      if (!res.ok) {
+        const e = await res.json().catch(()=>({}));
+        throw new Error(e.error?.message || `HTTP ${res.status}`);
       }
-    );
-    if (!res.ok) {
-      const e = await res.json().catch(()=>({}));
-      throw new Error(e.error?.message || `HTTP ${res.status}`);
+      const data = await res.json();
+      const raw  = data.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+      const items = JSON.parse(raw.replace(/```json|```/g,'').trim());
+      if (Array.isArray(items)) parsedResults.push(...items);
     }
-    const data = await res.json();
-    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
-    parsedResults = JSON.parse(raw.replace(/```json|```/g,'').trim());
-    if (!Array.isArray(parsedResults) || !parsedResults.length) {
-      toast('⚠️ ไม่พบงานในรูปนี้'); return;
-    }
+
+    if (!parsedResults.length) { toast('⚠️ ไม่พบงานในรูปนี้'); return; }
+
+    // Deduplicate by original_text
+    const seen = new Set();
+    parsedResults = parsedResults.filter(t => {
+      if (seen.has(t.original_text)) return false;
+      seen.add(t.original_text); return true;
+    });
+
     showParsedPreview(parsedResults);
-    toast(`🎉 พบ ${parsedResults.length} งาน!`);
+    toast(`🎉 พบ ${parsedResults.length} งาน จาก ${total} รูป!`);
   } catch(e) {
     console.error(e);
     toast('❌ ' + (e.message || 'ลองใหม่อีกครั้ง'));
@@ -1003,6 +1038,7 @@ async function confirmParsed() {
   document.getElementById('img-preview').style.display = 'none';
   document.getElementById('parse-btn').style.display = 'none';
   parsedResults = [];
+  pendingImages = [];
   toast(`✅ บันทึก ${newTasks.length} งานแล้ว`);
   showTab('hw');
 }
