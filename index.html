@@ -32,7 +32,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 input,textarea,select{font-family:inherit}
 
 /* Layout */
-#app{max-width:480px;margin:0 auto;height:100vh;display:flex;flex-direction:column;position:relative;background:var(--bg)}
+#app{max-width:480px;margin:0 auto;min-height:100vh;height:100vh;display:flex;flex-direction:column;position:relative;background:var(--bg)}
 
 /* Header */
 .header{background:var(--navy);color:white;padding:14px 18px 12px;flex-shrink:0}
@@ -67,11 +67,11 @@ input,textarea,select{font-family:inherit}
 @keyframes syncpulse{0%{opacity:0.4}50%{opacity:1}100%{opacity:0.4}}
 
 /* Content */
-.content{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:14px 14px 90px;scroll-behavior:smooth}
+.content{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:14px 14px 100px;scroll-behavior:smooth}
 .content::-webkit-scrollbar{width:0}
 
 /* Bottom nav */
-.bottom-nav{position:absolute;bottom:0;left:0;right:0;background:var(--surface);border-top:1.5px solid var(--border);display:flex;padding:8px 0 max(8px,env(safe-area-inset-bottom));flex-shrink:0;z-index:10}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--surface);border-top:1.5px solid var(--border);display:flex;padding:8px 0 max(8px,env(safe-area-inset-bottom));z-index:100}
 .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;color:var(--muted);font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;transition:color 0.15s}
 .nav-btn .icon{font-size:1.3rem;line-height:1}
 .nav-btn.active{color:var(--navy)}
