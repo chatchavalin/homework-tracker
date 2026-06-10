@@ -9,21 +9,25 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
-  --bg:       #f5f3ef;
-  --surface:  #ffffff;
-  --surface2: #f9f7f4;
-  --border:   #e8e4dc;
-  --text:     #1a1a2e;
-  --muted:    #8a8aa0;
-  --high:     #e05252;
-  --med:      #f5a623;
-  --low:      #3ecf8e;
-  --blue:     #3b82f6;
-  --navy:     #1a1a2e;
-  --r:        16px;
-  --r-sm:     10px;
-  --shadow:   0 2px 12px rgba(26,26,46,0.07);
-  --shadow-md:0 6px 24px rgba(26,26,46,0.11);
+  --bg:        #f0faf4;
+  --surface:   #ffffff;
+  --surface2:  #f0faf4;
+  --border:    #c6e8d4;
+  --text:      #0d2e1a;
+  --muted:     #6b9e80;
+  --high:      #e05252;
+  --med:       #f5a623;
+  --low:       #22c55e;
+  --blue:      #3b82f6;
+  --navy:      #166534;
+  --primary:   #16a34a;
+  --primary-dk:#15803d;
+  --primary-lt:#dcfce7;
+  --accent:    #4ade80;
+  --r:         16px;
+  --r-sm:      10px;
+  --shadow:    0 2px 12px rgba(22,101,52,0.08);
+  --shadow-md: 0 6px 24px rgba(22,101,52,0.14);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden}
@@ -35,7 +39,7 @@ input,textarea,select{font-family:inherit}
 #app{max-width:480px;margin:0 auto;min-height:100vh;height:100vh;display:flex;flex-direction:column;position:relative;background:var(--bg)}
 
 /* Header */
-.header{background:var(--navy);color:white;padding:14px 18px 12px;flex-shrink:0}
+.header{background:linear-gradient(135deg,var(--primary-dk) 0%,var(--primary) 100%);color:white;padding:14px 18px 12px;flex-shrink:0}
 .header-top{display:flex;align-items:center;justify-content:space-between}
 .header h1{font-family:'Caveat',cursive;font-size:1.55rem;font-weight:700}
 .header-date{font-size:0.72rem;opacity:0.6;font-weight:500;margin-top:1px}
@@ -74,7 +78,8 @@ input,textarea,select{font-family:inherit}
 .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--surface);border-top:1.5px solid var(--border);display:flex;padding:8px 0 max(8px,env(safe-area-inset-bottom));z-index:100}
 .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;color:var(--muted);font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;transition:color 0.15s}
 .nav-btn .icon{font-size:1.3rem;line-height:1}
-.nav-btn.active{color:var(--navy)}
+.nav-btn.active{color:var(--primary)}
+.nav-btn.active .icon{filter:drop-shadow(0 0 4px rgba(34,197,94,0.5))}
 
 /* Section label */
 .sec-label{font-size:0.68rem;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:18px 0 8px 2px;display:flex;align-items:center;gap:6px}
@@ -85,18 +90,20 @@ input,textarea,select{font-family:inherit}
 .filter-row{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px}
 .filter-row::-webkit-scrollbar{display:none}
 .f-tab{flex-shrink:0;padding:6px 13px;border-radius:20px;font-size:0.75rem;font-weight:700;background:var(--surface);border:1.5px solid var(--border);color:var(--muted);transition:all 0.15s}
-.f-tab.active{background:var(--navy);border-color:var(--navy);color:white}
+.f-tab.active{background:var(--primary);border-color:var(--primary);color:white}
 
 /* Task card */
 .task-card{background:var(--surface);border-radius:var(--r);padding:13px 14px;margin-bottom:9px;box-shadow:var(--shadow);display:flex;gap:11px;align-items:flex-start;transition:opacity 0.2s,transform 0.15s;border-left:3.5px solid transparent;position:relative}
-.task-card.p-high{border-left-color:var(--high)}
+.task-card.p-high{border-left-color:var(--high);background:linear-gradient(135deg,#fff5f5 0%,#ffffff 40%)}
+.task-card.p-high.overdue{background:linear-gradient(135deg,#fee2e2 0%,#fff5f5 60%);animation:overdueShake 2s ease-in-out infinite}
+@keyframes overdueShake{0%,90%,100%{transform:translateX(0)}92%{transform:translateX(-3px)}96%{transform:translateX(3px)}}
 .task-card.p-med{border-left-color:var(--med)}
 .task-card.p-low{border-left-color:var(--low)}
 .task-card.is-done{opacity:0.45}
 .task-card:active{transform:scale(0.985)}
 .check-wrap{flex-shrink:0;margin-top:2px}
 .check{width:24px;height:24px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:0.8rem;transition:all 0.2s;cursor:pointer;color:transparent}
-.task-card.is-done .check{background:var(--low);border-color:var(--low);color:white}
+.task-card.is-done .check{background:var(--primary);border-color:var(--primary);color:white}
 .task-body{flex:1;min-width:0}
 .task-title{font-size:0.9rem;font-weight:700;color:var(--text);line-height:1.35}
 .task-card.is-done .task-title{text-decoration:line-through}
@@ -130,7 +137,7 @@ input,textarea,select{font-family:inherit}
 .upload-btns{display:flex;gap:8px;margin-bottom:14px}
 .up-btn{flex:1;padding:11px 10px;border-radius:var(--r-sm);font-size:0.8rem;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;transition:transform 0.12s,box-shadow 0.12s}
 .up-btn:active{transform:scale(0.97)}
-.up-btn.primary{background:var(--navy);color:white;box-shadow:0 3px 10px rgba(26,26,46,0.2)}
+.up-btn.primary{background:var(--primary);color:white;box-shadow:0 3px 10px rgba(22,163,74,0.25)}
 .up-btn.secondary{background:var(--surface);color:var(--text);border:1.5px solid var(--border)}
 .img-preview{width:100%;border-radius:var(--r);max-height:260px;object-fit:cover;margin-bottom:12px;display:none}
 .parse-btn{width:100%;padding:13px;background:linear-gradient(135deg,#3b82f6,#6366f1);color:white;border-radius:var(--r-sm);font-size:0.9rem;font-weight:800;display:none;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;transition:opacity 0.2s}
@@ -145,7 +152,7 @@ input,textarea,select{font-family:inherit}
 .parsed-item-title{font-size:0.83rem;font-weight:700}
 .parsed-item-orig{font-size:0.72rem;color:var(--muted);font-style:italic;margin-top:2px}
 .parsed-item-tags{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap}
-.confirm-btn{width:100%;padding:13px;background:var(--low);color:white;border-radius:var(--r-sm);font-size:0.88rem;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity 0.2s}
+.confirm-btn{width:100%;padding:13px;background:var(--primary);color:white;border-radius:var(--r-sm);font-size:0.88rem;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity 0.2s}
 .confirm-btn:disabled{opacity:0.6}
 
 /* Manual form */
@@ -153,12 +160,12 @@ input,textarea,select{font-family:inherit}
 .form-row{margin-bottom:12px}
 .form-label{font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:5px;display:block}
 .form-input{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:0.88rem;font-weight:500;color:var(--text);background:var(--surface);outline:none;transition:border-color 0.15s}
-.form-input:focus{border-color:var(--blue)}
+.form-input:focus{border-color:var(--primary)}
 .form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .type-toggle{display:flex;border:1.5px solid var(--border);border-radius:var(--r-sm);overflow:hidden}
 .type-btn{flex:1;padding:9px;font-size:0.78rem;font-weight:700;color:var(--muted);background:var(--surface);transition:all 0.15s;text-align:center}
-.type-btn.active{background:var(--navy);color:white}
-.submit-btn{width:100%;padding:12px;background:var(--navy);color:white;border-radius:var(--r-sm);font-size:0.9rem;font-weight:800;transition:opacity 0.2s}
+.type-btn.active{background:var(--primary);color:white}
+.submit-btn{width:100%;padding:12px;background:var(--primary);color:white;border-radius:var(--r-sm);font-size:0.9rem;font-weight:800;transition:opacity 0.2s}
 .submit-btn:active{opacity:0.85}
 
 /* Exam */
@@ -177,8 +184,8 @@ input,textarea,select{font-family:inherit}
 .topic-done{text-decoration:line-through;color:var(--muted)}
 .add-topic-row{display:flex;gap:7px;margin-top:10px}
 .add-topic-input{flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.8rem;outline:none}
-.add-topic-input:focus{border-color:var(--blue)}
-.add-topic-btn{padding:8px 12px;background:var(--navy);color:white;border-radius:8px;font-size:0.78rem;font-weight:700}
+.add-topic-input:focus{border-color:var(--primary)}
+.add-topic-btn{padding:8px 12px;background:var(--primary);color:white;border-radius:8px;font-size:0.78rem;font-weight:700}
 .exam-date-row{font-size:0.72rem;color:var(--muted);font-weight:600;margin-bottom:10px}
 .new-exam-form{background:var(--surface);border-radius:var(--r);padding:15px 16px;margin-bottom:14px;box-shadow:var(--shadow);border:1.5px dashed var(--border)}
 .new-exam-title{font-size:0.8rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px}
@@ -190,10 +197,10 @@ input,textarea,select{font-family:inherit}
 .settings-row{margin-bottom:10px}
 .settings-label{font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:5px;display:block}
 .settings-input{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:0.82rem;color:var(--text);background:var(--surface);outline:none;transition:border-color 0.15s}
-.settings-input:focus{border-color:var(--blue)}
+.settings-input:focus{border-color:var(--primary)}
 .settings-btn{width:100%;padding:11px;border-radius:var(--r-sm);font-size:0.85rem;font-weight:800;margin-top:6px;transition:opacity 0.2s}
 .settings-btn:active{opacity:0.85}
-.settings-btn.primary{background:var(--navy);color:white}
+.settings-btn.primary{background:var(--primary);color:white}
 .settings-btn.danger{background:#fdeaea;color:var(--high);border:1.5px solid #fca5a5}
 .settings-btn.success{background:#e8faf2;color:#065f46;border:1.5px solid #6ee7b7}
 .status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px}
@@ -211,11 +218,11 @@ input,textarea,select{font-family:inherit}
 .modal-sub{font-size:0.78rem;color:var(--muted);margin-bottom:16px;line-height:1.5}
 .modal-input{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:0.85rem;outline:none;margin-bottom:10px;font-family:monospace}
 .modal-input:focus{border-color:var(--blue)}
-.modal-save{width:100%;padding:12px;background:var(--navy);color:white;border-radius:var(--r-sm);font-size:0.9rem;font-weight:800}
+.modal-save{width:100%;padding:12px;background:var(--primary);color:white;border-radius:var(--r-sm);font-size:0.9rem;font-weight:800}
 .modal-close{position:absolute;top:14px;right:16px;font-size:1.2rem;color:var(--muted);padding:4px}
 
 /* Toast */
-.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(30px);background:var(--navy);color:white;padding:10px 18px;border-radius:20px;font-size:0.82rem;font-weight:700;box-shadow:var(--shadow-md);opacity:0;transition:all 0.25s;z-index:99;white-space:nowrap;pointer-events:none}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(30px);background:var(--primary-dk);color:white;padding:10px 18px;border-radius:20px;font-size:0.82rem;font-weight:700;box-shadow:var(--shadow-md);opacity:0;transition:all 0.25s;z-index:99;white-space:nowrap;pointer-events:none}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* Spinner */
@@ -233,6 +240,253 @@ input,textarea,select{font-family:inherit}
 .tab-panel.active{display:block}
 .hidden{display:none!important}
 .mt-2{margin-top:8px}
+
+/* ── FAB ─────────────────────────────── */
+.fab{
+  position:fixed;bottom:72px;right:calc(50% - 228px);
+  width:56px;height:56px;border-radius:50%;
+  background:linear-gradient(135deg,var(--primary),var(--accent));
+  color:white;font-size:1.6rem;font-weight:300;
+  box-shadow:0 4px 20px rgba(22,163,74,0.45);
+  display:flex;align-items:center;justify-content:center;
+  z-index:50;transition:transform 0.2s,box-shadow 0.2s;
+  border:none;cursor:pointer;
+}
+.fab:active{transform:scale(0.92);box-shadow:0 2px 10px rgba(22,163,74,0.3)}
+.fab.open{transform:rotate(45deg)}
+
+/* FAB sheet */
+.fab-sheet{
+  position:fixed;inset:0;z-index:49;
+  display:none;align-items:flex-end;justify-content:center;
+}
+.fab-sheet.open{display:flex}
+.fab-backdrop{position:absolute;inset:0;background:rgba(13,46,26,0.4)}
+.fab-menu{
+  position:relative;width:100%;max-width:480px;
+  background:var(--surface);border-radius:24px 24px 0 0;
+  padding:20px 20px 36px;z-index:1;
+  box-shadow:0 -8px 32px rgba(22,163,74,0.15);
+}
+.fab-menu-title{
+  font-size:0.72rem;font-weight:800;text-transform:uppercase;
+  letter-spacing:0.08em;color:var(--muted);margin-bottom:14px;text-align:center;
+}
+.fab-options{display:flex;gap:10px;margin-bottom:16px}
+.fab-opt{
+  flex:1;padding:14px 8px;border-radius:14px;
+  background:var(--primary-lt);border:2px solid var(--border);
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  font-size:0.75rem;font-weight:800;color:var(--primary-dk);
+  transition:all 0.15s;
+}
+.fab-opt:active{transform:scale(0.96);background:var(--accent)}
+.fab-opt .fab-icon{font-size:1.6rem}
+.fab-quick-form{margin-top:4px}
+.fab-quick-input{
+  width:100%;padding:12px 14px;border:2px solid var(--border);
+  border-radius:12px;font-size:0.95rem;font-weight:600;
+  color:var(--text);background:var(--surface);outline:none;margin-bottom:10px;
+}
+.fab-quick-input:focus{border-color:var(--primary)}
+.quick-date-row{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto}
+.quick-date-row::-webkit-scrollbar{display:none}
+.qdate{
+  flex-shrink:0;padding:6px 12px;border-radius:20px;
+  font-size:0.73rem;font-weight:700;
+  background:var(--surface2);border:1.5px solid var(--border);color:var(--muted);
+  transition:all 0.15s;cursor:pointer;
+}
+.qdate.active{background:var(--primary);border-color:var(--primary);color:white}
+.fab-row{display:flex;gap:8px}
+.fab-type-toggle{
+  flex:1;display:flex;border:1.5px solid var(--border);
+  border-radius:10px;overflow:hidden;
+}
+.fab-type-btn{
+  flex:1;padding:8px 6px;font-size:0.73rem;font-weight:700;
+  color:var(--muted);background:var(--surface);transition:all 0.15s;text-align:center;
+}
+.fab-type-btn.active{background:var(--primary);color:white}
+.fab-add-btn{
+  padding:10px 18px;background:var(--primary);color:white;
+  border-radius:10px;font-size:0.85rem;font-weight:800;
+  white-space:nowrap;
+}
+
+/* ── RIGHT NOW BANNER ────────────────── */
+.rightnow-banner{
+  background:linear-gradient(135deg,var(--primary-dk),var(--primary));
+  border-radius:18px;padding:16px;margin-bottom:14px;
+  color:white;position:relative;overflow:hidden;
+}
+.rightnow-banner::before{
+  content:'';position:absolute;right:-20px;top:-20px;
+  width:100px;height:100px;border-radius:50%;
+  background:rgba(255,255,255,0.08);
+}
+.rightnow-greeting{font-size:0.78rem;font-weight:600;opacity:0.85;margin-bottom:2px}
+.rightnow-msg{font-size:1.05rem;font-weight:800;line-height:1.3}
+.rightnow-tasks{margin-top:12px;display:flex;flex-direction:column;gap:7px}
+.rightnow-task{
+  background:rgba(255,255,255,0.15);border-radius:12px;
+  padding:10px 12px;display:flex;align-items:center;gap:10px;
+  backdrop-filter:blur(4px);cursor:pointer;transition:background 0.15s;
+}
+.rightnow-task:active{background:rgba(255,255,255,0.25)}
+.rightnow-check{
+  width:28px;height:28px;border-radius:50%;
+  border:2px solid rgba(255,255,255,0.6);
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.9rem;color:transparent;flex-shrink:0;transition:all 0.2s;
+}
+.rightnow-check.done{background:white;color:var(--primary);border-color:white}
+.rightnow-task-title{font-size:0.85rem;font-weight:700;flex:1}
+.rightnow-due{font-size:0.65rem;opacity:0.8;white-space:nowrap}
+
+/* ── OVERDUE CARD ────────────────────── */
+.task-card.overdue{
+  border-left-color:var(--high)!important;
+  background:linear-gradient(135deg,#fee2e2 0%,#fff5f5 60%)!important;
+}
+.overdue-badge{
+  background:var(--high);color:white;
+  font-size:0.6rem;font-weight:800;
+  padding:2px 6px;border-radius:6px;
+  text-transform:uppercase;letter-spacing:0.04em;
+  animation:pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.6}}
+
+/* ── SWIPE ───────────────────────────── */
+.task-card{touch-action:pan-y;user-select:none}
+.swipe-hint{
+  position:absolute;inset:0;border-radius:var(--r);
+  display:flex;align-items:center;
+  font-size:0.78rem;font-weight:800;padding:0 20px;
+  opacity:0;transition:opacity 0.15s;pointer-events:none;
+}
+.swipe-hint.right{background:var(--primary);color:white;justify-content:flex-start}
+.swipe-hint.left{background:var(--high);color:white;justify-content:flex-end}
+
+/* ── CELEBRATION ─────────────────────── */
+.celebration-overlay{
+  position:fixed;inset:0;z-index:200;
+  display:none;flex-direction:column;
+  align-items:center;justify-content:center;
+  background:rgba(13,46,26,0.85);
+  backdrop-filter:blur(6px);
+}
+.celebration-overlay.show{display:flex}
+.celebration-box{
+  background:white;border-radius:28px;
+  padding:36px 28px;text-align:center;
+  max-width:320px;width:90%;
+  box-shadow:0 20px 60px rgba(0,0,0,0.3);
+  animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes popIn{from{transform:scale(0.5);opacity:0}to{transform:scale(1);opacity:1}}
+.celebration-emoji{font-size:4rem;margin-bottom:12px;display:block;
+  animation:bounce 0.6s ease-in-out 0.3s both}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px)}}
+.celebration-title{font-size:1.4rem;font-weight:900;color:var(--primary-dk);margin-bottom:6px}
+.celebration-sub{font-size:0.85rem;color:var(--muted);font-weight:600;margin-bottom:20px}
+.celebration-stars{font-size:1.8rem;letter-spacing:4px;margin-bottom:20px}
+.celebration-close{
+  width:100%;padding:13px;background:var(--primary);
+  color:white;border-radius:14px;font-size:0.95rem;font-weight:800;
+}
+
+/* confetti */
+.confetti-piece{
+  position:fixed;width:10px;height:10px;border-radius:2px;
+  animation:confettiFall 2.5s ease-in forwards;pointer-events:none;z-index:201;
+}
+@keyframes confettiFall{
+  0%{transform:translateY(-20px) rotate(0deg);opacity:1}
+  100%{transform:translateY(110vh) rotate(720deg);opacity:0}
+}
+
+/* ── HOME SCREEN PROMPT ──────────────── */
+.install-banner{
+  background:var(--primary-lt);border:1.5px solid var(--border);
+  border-radius:14px;padding:12px 14px;margin-bottom:12px;
+  display:flex;align-items:center;gap:10px;
+  font-size:0.78rem;font-weight:700;color:var(--primary-dk);
+}
+.install-banner .install-icon{font-size:1.4rem;flex-shrink:0}
+.install-banner .install-close{
+  margin-left:auto;color:var(--muted);font-size:1rem;padding:2px 6px;
+}
+
+/* ── UNDO TOAST ──────────────────────── */
+.undo-toast{
+  position:fixed;bottom:80px;left:50%;
+  transform:translateX(-50%) translateY(30px);
+  background:var(--text);color:white;
+  padding:10px 6px 10px 16px;border-radius:20px;
+  font-size:0.82rem;font-weight:700;
+  box-shadow:var(--shadow-md);opacity:0;
+  transition:all 0.25s;z-index:98;
+  display:flex;align-items:center;gap:8px;white-space:nowrap;
+  pointer-events:none;
+}
+.undo-toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:all}
+.undo-btn{
+  background:var(--accent);color:var(--primary-dk);
+  padding:5px 12px;border-radius:12px;
+  font-size:0.78rem;font-weight:800;
+}
+
+/* ── EDIT SHEET ──────────────────────── */
+.edit-sheet-overlay{position:fixed;inset:0;background:rgba(13,46,26,0.5);z-index:150;display:none;align-items:flex-end;justify-content:center}
+.edit-sheet-overlay.open{display:flex}
+.edit-sheet{background:var(--surface);border-radius:24px 24px 0 0;padding:20px 20px 40px;width:100%;max-width:480px;box-shadow:0 -8px 32px rgba(22,163,74,0.15);position:relative}
+.edit-sheet-title{font-size:1rem;font-weight:800;margin-bottom:14px;color:var(--text)}
+.edit-sheet-close{position:absolute;top:16px;right:16px;color:var(--muted);font-size:1.2rem;padding:4px}
+.edit-subject-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.subj-chip{padding:5px 10px;border-radius:20px;font-size:0.72rem;font-weight:800;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;transition:all 0.15s}
+.subj-chip.active{background:var(--primary);border-color:var(--primary);color:white}
+.edit-save-btn{width:100%;padding:12px;background:var(--primary);color:white;border-radius:12px;font-size:0.9rem;font-weight:800;margin-top:8px}
+
+/* ── EXAM COUNTDOWN STRIP ────────────── */
+.exam-strip{background:linear-gradient(90deg,#14532d,#166534);color:white;padding:8px 16px;display:flex;align-items:center;gap:10px;font-size:0.78rem;cursor:pointer;transition:opacity 0.2s;flex-shrink:0}
+.exam-strip:active{opacity:0.85}
+.exam-strip-name{font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.exam-strip-days{font-weight:900;font-size:1rem;color:#4ade80;white-space:nowrap}
+.exam-strip-label{opacity:0.7;font-size:0.68rem;white-space:nowrap}
+.exam-strip-none{background:#f0fdf4;color:var(--muted);padding:6px 16px;font-size:0.72rem;font-weight:600;text-align:center;cursor:pointer;flex-shrink:0}
+
+/* ── FILTER COUNTS ───────────────────── */
+.f-tab .tab-count{
+  display:inline-block;background:rgba(255,255,255,0.25);
+  border-radius:10px;padding:0px 5px;font-size:0.62rem;
+  margin-left:4px;font-weight:800;
+}
+.f-tab:not(.active) .tab-count{background:var(--primary-lt);color:var(--primary-dk)}
+
+/* ── FAB SUBJECT ROW ─────────────────── */
+.fab-subject-row{display:flex;gap:5px;overflow-x:auto;margin-bottom:10px;padding-bottom:2px}
+.fab-subject-row::-webkit-scrollbar{display:none}
+.fab-subj{flex-shrink:0;padding:5px 10px;border-radius:20px;font-size:0.7rem;font-weight:800;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;transition:all 0.15s}
+.fab-subj.active{background:var(--primary);border-color:var(--primary);color:white}
+
+/* ── LINE SETTINGS (2 parents) ───────── */
+.parent-card{background:var(--surface2);border-radius:12px;padding:14px;margin-bottom:10px;border:1.5px solid var(--border)}
+.parent-card-title{font-size:0.82rem;font-weight:800;margin-bottom:10px;color:var(--text);display:flex;align-items:center;gap:6px}
+.parent-status{width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block}
+.parent-status.active{background:var(--low)}
+
+/* ── MARK ALL DONE ───────────────────── */
+.mark-all-btn{width:100%;padding:9px;background:var(--primary-lt);color:var(--primary-dk);border-radius:10px;font-size:0.78rem;font-weight:800;margin-bottom:10px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;gap:6px}
+.mark-all-btn:active{background:var(--primary);color:white}
+
+/* ── UNDATED FILTER ──────────────────── */
+/* already handled by f-tab */
+
+/* ── OFFLINE WARNING ─────────────────── */
+.offline-chip{background:#fef9c3;border:1.5px solid #fde047;border-radius:8px;padding:3px 8px;font-size:0.65rem;font-weight:800;color:#713f12;display:none}
+.offline-chip.show{display:inline-block}
 </style>
 </head>
 <body>
@@ -255,7 +509,9 @@ input,textarea,select{font-family:inherit}
         <div class="header-date" id="hdr-date"></div>
       </div>
       <div class="hdr-btns">
+        <span class="offline-chip" id="offline-chip">📴 Offline</span>
         <button class="hdr-btn" id="sync-btn" onclick="showTab('settings')">⚡ Sync</button>
+        <button class="hdr-btn" id="lang-btn" onclick="toggleLang()">🇹🇭 TH</button>
         <button class="hdr-btn" id="api-btn" onclick="showTab('settings')">🔑 AI</button>
       </div>
     </div>
@@ -271,18 +527,24 @@ input,textarea,select{font-family:inherit}
     </div>
   </div>
   <div class="sync-bar" id="sync-bar"></div>
+  <!-- Exam countdown strip -->
+  <div id="exam-strip-wrap" onclick="showTab('exam')"></div>
 
   <!-- CONTENT -->
   <div class="content">
 
     <!-- TAB: HOMEWORK -->
     <div class="tab-panel active" id="tab-hw">
-      <div class="filter-row">
-        <button class="f-tab active" onclick="setDateFilter('today',this)">วันนี้</button>
-        <button class="f-tab" onclick="setDateFilter('week',this)">สัปดาห์นี้</button>
-        <button class="f-tab" onclick="setDateFilter('month',this)">เดือนนี้</button>
-        <button class="f-tab" onclick="setDateFilter('all',this)">ทั้งหมด</button>
+      <div id="rightnow-wrap"></div>
+      <div id="install-wrap"></div>
+      <div class="filter-row" id="hw-filter-row">
+        <button class="f-tab active" id="ftab-today"   onclick="setDateFilter('today',this)">วันนี้</button>
+        <button class="f-tab"        id="ftab-week"    onclick="setDateFilter('week',this)">สัปดาห์นี้</button>
+        <button class="f-tab"        id="ftab-month"   onclick="setDateFilter('month',this)">เดือนนี้</button>
+        <button class="f-tab"        id="ftab-undated" onclick="setDateFilter('undated',this)">ไม่มีวันส่ง</button>
+        <button class="f-tab"        id="ftab-all"     onclick="setDateFilter('all',this)">ทั้งหมด</button>
       </div>
+      <button class="mark-all-btn" id="mark-all-btn" onclick="markAllDone()">✅ ทำเครื่องหมายเสร็จทั้งหมด</button>
       <div id="hw-list"></div>
     </div>
 
@@ -379,6 +641,67 @@ input,textarea,select{font-family:inherit}
       <div id="exam-list"></div>
     </div>
 
+    <!-- TAB: CALENDAR -->
+    <div class="tab-panel" id="tab-cal">
+      <div id="uniform-wrap"></div>
+      <div id="holiday-wrap"></div>
+      <div class="cal-month-header">
+        <button class="cal-nav" onclick="calPrev()">‹</button>
+        <div class="cal-month-title" id="cal-title"></div>
+        <button class="cal-nav" onclick="calNext()">›</button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+
+      <div class="sec-label">📋 กิจกรรม / วันหยุด</div>
+      <div class="add-event-form">
+        <div class="form-row">
+          <label class="form-label">ประเภท</label>
+          <div class="event-type-row">
+            <button class="event-type-chip active" id="et-holiday" onclick="setEventType('holiday',this)">🔴 วันหยุด</button>
+            <button class="event-type-chip" id="et-break" onclick="setEventType('break',this)">🔵 ปิดเทอม</button>
+            <button class="event-type-chip" id="et-event" onclick="setEventType('event',this)">🟡 กิจกรรม</button>
+            <button class="event-type-chip" id="et-uniform" onclick="setEventType('uniform',this)">🟢 แต่งกาย</button>
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">ชื่อ</label>
+          <input class="form-input" id="ev-name" placeholder="เช่น วันสงกรานต์, วันปิดเทอม...">
+        </div>
+        <div class="form-row">
+          <label class="form-label">การทำซ้ำ</label>
+          <div style="display:flex;gap:6px;flex-wrap:wrap" id="repeat-row">
+            <button class="event-type-chip active" id="rp-none"   onclick="setRepeat('none',this)">ครั้งเดียว</button>
+            <button class="event-type-chip"        id="rp-weekly" onclick="setRepeat('weekly',this)">ทุกสัปดาห์</button>
+            <button class="event-type-chip"        id="rp-monthly"onclick="setRepeat('monthly',this)">ทุกเดือน</button>
+          </div>
+        </div>
+        <div id="repeat-day-row" style="display:none" class="form-row">
+          <label class="form-label">วันที่ทำซ้ำ</label>
+          <div style="display:flex;gap:5px;flex-wrap:wrap">
+            <button class="event-type-chip" id="wd-0" onclick="toggleWeekday(0,this)">อา</button>
+            <button class="event-type-chip" id="wd-1" onclick="toggleWeekday(1,this)">จ</button>
+            <button class="event-type-chip" id="wd-2" onclick="toggleWeekday(2,this)">อ</button>
+            <button class="event-type-chip" id="wd-3" onclick="toggleWeekday(3,this)">พ</button>
+            <button class="event-type-chip" id="wd-4" onclick="toggleWeekday(4,this)">พฤ</button>
+            <button class="event-type-chip" id="wd-5" onclick="toggleWeekday(5,this)">ศ</button>
+            <button class="event-type-chip" id="wd-6" onclick="toggleWeekday(6,this)">ส</button>
+          </div>
+        </div>
+        <div class="form-row-2" id="date-range-row">
+          <div class="form-row" style="margin-bottom:0">
+            <label class="form-label">วันเริ่ม</label>
+            <input class="form-input" id="ev-start" type="date">
+          </div>
+          <div class="form-row" style="margin-bottom:0">
+            <label class="form-label">วันสิ้นสุด</label>
+            <input class="form-input" id="ev-end" type="date">
+          </div>
+        </div>
+        <button class="submit-btn mt-2" onclick="addEvent()">+ เพิ่มกิจกรรม</button>
+      </div>
+      <div id="event-list"></div>
+    </div>
+
     <!-- TAB: SETTINGS -->
     <div class="tab-panel" id="tab-settings">
       <div class="sec-label">⚙️ การตั้งค่า</div>
@@ -417,26 +740,49 @@ input,textarea,select{font-family:inherit}
         </div>
       </div>
 
-      <!-- Line Notify -->
+      <!-- Line Notify — 2 parents -->
       <div class="settings-card">
-        <div class="settings-title">💬 Line Notify (แจ้งเตือนเช้า)</div>
+        <div class="settings-title">💬 Line Notify — แจ้งเตือนเช้า</div>
         <div class="settings-row">
-          <label class="settings-label">Line Notify Token</label>
-          <input class="settings-input" id="line-token-inp" type="password" placeholder="วาง token ที่นี่...">
-        </div>
-        <div class="settings-row">
-          <label class="settings-label">เวลาแจ้งเตือน</label>
+          <label class="settings-label">เวลาแจ้งเตือน (ทั้งคู่)</label>
           <input class="settings-input" id="line-time-inp" type="time" value="07:00">
         </div>
-        <button class="settings-btn primary" onclick="saveLineSettings()">บันทึกการตั้งค่า Line</button>
-        <button class="settings-btn success mt-2" onclick="testLineNotify()">🔔 ทดสอบส่งข้อความ</button>
+
+        <!-- Dad -->
+        <div class="parent-card">
+          <div class="parent-card-title">
+            <span class="parent-status" id="dad-status"></span>
+            👨 Dad
+          </div>
+          <div class="settings-row">
+            <label class="settings-label">Line Token</label>
+            <input class="settings-input" id="dad-token-inp" type="password" placeholder="วาง token ของคุณพ่อ...">
+          </div>
+          <button class="settings-btn primary" onclick="saveParentToken('dad')">บันทึก Token คุณพ่อ</button>
+          <button class="settings-btn success mt-2" onclick="testLineNotify('dad')">🔔 ทดสอบ (คุณพ่อ)</button>
+        </div>
+
+        <!-- Mum -->
+        <div class="parent-card">
+          <div class="parent-card-title">
+            <span class="parent-status" id="mum-status"></span>
+            👩 Mum
+          </div>
+          <div class="settings-row">
+            <label class="settings-label">Line Token</label>
+            <input class="settings-input" id="mum-token-inp" type="password" placeholder="วาง token ของคุณแม่...">
+          </div>
+          <button class="settings-btn primary" onclick="saveParentToken('mum')">บันทึก Token คุณแม่</button>
+          <button class="settings-btn success mt-2" onclick="testLineNotify('mum')">🔔 ทดสอบ (คุณแม่)</button>
+        </div>
+
         <div class="info-box">
-          วิธีรับ Token:<br>
+          วิธีรับ Token (ทำแยกกันแต่ละคน):<br>
           1. ไปที่ <a href="https://notify-bot.line.me" target="_blank">notify-bot.line.me</a><br>
-          2. Login ด้วย LINE account<br>
-          3. "Generate token" → เลือก group chat ครอบครัว<br>
+          2. Login ด้วย LINE account ของตัวเอง<br>
+          3. "Generate token" → เลือก "1-on-1 chat with LINE Notify"<br>
           4. Copy token มาวางที่นี่<br><br>
-          ⚠️ การแจ้งเตือนอัตโนมัติต้องเปิดแอปไว้ (หรือใช้ Vercel Cron ในภายหลัง)
+          ⚠️ แต่ละคนต้องตั้งค่าบนโทรศัพท์ของตัวเอง
         </div>
       </div>
 
@@ -455,11 +801,113 @@ input,textarea,select{font-family:inherit}
     <button class="nav-btn active" id="nav-hw" onclick="showTab('hw')"><span class="icon">📚</span>การบ้าน</button>
     <button class="nav-btn" id="nav-todo" onclick="showTab('todo')"><span class="icon">📋</span>ต้องทำ</button>
     <button class="nav-btn" id="nav-add" onclick="showTab('add')"><span class="icon">➕</span>เพิ่มงาน</button>
-    <button class="nav-btn" id="nav-exam" onclick="showTab('exam')"><span class="icon">🎯</span>สอบ</button>
+    <button class="nav-btn" id="nav-cal" onclick="showTab('cal')"><span class="icon">📅</span>ปฏิทิน</button>
     <button class="nav-btn" id="nav-settings" onclick="showTab('settings')"><span class="icon">⚙️</span>ตั้งค่า</button>
   </div>
 
 </div><!-- /app -->
+
+<!-- Edit Sheet -->
+<div class="edit-sheet-overlay" id="edit-overlay" onclick="closeEditSheet(event)">
+  <div class="edit-sheet">
+    <button class="edit-sheet-close" onclick="closeEditSheetDirect()">✕</button>
+    <div class="edit-sheet-title">✏️ แก้ไขงาน</div>
+    <input class="form-input" id="edit-title" style="margin-bottom:10px" placeholder="ชื่องาน">
+    <div class="form-label" style="margin-bottom:6px">วิชา</div>
+    <div class="edit-subject-row" id="edit-subject-row">
+      <button class="subj-chip" data-subj="Math" onclick="setEditSubj('Math',this)">🔢 คณิต</button>
+      <button class="subj-chip" data-subj="Thai" onclick="setEditSubj('Thai',this)">📖 ไทย</button>
+      <button class="subj-chip" data-subj="English" onclick="setEditSubj('English',this)">🔤 อังกฤษ</button>
+      <button class="subj-chip" data-subj="Science" onclick="setEditSubj('Science',this)">🔬 วิทย์</button>
+      <button class="subj-chip" data-subj="Social" onclick="setEditSubj('Social',this)">🌍 สังคม</button>
+      <button class="subj-chip" data-subj="Chinese" onclick="setEditSubj('Chinese',this)">🀄 จีน</button>
+      <button class="subj-chip" data-subj="PE" onclick="setEditSubj('PE',this)">⚽ พลศึกษา</button>
+      <button class="subj-chip" data-subj="Other" onclick="setEditSubj('Other',this)">📝 อื่นๆ</button>
+    </div>
+    <div class="form-row-2" style="margin-bottom:10px">
+      <div>
+        <label class="form-label">วันส่ง</label>
+        <input class="form-input" id="edit-due" type="date">
+      </div>
+      <div>
+        <label class="form-label">คะแนน</label>
+        <input class="form-input" id="edit-points" type="number" min="0" placeholder="0">
+      </div>
+    </div>
+    <div class="type-toggle" style="margin-bottom:10px">
+      <button class="type-btn active" id="edit-type-hw"   onclick="setEditType('homework')">📚 การบ้าน</button>
+      <button class="type-btn"        id="edit-type-todo" onclick="setEditType('todo')">📋 ต้องทำ</button>
+    </div>
+    <button class="edit-save-btn" onclick="saveEdit()">💾 บันทึก</button>
+  </div>
+</div>
+
+<!-- FAB -->
+<button class="fab" id="fab-btn" onclick="toggleFab()">+</button>
+<div class="fab-sheet" id="fab-sheet">
+  <div class="fab-backdrop" onclick="closeFab()"></div>
+  <div class="fab-menu">
+    <div class="fab-menu-title" id="fab-title">เพิ่มงานใหม่</div>
+    <div class="fab-options">
+      <button class="fab-opt" onclick="fabCamera()">
+        <span class="fab-icon">📷</span>
+        <span id="fab-cam-lbl">ถ่ายรูป</span>
+      </button>
+      <button class="fab-opt" onclick="fabGallery()">
+        <span class="fab-icon">🖼️</span>
+        <span id="fab-gal-lbl">เลือกรูป</span>
+      </button>
+      <button class="fab-opt" onclick="fabManual()">
+        <span class="fab-icon">✏️</span>
+        <span id="fab-man-lbl">พิมพ์เอง</span>
+      </button>
+    </div>
+    <div class="fab-quick-form" id="fab-quick-form" style="display:none">
+      <input class="fab-quick-input" id="fab-title-inp" placeholder="ชื่องาน..." />
+      <div class="fab-subject-row">
+        <button class="fab-subj active" data-s="Other"   onclick="setFabSubj('Other',this)">📝 อื่นๆ</button>
+        <button class="fab-subj"        data-s="Math"    onclick="setFabSubj('Math',this)">🔢 คณิต</button>
+        <button class="fab-subj"        data-s="Thai"    onclick="setFabSubj('Thai',this)">📖 ไทย</button>
+        <button class="fab-subj"        data-s="English" onclick="setFabSubj('English',this)">🔤 อังกฤษ</button>
+        <button class="fab-subj"        data-s="Science" onclick="setFabSubj('Science',this)">🔬 วิทย์</button>
+        <button class="fab-subj"        data-s="Social"  onclick="setFabSubj('Social',this)">🌍 สังคม</button>
+        <button class="fab-subj"        data-s="Chinese" onclick="setFabSubj('Chinese',this)">🀄 จีน</button>
+        <button class="fab-subj"        data-s="PE"      onclick="setFabSubj('PE',this)">⚽ PE</button>
+      </div>
+      <div class="quick-date-row" id="quick-date-row">
+        <button class="qdate active" id="qd-none" onclick="setQDate('none',this)">ไม่มีวันส่ง</button>
+        <button class="qdate" id="qd-today" onclick="setQDate('today',this)">วันนี้</button>
+        <button class="qdate" id="qd-tomorrow" onclick="setQDate('tomorrow',this)">พรุ่งนี้</button>
+        <button class="qdate" id="qd-friday" onclick="setQDate('friday',this)">ศุกร์นี้</button>
+        <button class="qdate" id="qd-nextweek" onclick="setQDate('nextweek',this)">อาทิตย์หน้า</button>
+      </div>
+      <div class="fab-row">
+        <div class="fab-type-toggle">
+          <button class="fab-type-btn active" id="fab-type-hw" onclick="setFabType('homework')">📚 การบ้าน</button>
+          <button class="fab-type-btn" id="fab-type-todo" onclick="setFabType('todo')">📋 ต้องทำ</button>
+        </div>
+        <button class="fab-add-btn" onclick="fabAddTask()">+ เพิ่ม</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Celebration overlay -->
+<div class="celebration-overlay" id="celebration">
+  <div class="celebration-box">
+    <span class="celebration-emoji" id="cel-emoji">🎉</span>
+    <div class="celebration-title" id="cel-title">หนูเก่งมาก!</div>
+    <div class="celebration-sub" id="cel-sub">ทำการบ้านวันนี้ครบแล้ว!</div>
+    <div class="celebration-stars" id="cel-stars">⭐⭐⭐</div>
+    <button class="celebration-close" onclick="closeCelebration()">ขอบคุณ 😊</button>
+  </div>
+</div>
+
+<!-- Undo toast -->
+<div class="undo-toast" id="undo-toast">
+  <span id="undo-msg">ลบแล้ว</span>
+  <button class="undo-btn" onclick="undoDelete()">ยกเลิก</button>
+</div>
 
 <div class="toast" id="toast"></div>
 
@@ -520,6 +968,9 @@ async function init() {
   document.getElementById('loading-screen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   renderAll();
+  applyLang();
+  updateParentStatus();
+  updateOfflineChip();
 }
 
 /* ═══════════════════════════════════════
@@ -586,16 +1037,19 @@ const diffD   = d  => Math.round((d - today()) / 86400000);
 
 function dueLabel(due) {
   if (!due) return null;
+  const L = t();
   const d = parseD(due), diff = diffD(d);
-  if (diff < 0)   return { text:`เกิน ${Math.abs(diff)}วัน`, cls:'urgent' };
-  if (diff === 0) return { text:'วันนี้!', cls:'urgent' };
-  if (diff === 1) return { text:'พรุ่งนี้', cls:'soon' };
-  if (diff <= 7)  return { text:`อีก ${diff}วัน`, cls:'soon' };
-  return { text: d.toLocaleDateString('th-TH',{day:'numeric',month:'short'}), cls:'' };
+  if (diff < 0)   return { text:`${L.dueOver} ${Math.abs(diff)}${L.dueDays}`, cls:'urgent' };
+  if (diff === 0) return { text: L.dueTodayLabel, cls:'urgent' };
+  if (diff === 1) return { text: L.dueTomorrow, cls:'soon' };
+  if (diff <= 7)  return { text:`${L.dueIn} ${diff}${L.dueDays}`, cls:'soon' };
+  const locale = currentLang === 'th' ? 'th-TH' : 'en-GB';
+  return { text: d.toLocaleDateString(locale,{day:'numeric',month:'short'}), cls:'' };
 }
 
 function inDateFilter(t) {
-  if (dateFilter === 'all') return true;
+  if (dateFilter === 'all')     return true;
+  if (dateFilter === 'undated') return !t.due_date;
   if (!t.due_date) return false;
   const d = parseD(t.due_date), td = today();
   if (dateFilter === 'today') return diffD(d) === 0;
@@ -651,35 +1105,44 @@ function renderHeader() {
 /* ═══════════════════════════════════════
    SUBJECT TAGS
 ═══════════════════════════════════════ */
-const SUBJ = { Math:'คณิต',Thai:'ไทย',English:'อังกฤษ',Science:'วิทยาฯ',Social:'สังคม',Chinese:'จีน',PE:'พลศึกษา',Other:'อื่นๆ' };
+const SUBJ_TH = { Math:'คณิต',Thai:'ไทย',English:'อังกฤษ',Science:'วิทยาฯ',Social:'สังคม',Chinese:'จีน',PE:'พลศึกษา',Other:'อื่นๆ' };
+const SUBJ_EN = { Math:'Math',Thai:'Thai',English:'English',Science:'Science',Social:'Social',Chinese:'Chinese',PE:'PE',Other:'Other' };
 function subjectTag(s) {
-  return `<span class="tag tag-${(s||'other').toLowerCase()}">${SUBJ[s]||s||'อื่นๆ'}</span>`;
+  const SUBJ = currentLang === 'th' ? SUBJ_TH : SUBJ_EN;
+  return `<span class="tag tag-${(s||'other').toLowerCase()}">${SUBJ[s]||s||'Other'}</span>`;
 }
 
 /* ═══════════════════════════════════════
    TASK CARD HTML
 ═══════════════════════════════════════ */
+const SUBJ_ICONS = {Math:'🔢',Thai:'📖',English:'🔤',Science:'🔬',Social:'🌍',Chinese:'🀄',PE:'⚽',Other:'📝'};
+
 function taskCardHTML(t) {
   const dl = dueLabel(t.due_date);
-  const dueHTML    = dl ? `<span class="due-chip ${dl.cls}">${dl.text}</span>` : '';
-  const pointsTag  = t.points ? `<span class="tag tag-points">⭐ ${t.points}คะแนน</span>` : '';
-  const origHTML   = t.original_text && t.original_text !== t.parsed_title
+  const overdue = isOverdue(t);
+  const dueHTML   = dl ? `<span class="due-chip ${dl.cls}">${dl.text}</span>` : '';
+  const pointsTag = t.points ? `<span class="tag tag-points">⭐ ${t.points}คะแนน</span>` : '';
+  const overdueTag = overdue ? `<span class="overdue-badge">เกินกำหนด!</span>` : '';
+  const origHTML  = t.original_text && t.original_text !== t.parsed_title
     ? `<div class="task-original">${escHtml(t.original_text)}</div>` : '';
+  const icon = SUBJ_ICONS[t.subject] || '📝';
+  const cardClass = `task-card p-${t.priority||'low'} ${t.is_done?'is-done':''} ${overdue?'overdue':''}`;
   return `
-  <div class="task-card p-${t.priority||'low'} ${t.is_done?'is-done':''}" id="tc-${t.id}">
+  <div class="${cardClass}" id="tc-${t.id}" ondblclick="openEditSheet('${t.id}')">
+    <div class="swipe-hint right">✓ เสร็จแล้ว</div>
+    <div class="swipe-hint left">🗑 ลบ</div>
     <div class="check-wrap"><div class="check" onclick="toggleTask('${t.id}')">✓</div></div>
     <div class="task-body">
-      <div class="task-title">${escHtml(t.parsed_title||t.original_text)}</div>
+      <div class="task-title">${icon} ${escHtml(t.parsed_title||t.original_text)}</div>
       ${origHTML}
       <div class="task-meta">
         ${subjectTag(t.subject)}
-        <span class="tag ${t.type==='homework'?'tag-hw':'tag-todo'}">${t.type==='homework'?'การบ้าน':'ต้องทำ'}</span>
-        ${pointsTag}${dueHTML}
+        <span class="tag ${t.type==='homework'?'tag-hw':'tag-todo'}">${t.type==='homework'?t_().hwType:t_().todoType}</span>
+        ${pointsTag}${overdueTag}${dueHTML}
       </div>
     </div>
-    <button class="task-delete" onclick="deleteTask('${t.id}')">✕</button>
-  </div>`;
-}
+    <button class="task-delete" onclick="softDeleteTask('${t.id}')">✕</button>
+  </div>`;}
 
 /* ═══════════════════════════════════════
    RENDER LISTS
@@ -695,15 +1158,17 @@ function renderHW() {
     return a.due_date ? -1 : b.due_date ? 1 : 0;
   });
   if (!tasks.length) {
+    const L = t();
     el.innerHTML = `<div class="empty"><div class="emoji">🎉</div>
-      <div class="msg">ไม่มีการบ้าน${dateFilter==='today'?'วันนี้':''}</div>
-      <div class="sub">เพิ่มงานใหม่ที่แท็บ "เพิ่มงาน"</div></div>`; return;
+      <div class="msg">${dateFilter==='today'?L.noHwToday:L.noHw}</div>
+      <div class="sub">${L.addNew}</div></div>`; return;
   }
   const pending = tasks.filter(t=>!t.is_done);
   const done    = tasks.filter(t=>t.is_done);
   let html = pending.map(taskCardHTML).join('');
-  if (done.length) html += `<div class="sec-label">✅ เสร็จแล้ว (${done.length})</div>` + done.map(taskCardHTML).join('');
+  if (done.length) html += `<div class="sec-label">✅ ${t().doneSection} (${done.length})</div>` + done.map(taskCardHTML).join('');
   el.innerHTML = html;
+  attachSwipeListeners();
 }
 
 function renderTodo() {
@@ -712,11 +1177,13 @@ function renderTodo() {
   if (todoFilter==='pending') tasks = tasks.filter(t=>!t.is_done);
   if (todoFilter==='done')    tasks = tasks.filter(t=>t.is_done);
   if (!tasks.length) {
+    const L = t();
     el.innerHTML = `<div class="empty"><div class="emoji">✨</div>
-      <div class="msg">ไม่มีรายการ</div>
-      <div class="sub">เพิ่มสิ่งที่ต้องทำที่แท็บ "เพิ่มงาน"</div></div>`; return;
+      <div class="msg">${L.noTodo}</div>
+      <div class="sub">${L.addTodo}</div></div>`; return;
   }
   el.innerHTML = tasks.map(taskCardHTML).join('');
+  attachSwipeListeners();
 }
 
 /* ═══════════════════════════════════════
@@ -725,9 +1192,10 @@ function renderTodo() {
 function renderExams() {
   const el = document.getElementById('exam-list');
   if (!STATE.exams.length) {
+    const L = t();
     el.innerHTML = `<div class="empty"><div class="emoji">📅</div>
-      <div class="msg">ยังไม่มีรายการสอบ</div>
-      <div class="sub">สร้างรายการสอบด้านบน</div></div>`; return;
+      <div class="msg">${L.noExam}</div>
+      <div class="sub">${L.addExam}</div></div>`; return;
   }
   el.innerHTML = STATE.exams.map(ex => {
     const topics = STATE.topics.filter(t => t.exam_id === ex.id);
@@ -735,11 +1203,12 @@ function renderExams() {
     const pct    = topics.length ? Math.round((doneT/topics.length)*100) : 0;
     let countdown='', ccls='';
     if (ex.exam_date) {
+      const L = t();
       const diff = diffD(parseD(ex.exam_date));
-      if (diff<0)       { countdown=`เกินแล้ว ${Math.abs(diff)}วัน`; }
-      else if (diff===0){ countdown='สอบวันนี้!'; }
-      else if (diff<=30){ countdown=`อีก ${diff}วัน`; ccls='soon'; }
-      else              { countdown=`อีก ${diff}วัน`; ccls='far'; }
+      if (diff<0)       { countdown=`${L.daysOver} ${Math.abs(diff)}${L.daysAgo}`; }
+      else if (diff===0){ countdown=L.examToday; }
+      else if (diff<=30){ countdown=`${L.daysLeft} ${diff}${L.daysAgo}`; ccls='soon'; }
+      else              { countdown=`${L.daysLeft} ${diff}${L.daysAgo}`; ccls='far'; }
     }
     const dateStr = ex.exam_date
       ? parseD(ex.exam_date).toLocaleDateString('th-TH',{day:'numeric',month:'long',year:'numeric'}) : '';
@@ -761,10 +1230,10 @@ function renderExams() {
         </div>
       </div>
       <div class="exam-progress"><div class="exam-bar" style="width:${pct}%"></div></div>
-      <div class="exam-pct">เรียนแล้ว ${doneT}/${topics.length} หัวข้อ (${pct}%)</div>
+      <div class="exam-pct">${t().studiedOf} ${doneT}/${topics.length} ${t().topics} (${pct}%)</div>
       ${topicsHTML}
       <div class="add-topic-row">
-        <input class="add-topic-input" id="tp-${ex.id}" placeholder="เพิ่มหัวข้อ..." onkeydown="if(event.key==='Enter')addTopic('${ex.id}')">
+        <input class="add-topic-input" id="tp-${ex.id}" placeholder="${t().topicPh}" onkeydown="if(event.key==='Enter')addTopic('${ex.id}')">
         <button class="add-topic-btn" onclick="addTopic('${ex.id}')">+</button>
       </div>
     </div>`;
@@ -778,11 +1247,14 @@ async function toggleTask(id) {
   const t = STATE.tasks.find(x=>x.id===id); if (!t) return;
   const newVal = !t.is_done;
   t.is_done = newVal; renderAll();
+  attachSwipeListeners();
+  if (newVal) checkCelebration();
   if (USE_LOCAL) { saveLocal(); }
   else {
     const { error } = await sb.from('tasks').update({ is_done: newVal }).eq('id', id);
     if (error) { t.is_done = !newVal; renderAll(); toast('❌ ซิงค์ไม่ได้'); return; }
   }
+  if (newVal) navigator.vibrate && navigator.vibrate(60);
   toast(newVal ? '✅ เสร็จแล้ว!' : '↩ ยกเลิกเครื่องหมาย');
 }
 
@@ -928,16 +1400,7 @@ async function parseImage() {
   const spin = document.getElementById('parse-spinner');
   btn.disabled = true; spin.classList.remove('hidden');
 
-  const PROMPT = `You are a homework parser for a Thai P.6 student preparing for ม.1 entrance exams.
-Extract ALL tasks from this notebook image. For each task return JSON with:
-- original_text: exact text as written (preserve Thai and English exactly, no changes)
-- parsed_title: clean concise English/Thai summary (max 80 chars)
-- type: "homework" (assignments with content to complete) or "todo" (bring items, admin, one-time actions)
-- subject: Math | Thai | English | Science | Social | Chinese | PE | Other
-- due_date: YYYY-MM-DD if a date is mentioned, else null
-- points: integer if points/marks mentioned, else null
-- priority: "high" if has points OR due within 2 days, "med" if due this week, "low" otherwise
-Return ONLY a valid JSON array. No markdown, no backticks, no explanation.`;
+  const PROMPT = PARSE_SYSTEM_PROMPT;
 
   parsedResults = [];
   const total = pendingImages.length;
@@ -1002,27 +1465,70 @@ Return ONLY a valid JSON array. No markdown, no backticks, no explanation.`;
   }
 }
 
+function isDuplicate(task) {
+  // Check if a very similar task already exists
+  const norm = s => (s||'').toLowerCase().replace(/\s+/g,' ').trim();
+  const incoming = norm(task.original_text);
+  return STATE.tasks.some(existing => {
+    const existing_norm = norm(existing.original_text);
+    // Exact match
+    if (existing_norm === incoming) return true;
+    // High similarity: one contains the other (>80% length match)
+    const shorter = incoming.length < existing_norm.length ? incoming : existing_norm;
+    const longer  = incoming.length < existing_norm.length ? existing_norm : incoming;
+    if (shorter.length > 10 && longer.includes(shorter)) return true;
+    return false;
+  });
+}
+
 function showParsedPreview(items) {
-  document.getElementById('parsed-list').innerHTML = items.map((t,i) => `
-    <div class="parsed-item">
-      <input type="checkbox" checked id="pi-${i}">
+  const L = t();
+  document.getElementById('parsed-list').innerHTML = items.map((task,i) => {
+    const dup = isDuplicate(task);
+    return `
+    <div class="parsed-item" style="${dup?'opacity:0.6;border-color:#fca5a5':''}">
+      <input type="checkbox" ${dup?'':'checked'} id="pi-${i}">
       <div class="parsed-item-body">
-        <div class="parsed-item-title">${escHtml(t.parsed_title)}</div>
-        ${t.original_text!==t.parsed_title?`<div class="parsed-item-orig">${escHtml(t.original_text)}</div>`:''}
+        <div class="parsed-item-title">${escHtml(task.parsed_title)}
+          ${dup?`<span class="tag tag-urgent" style="margin-left:4px;font-size:0.6rem">${L.dupWarning}</span>`:''}
+        </div>
+        ${task.original_text!==task.parsed_title?`<div class="parsed-item-orig">${escHtml(task.original_text)}</div>`:''}
         <div class="parsed-item-tags">
-          ${subjectTag(t.subject)}
-          <span class="tag ${t.type==='homework'?'tag-hw':'tag-todo'}">${t.type==='homework'?'การบ้าน':'ต้องทำ'}</span>
-          ${t.points?`<span class="tag tag-points">⭐${t.points}</span>`:''}
-          ${t.due_date?`<span class="tag" style="background:#fff3e0;color:#e65100">📅${t.due_date}</span>`:''}
+          ${subjectTag(task.subject)}
+          <span class="tag ${task.type==='homework'?'tag-hw':'tag-todo'}">${task.type==='homework'?L.hwType:L.todoType}</span>
+          ${task.points?`<span class="tag tag-points">⭐${task.points}</span>`:''}
+          ${task.due_date?`<span class="tag" style="background:#fff3e0;color:#e65100">📅${task.due_date}</span>`:''}
         </div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   document.getElementById('parsed-preview').classList.add('visible');
+
+  // Count duplicates
+  const dupCount = items.filter(isDuplicate).length;
+  if (dupCount > 0) {
+    toast(`⚠️ พบ ${dupCount} งานที่อาจซ้ำ — ยกเลิกการเลือกแล้ว`);
+  }
 }
 
 async function confirmParsed() {
   const selected = parsedResults.filter((_,i) => document.getElementById('pi-'+i)?.checked);
   if (!selected.length) { toast('⚠️ กรุณาเลือกอย่างน้อย 1 งาน'); return; }
+
+  // Split events from tasks
+  const autoEvents = selected.filter(r => r.record_type === 'event');
+  autoEvents.forEach(ev => {
+    if (ev.name) {
+      USER_EVENTS.push({ id: uid(), name: ev.name, type: ev.type||'event',
+        date: ev.date||null, start: ev.start||null, end: ev.end||null });
+    }
+  });
+  if (autoEvents.length) { saveEvents(); toast(`📅 บันทึก ${autoEvents.length} กิจกรรมอัตโนมัติ`); }
+
+  const taskItems = selected.filter(r => r.record_type !== 'event');
+  if (!taskItems.length && autoEvents.length) {
+    closeFab(); showTab('cal'); renderCalendar(); renderEventList(); return;
+  }
   const btn = document.getElementById('confirm-btn');
   const txt = document.getElementById('confirm-txt');
   const spin = document.getElementById('confirm-spinner');
@@ -1072,12 +1578,29 @@ async function testLineNotify() {
 
 function buildLineMessage() {
   const d = new Date();
+  const todayStr = fmtDate(d);
   const dateStr = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()+543}`;
-  const urgent  = STATE.tasks.filter(t=>!t.is_done&&t.type==='homework'&&t.priority==='high');
+  const dow = d.getDay();
+
+  // Holiday check
+  const todayEvs = getEventsForDate(todayStr).filter(e => e.type==='holiday'||e.type==='break');
+  const uniforms = getUniformForDate(todayStr);
+
+  const urgent    = STATE.tasks.filter(t=>!t.is_done&&t.type==='homework'&&t.priority==='high');
   const todayTodo = STATE.tasks.filter(t=>!t.is_done&&t.type==='todo');
-  const done    = STATE.tasks.filter(t=>t.is_done).length;
-  const total   = STATE.tasks.length;
-  let msg = `\n🌅 สรุปการบ้านวันนี้ ${dateStr}\n`;
+  const done      = STATE.tasks.filter(t=>t.is_done).length;
+  const total     = STATE.tasks.length;
+
+  let msg = `\n🌅 สวัสดีตอนเช้า Ryuji! ${dateStr}\n`;
+
+  // Holiday banner
+  if (todayEvs.length) {
+    msg += `\n🎉 ${todayEvs[0].name} — วันหยุด!\n`;
+  }
+  // Uniform reminder
+  if (uniforms.length) {
+    uniforms.forEach(u => { msg += `\n${u.icon} วันนี้ใส่${u.name}!\n`; });
+  }
   if (urgent.length) {
     msg += `\n📚 การบ้านด่วน:\n`;
     urgent.forEach(t => { msg += `• ${t.parsed_title||t.original_text}\n`; });
@@ -1112,21 +1635,7 @@ async function sendLineMessage(token, msg) {
   }
 }
 
-function scheduleLineCheck() {
-  // Check every minute if it's time to send
-  setInterval(() => {
-    if (!LINETOKEN()) return;
-    const now   = new Date();
-    const hhmm  = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-    const target = LINETIME();
-    const lastSent = localStorage.getItem('ht_lastnotify');
-    const today_ = new Date().toDateString();
-    if (hhmm === target && lastSent !== today_) {
-      localStorage.setItem('ht_lastnotify', today_);
-      sendLineMessage(LINETOKEN(), buildLineMessage());
-    }
-  }, 60000);
-}
+// scheduleLineCheck moved to 2-parent version above
 
 /* ═══════════════════════════════════════
    SETTINGS ACTIONS
@@ -1147,7 +1656,7 @@ function saveLineSettings() {
 }
 
 async function clearAllData() {
-  if (!confirm('ลบข้อมูลทั้งหมดใช่ไหม? ไม่สามารถกู้คืนได้')) return;
+  if (!confirm(t().confirmClear)) return;
   STATE = { tasks:[], exams:[], topics:[] };
   saveLocal();
   if (!USE_LOCAL) {
@@ -1166,10 +1675,11 @@ async function clearAllData() {
 ═══════════════════════════════════════ */
 function showTab(tab) {
   currentTab = tab;
-  ['hw','todo','add','exam','settings'].forEach(t => {
+  ['hw','todo','add','exam','cal','settings'].forEach(t => {
     document.getElementById('tab-'+t)?.classList.toggle('active', t===tab);
     document.getElementById('nav-'+t)?.classList.toggle('active', t===tab);
   });
+  if (tab === 'cal') { renderCalendar(); renderEventList(); renderUniformBanner(); renderHolidayBanner(); }
 }
 
 function setDateFilter(f, btn) {
@@ -1210,11 +1720,32 @@ function setSyncStatus(ok) {
 /* ═══════════════════════════════════════
    RENDER ALL
 ═══════════════════════════════════════ */
+function attachSwipeListeners() {
+  document.querySelectorAll('.task-card[id^="tc-"]').forEach(el => {
+    if (el.dataset.swipe) return; // already attached
+    el.dataset.swipe = '1';
+    const id = el.id.replace('tc-','');
+    addSwipeListeners(el, id);
+  });
+}
+
 function renderAll() {
   renderHeader();
   renderHW();
   renderTodo();
   renderExams();
+  renderRightNow();
+  renderUniformBanner();
+  renderHolidayBanner();
+  renderInstallBanner();
+  renderExamStrip();
+  updateFilterCounts();
+  updateOfflineChip();
+  updateParentStatus();
+  // Show/hide mark-all btn
+  const hw = STATE.tasks.filter(t => t.type==='homework' && !t.is_done && inDateFilter(t));
+  const btn = document.getElementById('mark-all-btn');
+  if (btn) btn.style.display = hw.length > 1 ? 'flex' : 'none';
 }
 
 /* ═══════════════════════════════════════
@@ -1240,6 +1771,795 @@ function setBtnLoading(btnId, txtId, spinnerId, loading) {
 }
 
 /* ═══════════════════════════════════════
+   i18n — BILINGUAL SUPPORT
+═══════════════════════════════════════ */
+const LANG = {
+  th: {
+    appTitle: 'การบ้านของฉัน',
+    today: 'วันนี้', week: 'สัปดาห์นี้', month: 'เดือนนี้', all: 'ทั้งหมด',
+    pending: 'ค้างอยู่', done: 'เสร็จแล้ว',
+    urgent: 'ด่วน', pendingStat: 'ค้างอยู่', doneStat: 'เสร็จ', total: 'ทั้งหมด',
+    hwTab: 'การบ้าน', todoTab: 'ต้องทำ', addTab: 'เพิ่มงาน', examTab: 'สอบ', settingsTab: 'ตั้งค่า',
+    noHwToday: 'ไม่มีการบ้านวันนี้', noHw: 'ไม่มีการบ้าน', addNew: 'เพิ่มงานใหม่ที่แท็บ "เพิ่มงาน"',
+    noTodo: 'ไม่มีรายการ', addTodo: 'เพิ่มสิ่งที่ต้องทำที่แท็บ "เพิ่มงาน"',
+    noExam: 'ยังไม่มีรายการสอบ', addExam: 'สร้างรายการสอบด้านบน',
+    doneSection: 'เสร็จแล้ว',
+    hwType: 'การบ้าน', todoType: 'ต้องทำ',
+    takePhoto: '📷 ถ่ายรูป', selectPhoto: '🖼️ เลือกหลายรูป',
+    parseBtn: '✨ อ่านการบ้านด้วย AI', parsing: 'กำลังอ่าน...', parsingN: 'กำลังอ่านรูป',
+    parsedHeader: '✅ ตรวจสอบก่อนบันทึก',
+    saveSelected: '💾 บันทึกที่เลือก', saving: 'กำลังบันทึก...',
+    manualTitle: '✏️ เพิ่มด้วยตนเอง',
+    taskName: 'ชื่องาน', taskType: 'ประเภท', subject: 'วิชา', points: 'คะแนน (ถ้ามี)', dueDate: 'วันส่ง',
+    addBtn: '+ เพิ่มงาน',
+    hwTypeBtn: '📚 การบ้าน', todoTypeBtn: '📋 สิ่งที่ต้องทำ',
+    subjects: ['เลือกวิชา...','คณิตศาสตร์','ภาษาไทย','ภาษาอังกฤษ','วิทยาศาสตร์','สังคมศึกษา','ภาษาจีน','พลศึกษา'],
+    examPrepTitle: '🎯 เตรียมสอบเข้า ม.1',
+    newExam: '+ สร้างการสอบใหม่', examName: 'ชื่อการสอบ', examDate: 'วันสอบ', createExam: '+ สร้าง',
+    examNamePh: 'เช่น สอบเข้า ม.1 Triam Udom',
+    topicPh: 'เพิ่มหัวข้อ...',
+    studiedOf: 'เรียนแล้ว', topics: 'หัวข้อ',
+    daysLeft: 'อีก', daysOver: 'เกินแล้ว', daysAgo: 'วัน', examToday: 'สอบวันนี้!',
+    dueTodayLabel: 'วันนี้!', dueTomorrow: 'พรุ่งนี้', dueIn: 'อีก', dueOver: 'เกิน', dueDays: 'วัน',
+    settingsTitle: '⚙️ การตั้งค่า',
+    retryBtn: '🔄 ลองเชื่อมต่อ Supabase ใหม่', clearBtn: '🗑 ลบข้อมูลทั้งหมด',
+    confirmClear: 'ลบข้อมูลทั้งหมดใช่ไหม? ไม่สามารถกู้คืนได้',
+    testLine: '🔔 ทดสอบส่งข้อความ', saveLineSetting: 'บันทึกการตั้งค่า Line',
+    notifyTime: 'เวลาแจ้งเตือน', lineToken: 'Line Notify Token',
+    uploadSection: '📷 อัปโหลดรูปสมุดการบ้าน',
+    dupWarning: '⚠️ อาจซ้ำ',
+    taskNamePh: 'เช่น ทำแบบฝึกหัดคณิตฯ หน้า 20-21',
+    pointsPh: 'เช่น 10',
+  },
+  en: {
+    appTitle: 'My Homework',
+    today: 'Today', week: 'This Week', month: 'This Month', all: 'All',
+    pending: 'Pending', done: 'Done',
+    urgent: 'Urgent', pendingStat: 'Pending', doneStat: 'Done', total: 'Total',
+    hwTab: 'Homework', todoTab: 'To-Do', addTab: 'Add', examTab: 'Exams', settingsTab: 'Settings',
+    noHwToday: 'No homework today!', noHw: 'No homework', addNew: 'Add tasks in the "Add" tab',
+    noTodo: 'No items', addTodo: 'Add to-dos in the "Add" tab',
+    noExam: 'No exams yet', addExam: 'Create an exam above',
+    doneSection: 'Done',
+    hwType: 'Homework', todoType: 'To-Do',
+    takePhoto: '📷 Take Photo', selectPhoto: '🖼️ Select Photos',
+    parseBtn: '✨ Read Homework with AI', parsing: 'Reading...', parsingN: 'Reading image',
+    parsedHeader: '✅ Review before saving',
+    saveSelected: '💾 Save Selected', saving: 'Saving...',
+    manualTitle: '✏️ Add Manually',
+    taskName: 'Task name', taskType: 'Type', subject: 'Subject', points: 'Points (if any)', dueDate: 'Due date',
+    addBtn: '+ Add Task',
+    hwTypeBtn: '📚 Homework', todoTypeBtn: '📋 To-Do',
+    subjects: ['Select subject...','Math','Thai','English','Science','Social','Chinese','PE'],
+    examPrepTitle: '🎯 Exam Prep (ม.1)',
+    newExam: '+ Create New Exam', examName: 'Exam name', examDate: 'Exam date', createExam: '+ Create',
+    examNamePh: 'e.g. ม.1 Entrance – Triam Udom',
+    topicPh: 'Add topic...',
+    studiedOf: 'Studied', topics: 'topics',
+    daysLeft: 'in', daysOver: 'Overdue', daysAgo: 'days', examToday: 'Exam today!',
+    dueTodayLabel: 'Today!', dueTomorrow: 'Tomorrow', dueIn: 'in', dueOver: 'Overdue', dueDays: 'days',
+    settingsTitle: '⚙️ Settings',
+    retryBtn: '🔄 Retry Supabase connection', clearBtn: '🗑 Clear all data',
+    confirmClear: 'Delete all data? This cannot be undone.',
+    testLine: '🔔 Test Line message', saveLineSetting: 'Save Line Settings',
+    notifyTime: 'Notify time', lineToken: 'Line Notify Token',
+    uploadSection: '📷 Upload Homework Photo',
+    dupWarning: '⚠️ Possible duplicate',
+    taskNamePh: 'e.g. Math exercise pages 20-21',
+    pointsPh: 'e.g. 10',
+  }
+};
+
+let currentLang = localStorage.getItem('ht_lang') || 'th';
+const t = () => LANG[currentLang];
+const t_ = () => LANG[currentLang]; // alias for use inside loops where t is a variable
+
+function toggleLang() {
+  currentLang = currentLang === 'th' ? 'en' : 'th';
+  localStorage.setItem('ht_lang', currentLang);
+  applyLang();
+  renderAll();
+}
+
+function applyLang() {
+  const L = t();
+  const btn = document.getElementById('lang-btn');
+  if (btn) btn.textContent = currentLang === 'th' ? '🇹🇭 TH' : '🇬🇧 EN';
+
+  // Header
+  document.querySelector('.header h1').textContent = '📚 ' + L.appTitle;
+
+  // Filter tabs - hw
+  const hwTabs = document.querySelectorAll('#tab-hw .f-tab');
+  if (hwTabs.length >= 4) {
+    hwTabs[0].textContent = L.today;
+    hwTabs[1].textContent = L.week;
+    hwTabs[2].textContent = L.month;
+    hwTabs[3].textContent = L.all;
+  }
+
+  // Filter tabs - todo
+  const todoTabs = document.querySelectorAll('#tab-todo .f-tab');
+  if (todoTabs.length >= 3) {
+    todoTabs[0].textContent = L.pending;
+    todoTabs[1].textContent = L.done;
+    todoTabs[2].textContent = L.all;
+  }
+
+  // Stats
+  document.querySelector('.stat-pill.urgent .l').textContent  = L.urgent;
+  document.querySelector('.stat-pill.pending .l').textContent = L.pendingStat;
+  document.querySelector('.stat-pill.done .l').textContent    = L.doneStat;
+  document.querySelectorAll('.stat-pill')[3].querySelector('.l').textContent = L.total;
+
+  // Bottom nav
+  const navLabels = document.querySelectorAll('.nav-btn');
+  if (navLabels.length >= 5) {
+    navLabels[0].lastChild.textContent = L.hwTab;
+    navLabels[1].lastChild.textContent = L.todoTab;
+    navLabels[2].lastChild.textContent = L.addTab;
+    navLabels[3].lastChild.textContent = L.examTab;
+    navLabels[4].lastChild.textContent = L.settingsTab;
+  }
+
+  // Add tab
+  const camBtn  = document.querySelector('.up-btn.primary');
+  const fileBtn = document.querySelector('.up-btn.secondary');
+  if (camBtn)  camBtn.textContent  = L.takePhoto;
+  if (fileBtn) fileBtn.textContent = L.selectPhoto;
+
+  const parseBtn = document.getElementById('parse-btn-txt');
+  if (parseBtn) parseBtn.textContent = L.parseBtn;
+
+  const secLabels = document.querySelectorAll('#tab-add .sec-label');
+  if (secLabels[0]) secLabels[0].childNodes[0].textContent = L.uploadSection + ' ';
+  if (secLabels[1]) secLabels[1].childNodes[0].textContent = L.manualTitle + ' ';
+
+  // Manual form labels
+  const formLabels = document.querySelectorAll('.manual-form .form-label');
+  if (formLabels[0]) formLabels[0].textContent = L.taskName;
+  if (formLabels[1]) formLabels[1].textContent = L.taskType;
+  if (formLabels[2]) formLabels[2].textContent = L.subject;
+  if (formLabels[3]) formLabels[3].textContent = L.points;
+  if (formLabels[4]) formLabels[4].textContent = L.dueDate;
+
+  document.getElementById('type-hw').textContent   = L.hwTypeBtn;
+  document.getElementById('type-todo').textContent = L.todoTypeBtn;
+
+  const titleInp = document.getElementById('f-title');
+  if (titleInp) titleInp.placeholder = L.taskNamePh;
+  const pointsInp = document.getElementById('f-points');
+  if (pointsInp) pointsInp.placeholder = L.pointsPh;
+
+  const addBtnTxt = document.getElementById('add-btn-txt');
+  if (addBtnTxt) addBtnTxt.textContent = L.addBtn;
+
+  // Subject options
+  const subjectSel = document.getElementById('f-subject');
+  if (subjectSel) {
+    const vals = ['Other','Math','Thai','English','Science','Social','Chinese','PE'];
+    Array.from(subjectSel.options).forEach((opt, i) => { opt.text = L.subjects[i] || opt.text; });
+  }
+
+  // Exam tab
+  const examSecLabel = document.querySelector('#tab-exam .sec-label');
+  if (examSecLabel) examSecLabel.childNodes[0].textContent = L.examPrepTitle + ' ';
+  const newExamTitle = document.querySelector('.new-exam-title');
+  if (newExamTitle) newExamTitle.textContent = L.newExam;
+  const examLabels = document.querySelectorAll('.new-exam-form .form-label');
+  if (examLabels[0]) examLabels[0].textContent = L.examName;
+  if (examLabels[1]) examLabels[1].textContent = L.examDate;
+  const examNameInp = document.getElementById('exam-name-inp');
+  if (examNameInp) examNameInp.placeholder = L.examNamePh;
+  const createExamBtn = document.querySelector('.new-exam-form .submit-btn');
+  if (createExamBtn) createExamBtn.textContent = L.createExam;
+
+  // Settings
+  const settingsSecLabel = document.querySelector('#tab-settings .sec-label');
+  if (settingsSecLabel) settingsSecLabel.childNodes[0].textContent = L.settingsTitle + ' ';
+}
+
+/* ═══════════════════════════════════════
+   CALENDAR & SCHOOL EVENTS
+═══════════════════════════════════════ */
+
+// Built-in Thai public holidays 2026
+const THAI_HOLIDAYS_2026 = [
+  { date:'2026-01-01', name:'วันขึ้นปีใหม่', type:'holiday' },
+  { date:'2026-01-02', name:'วันหยุดชดเชยวันขึ้นปีใหม่', type:'holiday' },
+  { date:'2026-02-12', name:'วันมาฆบูชา', type:'holiday' },
+  { date:'2026-04-06', name:'วันจักรี', type:'holiday' },
+  { date:'2026-04-13', name:'วันสงกรานต์', type:'holiday' },
+  { date:'2026-04-14', name:'วันสงกรานต์', type:'holiday' },
+  { date:'2026-04-15', name:'วันสงกรานต์', type:'holiday' },
+  { date:'2026-05-01', name:'วันแรงงานแห่งชาติ', type:'holiday' },
+  { date:'2026-05-04', name:'วันฉัตรมงคล', type:'holiday' },
+  { date:'2026-05-11', name:'วันวิสาขบูชา', type:'holiday' },
+  { date:'2026-05-13', name:'วันพืชมงคล', type:'holiday' },
+  { date:'2026-06-03', name:'วันเฉลิมพระชนมพรรษาสมเด็จพระราชินี', type:'holiday' },
+  { date:'2026-07-09', name:'วันอาสาฬหบูชา', type:'holiday' },
+  { date:'2026-07-10', name:'วันเข้าพรรษา', type:'holiday' },
+  { date:'2026-07-28', name:'วันเฉลิมพระชนมพรรษา ร.10', type:'holiday' },
+  { date:'2026-08-12', name:'วันแม่แห่งชาติ', type:'holiday' },
+  { date:'2026-10-13', name:'วันนวมินทรมหาราช', type:'holiday' },
+  { date:'2026-10-23', name:'วันปิยมหาราช', type:'holiday' },
+  { date:'2026-11-01', name:'วันออกพรรษา', type:'holiday' },
+  { date:'2026-12-05', name:'วันพ่อแห่งชาติ', type:'holiday' },
+  { date:'2026-12-10', name:'วันรัฐธรรมนูญ', type:'holiday' },
+  { date:'2026-12-31', name:'วันสิ้นปี', type:'holiday' },
+];
+
+// Term 1 2026: ~16 May – 11 Oct 2026, Term 2: ~2 Nov 2026 – 28 Feb 2027
+const SCHOOL_TERMS = [
+  { start:'2026-05-16', end:'2026-10-11', name:'ภาคเรียนที่ 1/2569', type:'term' },
+  { start:'2026-11-02', end:'2027-02-28', name:'ภาคเรียนที่ 2/2569', type:'term' },
+];
+
+// Uniform schedule
+const UNIFORM_SCHEDULE = [
+  { day: 5, type:'pe',    icon:'⚽', name:'ชุดพลศึกษา', sub:'ทุกวันศุกร์ใส่ชุด PE' },
+  { day: 4, type:'scout', icon:'👘', name:'ชุดลูกเสือ', sub:'ทุกวันพฤหัสใส่ชุดลูกเสือ' },
+];
+
+// User events stored in localStorage
+let USER_EVENTS = JSON.parse(localStorage.getItem('ht_events') || '[]');
+let calViewDate  = new Date();
+let newEventType = 'holiday';
+let newRepeat    = 'none';      // 'none' | 'weekly' | 'monthly'
+let newWeekdays  = new Set();   // which weekdays selected for weekly repeat
+
+function saveEvents() {
+  localStorage.setItem('ht_events', JSON.stringify(USER_EVENTS));
+}
+
+function setRepeat(val, btn) {
+  newRepeat = val;
+  document.querySelectorAll('#repeat-row .event-type-chip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('repeat-day-row').style.display = val === 'weekly' ? 'block' : 'none';
+}
+
+function toggleWeekday(day, btn) {
+  if (newWeekdays.has(day)) { newWeekdays.delete(day); btn.classList.remove('active'); }
+  else                      { newWeekdays.add(day);    btn.classList.add('active'); }
+}
+
+/* ── Get all events for a date ── */
+function getEventsForDate(dateStr) {
+  const all = [...THAI_HOLIDAYS_2026, ...USER_EVENTS];
+  const d   = new Date(dateStr + 'T00:00:00');
+  const dow = d.getDay();
+  const dom = d.getDate();
+
+  return all.filter(ev => {
+    // Weekly recurring
+    if (ev.repeat === 'weekly' && ev.weekdays) {
+      if (!ev.weekdays.includes(dow)) return false;
+      if (ev.start && dateStr < ev.start) return false;
+      if (ev.end   && dateStr > ev.end)   return false;
+      return true;
+    }
+    // Monthly recurring (same day of month)
+    if (ev.repeat === 'monthly' && ev.day_of_month) {
+      if (ev.day_of_month !== dom) return false;
+      if (ev.start && dateStr < ev.start) return false;
+      if (ev.end   && dateStr > ev.end)   return false;
+      return true;
+    }
+    // Date range
+    if (ev.start && ev.end) return dateStr >= ev.start && dateStr <= ev.end;
+    // Single date
+    return ev.date === dateStr;
+  });
+}
+
+function isHolidayDate(dateStr) {
+  return getEventsForDate(dateStr).some(e => e.type === 'holiday' || e.type === 'break');
+}
+
+function isSchoolDay(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  const dow = d.getDay();
+  if (dow === 0 || dow === 6) return false; // weekend
+  if (isHolidayDate(dateStr)) return false;
+  return true;
+}
+
+function getUniformForDate(dateStr) {
+  const d   = new Date(dateStr + 'T00:00:00');
+  const dow = d.getDay();
+  // Built-in uniform schedule
+  const builtin = UNIFORM_SCHEDULE.filter(u => u.day === dow);
+  // User-defined uniform events for this date
+  const userUni = getEventsForDate(dateStr)
+    .filter(e => e.type === 'uniform' && !THAI_HOLIDAYS_2026.includes(e))
+    .map(e => ({ icon:'👔', name: e.name, sub: e.repeat === 'weekly'
+      ? '🔁 ทำซ้ำทุกสัปดาห์' : '', type:'custom' }));
+  return [...builtin, ...userUni];
+}
+
+/* ── Calendar render ── */
+function renderCalendar() {
+  const grid  = document.getElementById('cal-grid');
+  const title = document.getElementById('cal-title');
+  if (!grid || !title) return;
+
+  const yr = calViewDate.getFullYear();
+  const mo = calViewDate.getMonth();
+  const thMonths = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
+    'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  title.textContent = `${thMonths[mo]} ${yr + 543}`;
+
+  const dayLabels = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+  const todayStr  = fmtDate(new Date());
+  const firstDay  = new Date(yr, mo, 1).getDay();
+  const daysInMo  = new Date(yr, mo+1, 0).getDate();
+  const daysInPrev= new Date(yr, mo, 0).getDate();
+
+  let html = dayLabels.map(d => `<div class="cal-day-label">${d}</div>`).join('');
+
+  // prev month filler
+  for (let i = firstDay - 1; i >= 0; i--) {
+    html += `<div class="cal-day other-month">${daysInPrev - i}</div>`;
+  }
+
+  // current month days
+  for (let d = 1; d <= daysInMo; d++) {
+    const ds = `${yr}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const evs = getEventsForDate(ds);
+    const isHol = evs.some(e => e.type === 'holiday');
+    const isBreak = evs.some(e => e.type === 'break');
+    const uniforms = getUniformForDate(ds);
+    const hasPE    = uniforms.some(u => u.type === 'pe');
+    const hasScout = uniforms.some(u => u.type === 'scout');
+    const hasHw    = STATE.tasks.some(t => t.due_date === ds && !t.is_done);
+    const isToday  = ds === todayStr;
+    const dow      = new Date(ds + 'T00:00:00').getDay();
+    const isWkend  = dow === 0 || dow === 6;
+
+    let cls = 'cal-day';
+    if (isToday)  cls += ' today-cal';
+    if (isHol)    cls += ' is-holiday';
+    if (isBreak)  cls += ' is-break';
+    if (hasPE)    cls += ' is-uniform-pe';
+    if (hasScout) cls += ' is-uniform-scout';
+    if (hasHw)    cls += ' has-hw';
+    if (isWkend && !isToday) cls += ' other-month';
+
+    const dots = [
+      hasPE    ? '🟢' : '',
+      hasScout ? '🟣' : '',
+      isHol    ? '🔴' : '',
+    ].filter(Boolean).join('');
+
+    html += `<div class="${cls}" onclick="calDayClick('${ds}')">${d}${dots?`<span style="font-size:0.45rem;line-height:1">${dots}</span>`:''}</div>`;
+  }
+
+  // next month filler
+  const total = firstDay + daysInMo;
+  const remaining = total % 7 === 0 ? 0 : 7 - (total % 7);
+  for (let d = 1; d <= remaining; d++) {
+    html += `<div class="cal-day other-month">${d}</div>`;
+  }
+
+  grid.innerHTML = html;
+}
+
+function calPrev() { calViewDate.setMonth(calViewDate.getMonth()-1); renderCalendar(); }
+function calNext() { calViewDate.setMonth(calViewDate.getMonth()+1); renderCalendar(); }
+
+function calDayClick(ds) {
+  // Pre-fill add form with this date
+  document.getElementById('ev-start').value = ds;
+  document.getElementById('ev-end').value   = ds;
+  // Show tasks for this day
+  const tasks = STATE.tasks.filter(t => t.due_date === ds);
+  const evs   = getEventsForDate(ds);
+  const d     = new Date(ds + 'T00:00:00');
+  const fmt   = d.toLocaleDateString('th-TH', {day:'numeric',month:'long',year:'numeric'});
+  let msg = fmt;
+  if (evs.length)   msg += ' — ' + evs[0].name;
+  if (tasks.length) msg += ` (${tasks.length} งาน)`;
+  toast('📅 ' + msg);
+}
+
+/* ── Event list render ── */
+function renderEventList() {
+  const el = document.getElementById('event-list');
+  if (!el) return;
+  const all = [...THAI_HOLIDAYS_2026.slice(0,5), ...USER_EVENTS]
+    .sort((a,b) => (a.date||a.start||'').localeCompare(b.date||b.start||''));
+
+  if (!all.length) { el.innerHTML = ''; return; }
+
+  const typeColors = { holiday:'holiday', break:'break', event:'event', uniform:'uniform' };
+  const upcoming = all.filter(ev => {
+    const ds = ev.date || ev.start || '';
+    return ds >= fmtDate(new Date());
+  }).slice(0, 20);
+
+  const DAY_TH = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+  el.innerHTML = upcoming.map(ev => {
+    const ds  = ev.date || ev.start || '';
+    const de  = ev.end  ? ` – ${ev.end}` : '';
+    const dot = typeColors[ev.type] || 'event';
+    const isUser = USER_EVENTS.includes(ev);
+    let repeatLabel = '';
+    if (ev.repeat === 'weekly' && ev.weekdays) {
+      repeatLabel = '🔁 ทุกวัน' + ev.weekdays.map(d => DAY_TH[d]).join(',');
+    } else if (ev.repeat === 'monthly') {
+      repeatLabel = `🔁 ทุกวันที่ ${ev.day_of_month} ของเดือน`;
+    }
+    return `
+    <div class="event-item">
+      <div class="event-dot ${dot}"></div>
+      <div class="event-item-body">
+        <div class="event-item-title">${escHtml(ev.name)}</div>
+        <div class="event-item-date">${repeatLabel || (ds + de)}</div>
+      </div>
+      ${isUser ? `<button class="event-delete" onclick="deleteEvent('${ev.id}')">✕</button>` : ''}
+    </div>`;
+  }).join('');
+}
+
+/* ── Add / delete events ── */
+function setEventType(type, btn) {
+  newEventType = type;
+  document.querySelectorAll('.event-type-chip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function addEvent() {
+  const name  = document.getElementById('ev-name').value.trim();
+  const start = document.getElementById('ev-start').value;
+  const end   = document.getElementById('ev-end').value || start;
+
+  // For weekly repeat, date fields optional (defaults to school year)
+  if (newRepeat === 'weekly' && newWeekdays.size === 0) {
+    toast('⚠️ กรุณาเลือกวันที่ทำซ้ำ'); return;
+  }
+  if (!name) { toast('⚠️ กรุณาใส่ชื่อ'); return; }
+  if (newRepeat === 'none' && !start) { toast('⚠️ กรุณาใส่วันที่'); return; }
+
+  let ev = { id: uid(), name, type: newEventType };
+
+  if (newRepeat === 'weekly') {
+    ev.repeat    = 'weekly';
+    ev.weekdays  = [...newWeekdays].sort();
+    ev.start     = start || '2026-05-16';  // default: start of term 1
+    ev.end       = end   || '2027-02-28';  // default: end of term 2
+  } else if (newRepeat === 'monthly') {
+    const d = new Date((start || fmtDate(new Date())) + 'T00:00:00');
+    ev.repeat       = 'monthly';
+    ev.day_of_month = d.getDate();
+    ev.start        = start || fmtDate(new Date());
+    ev.end          = end   || '2027-02-28';
+  } else {
+    ev.date  = start === end ? start : null;
+    ev.start = start !== end ? start : null;
+    ev.end   = start !== end ? end   : null;
+  }
+
+  USER_EVENTS.push(ev);
+  saveEvents();
+  renderCalendar();
+  renderEventList();
+  renderUniformBanner();
+  renderHolidayBanner();
+
+  // Reset form
+  document.getElementById('ev-name').value  = '';
+  document.getElementById('ev-start').value = '';
+  document.getElementById('ev-end').value   = '';
+  newWeekdays.clear();
+  document.querySelectorAll('[id^="wd-"]').forEach(b => b.classList.remove('active'));
+  setRepeat('none', document.getElementById('rp-none'));
+
+  const repeatLabel = newRepeat === 'weekly' ? ' (ทุกสัปดาห์)' : newRepeat === 'monthly' ? ' (ทุกเดือน)' : '';
+  toast('✅ เพิ่มกิจกรรมแล้ว' + repeatLabel);
+  newRepeat = 'none';
+}
+
+function deleteEvent(id) {
+  USER_EVENTS = USER_EVENTS.filter(e => e.id !== id);
+  saveEvents();
+  renderCalendar();
+  renderEventList();
+  toast('🗑 ลบกิจกรรมแล้ว');
+}
+
+/* ── Uniform banner (shown on hw tab today) ── */
+function renderUniformBanner() {
+  const wrap = document.getElementById('uniform-wrap');
+  if (!wrap) return;
+  const todayStr = fmtDate(new Date());
+  const uniforms = getUniformForDate(todayStr);
+  if (!uniforms.length) { wrap.innerHTML = ''; return; }
+  wrap.innerHTML = uniforms.map(u => `
+    <div class="uniform-banner ${u.type}">
+      <span class="uni-icon">${u.icon}</span>
+      <div>
+        <div class="uni-title">วันนี้ใส่${u.name}</div>
+        <div class="uni-sub">${u.sub}</div>
+      </div>
+    </div>`).join('');
+}
+
+/* ── Holiday banner (shown on hw tab today) ── */
+function renderHolidayBanner() {
+  const wrap = document.getElementById('holiday-wrap');
+  if (!wrap) return;
+  const todayStr = fmtDate(new Date());
+  const evs = getEventsForDate(todayStr).filter(e => e.type === 'holiday' || e.type === 'break');
+  if (!evs.length) { wrap.innerHTML = ''; return; }
+  wrap.innerHTML = evs.map(ev => `
+    <div class="holiday-banner">
+      <span class="hol-icon">🎉</span>
+      <div><strong>${escHtml(ev.name)}</strong><br><span style="font-size:0.75rem;opacity:0.8">วันหยุด — ไม่ต้องไปโรงเรียน</span></div>
+    </div>`).join('');
+}
+
+/* ── Update AI parse prompt to detect holidays/events ── */
+const PARSE_SYSTEM_PROMPT = `You are a homework parser for a Thai P.6 student preparing for ม.1 entrance exams.
+Extract ALL tasks AND school events from this notebook image.
+
+For each TASK return JSON with:
+- record_type: "task"
+- original_text: exact text as written (preserve Thai and English exactly)
+- parsed_title: clean concise English/Thai summary (max 80 chars)
+- type: "homework" or "todo"
+- subject: Math | Thai | English | Science | Social | Chinese | PE | Other
+- due_date: YYYY-MM-DD if a date is mentioned, else null
+- points: integer if points/marks mentioned, else null
+- priority: "high" if has points OR due within 2 days, "med" if due this week, "low" otherwise
+
+For each SCHOOL EVENT (holidays, ceremonies, breaks, special days, uniform changes) return:
+- record_type: "event"
+- name: event name (Thai/English as written)
+- type: "holiday" | "break" | "event" | "uniform"
+- date: YYYY-MM-DD (single day) or null
+- start: YYYY-MM-DD (if range) or null
+- end: YYYY-MM-DD (if range) or null
+
+Return ONLY a valid JSON array mixing tasks and events. No markdown, no backticks, no explanation.`;
+
+/* ═══════════════════════════════════════
+   EDIT TASK
+═══════════════════════════════════════ */
+let editingTaskId = null;
+let editSubj = 'Other';
+let editType = 'homework';
+
+function openEditSheet(id) {
+  const task = STATE.tasks.find(t => t.id === id);
+  if (!task) return;
+  editingTaskId = id;
+  editSubj = task.subject || 'Other';
+  editType = task.type || 'homework';
+  document.getElementById('edit-title').value  = task.parsed_title || task.original_text || '';
+  document.getElementById('edit-due').value    = task.due_date || '';
+  document.getElementById('edit-points').value = task.points || '';
+  // Set subject chip
+  document.querySelectorAll('.subj-chip').forEach(b => {
+    b.classList.toggle('active', b.dataset.subj === editSubj);
+  });
+  // Set type
+  document.getElementById('edit-type-hw').classList.toggle('active',   editType==='homework');
+  document.getElementById('edit-type-todo').classList.toggle('active', editType==='todo');
+  document.getElementById('edit-overlay').classList.add('open');
+}
+
+function closeEditSheet(e) {
+  if (e.target === document.getElementById('edit-overlay')) closeEditSheetDirect();
+}
+function closeEditSheetDirect() {
+  document.getElementById('edit-overlay').classList.remove('open');
+  editingTaskId = null;
+}
+
+function setEditSubj(s, btn) {
+  editSubj = s;
+  document.querySelectorAll('.subj-chip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function setEditType(t) {
+  editType = t;
+  document.getElementById('edit-type-hw').classList.toggle('active',   t==='homework');
+  document.getElementById('edit-type-todo').classList.toggle('active', t==='todo');
+}
+
+async function saveEdit() {
+  if (!editingTaskId) return;
+  const task = STATE.tasks.find(t => t.id === editingTaskId);
+  if (!task) return;
+  const title  = document.getElementById('edit-title').value.trim();
+  const due    = document.getElementById('edit-due').value || null;
+  const points = parseInt(document.getElementById('edit-points').value) || null;
+  if (!title) { toast('⚠️ กรุณาใส่ชื่องาน'); return; }
+
+  task.parsed_title  = title;
+  task.original_text = task.original_text === task.parsed_title ? title : task.original_text;
+  task.subject  = editSubj;
+  task.due_date = due;
+  task.points   = points;
+  task.type     = editType;
+  task.priority = calcPriority(due, points);
+
+  renderAll(); attachSwipeListeners();
+  if (USE_LOCAL) saveLocal();
+  else {
+    const { error } = await sb.from('tasks').update({
+      parsed_title: task.parsed_title, subject: editSubj,
+      due_date: due, points, type: editType, priority: task.priority
+    }).eq('id', editingTaskId);
+    if (error) { toast('❌ บันทึกไม่ได้: ' + error.message); return; }
+  }
+  closeEditSheetDirect();
+  navigator.vibrate && navigator.vibrate(40);
+  toast('✅ แก้ไขแล้ว');
+}
+
+/* ═══════════════════════════════════════
+   EXAM COUNTDOWN STRIP
+═══════════════════════════════════════ */
+function renderExamStrip() {
+  const wrap = document.getElementById('exam-strip-wrap');
+  if (!wrap) return;
+  if (!STATE.exams.length) {
+    wrap.innerHTML = `<div class="exam-strip-none" onclick="showTab('exam')">🎯 เพิ่มรายการสอบ ม.1 → ดูการนับถอยหลัง</div>`;
+    return;
+  }
+  // Find nearest upcoming exam
+  const upcoming = STATE.exams
+    .filter(e => e.exam_date)
+    .map(e => ({ ...e, diff: diffD(parseD(e.exam_date)) }))
+    .filter(e => e.diff >= 0)
+    .sort((a,b) => a.diff - b.diff)[0];
+
+  if (!upcoming) { wrap.innerHTML = ''; return; }
+
+  const topics   = STATE.topics.filter(t => t.exam_id === upcoming.id);
+  const done     = topics.filter(t => t.is_done).length;
+  const pct      = topics.length ? Math.round((done/topics.length)*100) : 0;
+  const daysColor = upcoming.diff <= 30 ? '#fb923c' : '#4ade80';
+
+  wrap.innerHTML = `
+  <div class="exam-strip">
+    <div>
+      <div class="exam-strip-name">🎯 ${escHtml(upcoming.name)}</div>
+      <div class="exam-strip-label">เรียนแล้ว ${done}/${topics.length} หัวข้อ (${pct}%)</div>
+    </div>
+    <div style="text-align:right">
+      <div class="exam-strip-days" style="color:${daysColor}">${upcoming.diff}</div>
+      <div class="exam-strip-label">วัน</div>
+    </div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════
+   FILTER TAB COUNTS
+═══════════════════════════════════════ */
+function updateFilterCounts() {
+  const hw = STATE.tasks.filter(t => t.type==='homework' && !t.is_done);
+  const counts = {
+    today:   hw.filter(t => t.due_date && diffD(parseD(t.due_date))===0).length,
+    week:    hw.filter(t => t.due_date && diffD(parseD(t.due_date))>=0 && diffD(parseD(t.due_date))<=7).length,
+    month:   hw.filter(t => { if (!t.due_date) return false; const d=parseD(t.due_date),td=today(); return d.getMonth()===td.getMonth()&&d.getFullYear()===td.getFullYear(); }).length,
+    undated: hw.filter(t => !t.due_date).length,
+    all:     hw.length,
+  };
+  Object.entries(counts).forEach(([key, count]) => {
+    const btn = document.getElementById('ftab-' + key);
+    if (!btn) return;
+    // Remove existing count
+    const existing = btn.querySelector('.tab-count');
+    if (existing) existing.remove();
+    if (count > 0) {
+      const span = document.createElement('span');
+      span.className = 'tab-count';
+      span.textContent = count;
+      btn.appendChild(span);
+    }
+  });
+}
+
+/* ═══════════════════════════════════════
+   MARK ALL DONE
+═══════════════════════════════════════ */
+async function markAllDone() {
+  const hw = STATE.tasks.filter(t => t.type==='homework' && !t.is_done && inDateFilter(t));
+  if (!hw.length) { toast('✅ ไม่มีงานค้างอยู่'); return; }
+  hw.forEach(t => { t.is_done = true; });
+  renderAll(); attachSwipeListeners();
+  checkCelebration();
+  if (USE_LOCAL) { saveLocal(); }
+  else {
+    const ids = hw.map(t => t.id);
+    await sb.from('tasks').update({ is_done: true }).in('id', ids);
+  }
+  navigator.vibrate && navigator.vibrate([60,30,60,30,100]);
+  toast(`✅ ทำเครื่องหมายเสร็จ ${hw.length} งาน`);
+}
+
+/* ═══════════════════════════════════════
+   FAB SUBJECT
+═══════════════════════════════════════ */
+let fabSubject = 'Other';
+function setFabSubj(s, btn) {
+  fabSubject = s;
+  document.querySelectorAll('.fab-subj').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+/* ═══════════════════════════════════════
+   2-PARENT LINE NOTIFY
+═══════════════════════════════════════ */
+const LINE_TOKENS = () => ({
+  dad: localStorage.getItem('ht_line_dad') || '',
+  mum: localStorage.getItem('ht_line_mum') || '',
+});
+
+function saveParentToken(parent) {
+  const inp = document.getElementById(parent + '-token-inp');
+  if (!inp) return;
+  const token = inp.value.trim();
+  localStorage.setItem('ht_line_' + parent, token);
+  updateParentStatus();
+  toast(`✅ บันทึก Token ${parent === 'dad' ? 'คุณพ่อ' : 'คุณแม่'} แล้ว`);
+}
+
+function updateParentStatus() {
+  const tokens = LINE_TOKENS();
+  const dadDot = document.getElementById('dad-status');
+  const mumDot = document.getElementById('mum-status');
+  if (dadDot) dadDot.classList.toggle('active', !!tokens.dad);
+  if (mumDot) mumDot.classList.toggle('active', !!tokens.mum);
+  // Pre-fill inputs if tokens exist
+  if (tokens.dad && document.getElementById('dad-token-inp'))
+    document.getElementById('dad-token-inp').value = tokens.dad;
+  if (tokens.mum && document.getElementById('mum-token-inp'))
+    document.getElementById('mum-token-inp').value = tokens.mum;
+}
+
+async function testLineNotify(parent) {
+  const tokens = LINE_TOKENS();
+  const token = parent ? tokens[parent] : (tokens.dad || tokens.mum);
+  if (!token) {
+    toast(`⚠️ ยังไม่มี Token ${parent === 'dad' ? 'คุณพ่อ' : 'คุณแม่'}`);
+    return;
+  }
+  const msg = buildLineMessage();
+  await sendLineMessage(token, msg);
+}
+
+function scheduleLineCheck() {
+  setInterval(async () => {
+    const tokens = LINE_TOKENS();
+    if (!tokens.dad && !tokens.mum) return;
+    const now    = new Date();
+    const hhmm   = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+    const target = LINETIME();
+    const today_ = new Date().toDateString();
+    const lastSent = localStorage.getItem('ht_lastnotify');
+    if (hhmm === target && lastSent !== today_) {
+      localStorage.setItem('ht_lastnotify', today_);
+      const msg = buildLineMessage();
+      if (tokens.dad) await sendLineMessage(tokens.dad, msg);
+      if (tokens.mum) await sendLineMessage(tokens.mum, msg);
+    }
+  }, 60000);
+}
+
+/* ═══════════════════════════════════════
+   OFFLINE INDICATOR
+═══════════════════════════════════════ */
+function updateOfflineChip() {
+  const chip = document.getElementById('offline-chip');
+  if (chip) chip.classList.toggle('show', USE_LOCAL);
+}
+
+/* ═══════════════════════════════════════
    RETRY SUPABASE
 ═══════════════════════════════════════ */
 async function retrySupabase() {
@@ -1256,6 +2576,360 @@ async function retrySupabase() {
     setSyncStatus(false);
     toast('❌ ยังเชื่อมต่อไม่ได้ — ใช้โหมดออฟไลน์ต่อไป');
   }
+}
+
+/* ═══════════════════════════════════════
+   FAB
+═══════════════════════════════════════ */
+let fabType = 'homework';
+let fabQDate = 'none';
+let fabQDateVal = null;
+
+function toggleFab() {
+  const sheet = document.getElementById('fab-sheet');
+  const btn   = document.getElementById('fab-btn');
+  const isOpen = sheet.classList.contains('open');
+  if (isOpen) closeFab();
+  else {
+    sheet.classList.add('open');
+    btn.classList.add('open');
+    document.getElementById('fab-quick-form').style.display = 'none';
+  }
+}
+function closeFab() {
+  document.getElementById('fab-sheet').classList.remove('open');
+  document.getElementById('fab-btn').classList.remove('open');
+}
+function fabCamera() {
+  closeFab();
+  showTab('add');
+  setTimeout(() => document.getElementById('cam-input').click(), 200);
+}
+function fabGallery() {
+  closeFab();
+  showTab('add');
+  setTimeout(() => document.getElementById('file-input').click(), 200);
+}
+function fabManual() {
+  document.getElementById('fab-quick-form').style.display = 'block';
+  document.getElementById('fab-title-inp').focus();
+}
+function setFabType(type) {
+  fabType = type;
+  document.getElementById('fab-type-hw').classList.toggle('active',   type==='homework');
+  document.getElementById('fab-type-todo').classList.toggle('active', type==='todo');
+}
+function setQDate(key, btn) {
+  fabQDate = key;
+  document.querySelectorAll('.qdate').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const d = new Date();
+  if (key === 'none')     { fabQDateVal = null; }
+  if (key === 'today')    { fabQDateVal = fmtDate(d); }
+  if (key === 'tomorrow') { d.setDate(d.getDate()+1); fabQDateVal = fmtDate(d); }
+  if (key === 'friday')   {
+    const day = d.getDay(); const diff = (5 - day + 7) % 7 || 7;
+    d.setDate(d.getDate() + diff); fabQDateVal = fmtDate(d);
+  }
+  if (key === 'nextweek') { d.setDate(d.getDate() + (8 - d.getDay())); fabQDateVal = fmtDate(d); }
+}
+function fmtDate(d) { return d.toISOString().slice(0,10); }
+async function fabAddTask() {
+  const title = document.getElementById('fab-title-inp').value.trim();
+  if (!title) { document.getElementById('fab-title-inp').focus(); return; }
+  const task = {
+    id: uid(), type: fabType,
+    original_text: title, parsed_title: title,
+    subject: fabSubject, due_date: fabQDateVal, points: null,
+    priority: calcPriority(fabQDateVal, null),
+    is_done: false, source: 'manual',
+    created_at: new Date().toISOString()
+  };
+  STATE.tasks.unshift(task); renderAll();
+  if (USE_LOCAL) saveLocal();
+  else await sb.from('tasks').insert(task);
+  document.getElementById('fab-title-inp').value = '';
+  setQDate('none', document.getElementById('qd-none'));
+  closeFab();
+  navigator.vibrate && navigator.vibrate(40);
+  toast('✅ เพิ่มงานแล้ว');
+}
+
+/* ═══════════════════════════════════════
+   RIGHT NOW BANNER
+═══════════════════════════════════════ */
+function renderRightNow() {
+  const wrap = document.getElementById('rightnow-wrap');
+  if (!wrap) return;
+  const h = new Date().getHours();
+  const urgent = STATE.tasks
+    .filter(t => !t.is_done && t.type === 'homework' && (
+      (t.due_date && diffD(parseD(t.due_date)) <= 1) ||
+      t.priority === 'high'
+    ))
+    .sort((a,b) => {
+      const da = a.due_date ? diffD(parseD(a.due_date)) : 999;
+      const db = b.due_date ? diffD(parseD(b.due_date)) : 999;
+      return da - db;
+    })
+    .slice(0, 3);
+
+  // Greeting based on time
+  let greeting = '🌅 อรุณสวัสดิ์!';
+  if (h >= 12 && h < 17) greeting = '☀️ สวัสดีตอนบ่าย!';
+  if (h >= 17 && h < 21) greeting = '🌆 สวัสดีตอนเย็น!';
+  if (h >= 21) greeting = '🌙 สวัสดีตอนกลางคืน!';
+
+  if (!urgent.length) {
+    wrap.innerHTML = `
+    <div class="rightnow-banner" style="background:linear-gradient(135deg,#15803d,#16a34a)">
+      <div class="rightnow-greeting">${greeting}</div>
+      <div class="rightnow-msg">🎉 ไม่มีการบ้านด่วน! เก่งมาก</div>
+    </div>`;
+    return;
+  }
+
+  const msg = urgent.length === 1
+    ? `มีการบ้านด่วน 1 ชิ้น`
+    : `มีการบ้านด่วน ${urgent.length} ชิ้น`;
+
+  const tasksHTML = urgent.map(t => {
+    const dl = dueLabel(t.due_date);
+    return `
+    <div class="rightnow-task" onclick="toggleTask('${t.id}')">
+      <div class="rightnow-check ${t.is_done?'done':''}">✓</div>
+      <div class="rightnow-task-title">${escHtml(t.parsed_title||t.original_text)}</div>
+      ${dl ? `<div class="rightnow-due">${dl.text}</div>` : ''}
+    </div>`;
+  }).join('');
+
+  wrap.innerHTML = `
+  <div class="rightnow-banner">
+    <div class="rightnow-greeting">${greeting}</div>
+    <div class="rightnow-msg">⚡ ${msg}</div>
+    <div class="rightnow-tasks">${tasksHTML}</div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════
+   OVERDUE DETECTION
+═══════════════════════════════════════ */
+function isOverdue(task) {
+  if (!task.due_date || task.is_done) return false;
+  return diffD(parseD(task.due_date)) < 0;
+}
+
+/* ═══════════════════════════════════════
+   SWIPE TO COMPLETE / DELETE
+═══════════════════════════════════════ */
+function addSwipeListeners(el, taskId) {
+  let startX = 0, startY = 0, dx = 0;
+  let swiping = false;
+
+  el.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    dx = 0; swiping = false;
+  }, { passive: true });
+
+  el.addEventListener('touchmove', e => {
+    dx = e.touches[0].clientX - startX;
+    const dy = Math.abs(e.touches[0].clientY - startY);
+    if (Math.abs(dx) < 8 && !swiping) return;
+    if (dy > Math.abs(dx) && !swiping) return; // vertical scroll
+    swiping = true;
+    const capped = Math.max(-100, Math.min(100, dx));
+    el.style.transform = `translateX(${capped}px)`;
+    el.style.transition = 'none';
+    // Show hints
+    const rHint = el.querySelector('.swipe-hint.right');
+    const lHint = el.querySelector('.swipe-hint.left');
+    if (rHint) rHint.style.opacity = dx > 20 ? Math.min(1, (dx-20)/60) : 0;
+    if (lHint) lHint.style.opacity = dx < -20 ? Math.min(1, (-dx-20)/60) : 0;
+  }, { passive: true });
+
+  el.addEventListener('touchend', () => {
+    el.style.transition = 'transform 0.3s ease';
+    el.style.transform = 'translateX(0)';
+    const rHint = el.querySelector('.swipe-hint.right');
+    const lHint = el.querySelector('.swipe-hint.left');
+    if (rHint) rHint.style.opacity = 0;
+    if (lHint) lHint.style.opacity = 0;
+    if (dx > 55) { toggleTask(taskId); navigator.vibrate && navigator.vibrate(50); }
+    if (dx < -55) { softDeleteTask(taskId); navigator.vibrate && navigator.vibrate([50,30,50]); }
+    swiping = false;
+  });
+}
+
+/* ═══════════════════════════════════════
+   UNDO DELETE
+═══════════════════════════════════════ */
+let undoStack = null;
+let undoTimer = null;
+
+function softDeleteTask(id) {
+  const task = STATE.tasks.find(x => x.id === id);
+  if (!task) return;
+  undoStack = { ...task };
+  STATE.tasks = STATE.tasks.filter(x => x.id !== id);
+  renderAll();
+  showUndoToast(`ลบ "${task.parsed_title.slice(0,20)}..." แล้ว`);
+  undoTimer = setTimeout(() => commitDelete(id), 5000);
+}
+
+async function commitDelete(id) {
+  undoStack = null;
+  if (USE_LOCAL) saveLocal();
+  else await sb.from('tasks').delete().eq('id', id);
+}
+
+async function undoDelete() {
+  if (!undoStack) return;
+  clearTimeout(undoTimer);
+  STATE.tasks.unshift(undoStack);
+  if (USE_LOCAL) saveLocal();
+  else await sb.from('tasks').insert(undoStack);
+  undoStack = null;
+  hideUndoToast();
+  renderAll();
+  toast('↩ คืนงานแล้ว');
+}
+
+let _undoTimer2 = null;
+function showUndoToast(msg) {
+  const el = document.getElementById('undo-toast');
+  document.getElementById('undo-msg').textContent = msg;
+  el.classList.add('show');
+  clearTimeout(_undoTimer2);
+  _undoTimer2 = setTimeout(hideUndoToast, 5200);
+}
+function hideUndoToast() {
+  document.getElementById('undo-toast').classList.remove('show');
+}
+
+/* ═══════════════════════════════════════
+   CELEBRATION
+═══════════════════════════════════════ */
+let lastTodayDone = 0;
+
+function checkCelebration() {
+  const todayTasks = STATE.tasks.filter(t =>
+    t.type === 'homework' &&
+    t.due_date && diffD(parseD(t.due_date)) === 0
+  );
+  if (!todayTasks.length) return;
+  const doneNow = todayTasks.filter(t => t.is_done).length;
+  const total   = todayTasks.length;
+  if (doneNow === total && doneNow > lastTodayDone) {
+    lastTodayDone = doneNow;
+    setTimeout(() => showCelebration(total), 400);
+  }
+  lastTodayDone = doneNow;
+}
+
+function showCelebration(count) {
+  const msgs = [
+    ['🌟','หนูเก่งมาก!','ทำการบ้านวันนี้ครบแล้ว!','⭐⭐⭐'],
+    ['🏆','ยอดเยี่ยม!','ทำสำเร็จทุกชิ้นเลย!','🏆🏆🏆'],
+    ['🎉','สุดยอด!','วันนี้ขยันมากเลย!','⭐⭐⭐⭐⭐'],
+  ];
+  const m = msgs[Math.floor(Math.random() * msgs.length)];
+  document.getElementById('cel-emoji').textContent  = m[0];
+  document.getElementById('cel-title').textContent  = m[1];
+  document.getElementById('cel-sub').textContent    = m[2];
+  document.getElementById('cel-stars').textContent  = m[3];
+  document.getElementById('celebration').classList.add('show');
+  spawnConfetti();
+  navigator.vibrate && navigator.vibrate([100, 50, 100, 50, 200]);
+}
+
+function closeCelebration() {
+  document.getElementById('celebration').classList.remove('show');
+}
+
+function spawnConfetti() {
+  const colors = ['#22c55e','#4ade80','#fbbf24','#f87171','#60a5fa','#e879f9','#34d399'];
+  for (let i = 0; i < 60; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.cssText = `
+      left:${Math.random()*100}vw;
+      top:-10px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      width:${6+Math.random()*8}px;
+      height:${6+Math.random()*8}px;
+      animation-delay:${Math.random()*1}s;
+      animation-duration:${2+Math.random()*1.5}s;
+      border-radius:${Math.random()>0.5?'50%':'2px'};
+    `;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 4000);
+  }
+}
+
+/* ── CALENDAR / HOLIDAY ─────────────── */
+.cal-month-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cal-month-title{font-size:1rem;font-weight:800;color:var(--text)}
+.cal-nav{background:var(--primary-lt);border:none;border-radius:8px;padding:6px 12px;font-size:0.9rem;cursor:pointer;color:var(--primary-dk);font-weight:700}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:16px}
+.cal-day-label{text-align:center;font-size:0.62rem;font-weight:800;color:var(--muted);text-transform:uppercase;padding:4px 0}
+.cal-day{aspect-ratio:1;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:0.78rem;font-weight:700;cursor:pointer;position:relative;transition:all 0.15s;gap:1px}
+.cal-day:active{transform:scale(0.92)}
+.cal-day.other-month{opacity:0.25}
+.cal-day.today-cal{background:var(--primary);color:white;box-shadow:0 3px 10px rgba(22,163,74,0.35)}
+.cal-day.is-holiday{background:#fef2f2;color:#991b1b}
+.cal-day.is-break{background:#eff6ff;color:#1d4ed8}
+.cal-day.has-hw::after{content:'';width:5px;height:5px;border-radius:50%;background:var(--med);position:absolute;bottom:3px}
+.cal-day.today-cal.has-hw::after{background:white}
+.cal-day.is-uniform-pe{border:2px solid #fb923c}
+.cal-day.is-uniform-scout{border:2px solid #a855f7}
+
+.uniform-banner{border-radius:14px;padding:12px 16px;margin-bottom:10px;display:flex;align-items:center;gap:10px;font-size:0.85rem;font-weight:700}
+.uniform-banner.pe{background:#fff7ed;border:1.5px solid #fed7aa;color:#9a3412}
+.uniform-banner.scout{background:#faf5ff;border:1.5px solid #e9d5ff;color:#6b21a8}
+.uniform-banner .uni-icon{font-size:1.5rem;flex-shrink:0}
+.uniform-banner .uni-title{font-weight:800;font-size:0.9rem}
+.uniform-banner .uni-sub{font-size:0.72rem;opacity:0.75;margin-top:1px}
+
+.holiday-banner{background:linear-gradient(135deg,#fef9c3,#fef08a);border:1.5px solid #fde047;border-radius:14px;padding:12px 16px;margin-bottom:10px;display:flex;align-items:center;gap:10px;font-size:0.85rem;font-weight:700;color:#713f12}
+.holiday-banner .hol-icon{font-size:1.5rem;flex-shrink:0}
+
+.event-item{background:var(--surface);border-radius:12px;padding:11px 13px;margin-bottom:8px;box-shadow:var(--shadow);display:flex;align-items:center;gap:10px;font-size:0.83rem;font-weight:600}
+.event-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.event-dot.holiday{background:var(--high)}
+.event-dot.break{background:var(--blue)}
+.event-dot.uniform{background:var(--primary)}
+.event-dot.event{background:var(--med)}
+.event-item-body{flex:1}
+.event-item-title{font-weight:700}
+.event-item-date{font-size:0.7rem;color:var(--muted);margin-top:1px}
+.event-delete{color:var(--muted);font-size:0.75rem;padding:4px 6px}
+
+.add-event-form{background:var(--surface);border-radius:var(--r);padding:15px 16px;box-shadow:var(--shadow);margin-bottom:12px;border:1.5px dashed var(--border)}
+.event-type-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.event-type-chip{padding:5px 11px;border-radius:20px;font-size:0.72rem;font-weight:800;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;transition:all 0.15s}
+.event-type-chip.active{background:var(--primary);border-color:var(--primary);color:white}
+
+/* ═══════════════════════════════════════
+   INSTALL BANNER
+═══════════════════════════════════════ */
+function renderInstallBanner() {
+  const wrap = document.getElementById('install-wrap');
+  if (!wrap) return;
+  if (localStorage.getItem('ht_install_dismissed')) { wrap.innerHTML = ''; return; }
+  const isStandalone = window.matchMedia('(display-mode:standalone)').matches || window.navigator.standalone;
+  if (isStandalone) { wrap.innerHTML = ''; return; }
+  wrap.innerHTML = `
+  <div class="install-banner">
+    <span class="install-icon">📲</span>
+    <span>เพิ่มไปหน้าจอหลักเพื่อใช้งานแบบ fullscreen</span>
+    <button class="install-close" onclick="dismissInstall()">✕</button>
+  </div>`;
+}
+function dismissInstall() {
+  localStorage.setItem('ht_install_dismissed','1');
+  const wrap = document.getElementById('install-wrap');
+  if (wrap) wrap.innerHTML = '';
 }
 
 /* ═══════════════════════════════════════
