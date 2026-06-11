@@ -40,15 +40,39 @@ export default async function handler(req, res) {
     if (dow === 5) uniformMsg = '\n⚽ วันนี้ใส่ชุดพลศึกษาด้วยนะ!';
     if (dow === 3) uniformMsg = '\n👔 วันนี้นำผ้ากันเปื้อนมาด้วยนะ!';
 
-    // Urgent homework
-    const urgent  = tasks.filter(t => t.type === 'homework' && t.priority === 'high');
-    const todayHw = tasks.filter(t => {
-      if (!t.due_date || t.type !== 'homework') return false;
-      const d = new Date(t.due_date + 'T00:00:00');
-      const diff = Math.round((d - today) / 86400000);
-      return diff === 0;
-    });
-    const todos = tasks.filter(t => t.type === 'todo').slice(0, 5);
+    // Split tasks per kid (legacy tasks without kid_id = Ryuji)
+    const kidName = { ryuji: 'Ryuji 👦', miki: 'Miki 👧' };
+    const byKid = {
+      ryuji: tasks.filter(t => !t.kid_id || t.kid_id === 'ryuji'),
+      miki:  tasks.filter(t => t.kid_id === 'miki'),
+    };
+
+    function kidSection(kidId) {
+      const kt = byKid[kidId];
+      if (!kt.length) return `\n\n${kidName[kidId]}: ✅ ไม่มีงานค้าง`;
+      // due tomorrow (this runs at 9PM, so warn about tomorrow)
+      const tmrHw = kt.filter(t => {
+        if (!t.due_date || t.type !== 'homework') return false;
+        const d = new Date(t.due_date + 'T00:00:00');
+        const diff = Math.round((d - today) / 86400000);
+        return diff <= 1 && diff >= 0;
+      });
+      const urgent = kt.filter(t => t.type === 'homework' && t.priority === 'high');
+      const todos  = kt.filter(t => t.type === 'todo').slice(0, 3);
+      let s = `\n\n*${kidName[kidId]}* — ค้าง ${kt.length} ชิ้น`;
+      if (tmrHw.length) {
+        s += `\n🔴 ส่งพรุ่งนี้/วันนี้:`;
+        tmrHw.slice(0,5).forEach(t => { s += `\n  • ${t.parsed_title || t.original_text}`; });
+      } else if (urgent.length) {
+        s += `\n⚡ งานด่วน:`;
+        urgent.slice(0,4).forEach(t => { s += `\n  • ${t.parsed_title || t.original_text}`; });
+      }
+      if (todos.length) {
+        s += `\n📋 ต้องทำ:`;
+        todos.forEach(t => { s += `\n  • ${t.parsed_title || t.original_text}`; });
+      }
+      return s;
+    }
 
     // Exam countdown
     let examMsg = '';
@@ -66,26 +90,12 @@ export default async function handler(req, res) {
     }
 
     // Compose message
-    let msg = `📚 *สวัสดีตอนเช้า Ryuji\\!*\n`;
+    let msg = `🌙 *สรุปการบ้านคืนนี้ — เตรียมพร้อมสำหรับพรุ่งนี้\\!*\n`;
     msg += `วัน${DOW_TH[dow]} ${dateStr}`;
     msg += uniformMsg;
 
-    if (todayHw.length) {
-      msg += `\n\n🔴 *การบ้านวันนี้ ${todayHw.length} ชิ้น:*\n`;
-      todayHw.forEach(t => { msg += `• ${t.parsed_title || t.original_text}\n`; });
-    } else if (urgent.length) {
-      msg += `\n\n⚡ *การบ้านด่วน ${urgent.length} ชิ้น:*\n`;
-      urgent.slice(0,5).forEach(t => { msg += `• ${t.parsed_title || t.original_text}\n`; });
-    } else {
-      msg += `\n\n✅ ไม่มีการบ้านด่วน วันนี้!`;
-    }
-
-    if (todos.length) {
-      msg += `\n\n📋 *สิ่งที่ต้องทำ:*\n`;
-      todos.forEach(t => { msg += `• ${t.parsed_title || t.original_text}\n`; });
-    }
-
-    msg += `\n\n📊 งานค้างอยู่ทั้งหมด ${tasks.length} ชิ้น`;
+    msg += kidSection('ryuji');
+    msg += kidSection('miki');
     msg += examMsg;
 
     // Send to both parents via Telegram
