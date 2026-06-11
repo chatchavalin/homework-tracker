@@ -1287,7 +1287,7 @@ async function init() {
 function loadFromLocal() {
   const allTasks  = JSON.parse(localStorage.getItem('ht_tasks')  || '[]');
   STATE.tasks  = allTasks.filter(t => !t.kid_id || t.kid_id === currentKid);
-  STATE.exams  = JSON.parse(localStorage.getItem('ht_exams')  || '[]');
+  STATE.exams  = JSON.parse(localStorage.getItem('ht_exams')  || '[]').filter(e => e.kid_id === currentKid || (!e.kid_id && currentKid === 'miki'));
   STATE.topics = JSON.parse(localStorage.getItem('ht_topics') || '[]');
   const allNotes = JSON.parse(localStorage.getItem('ht_notes') || '[]');
   STATE.notes  = allNotes.filter(n => !n.kid_id || n.kid_id === currentKid);
