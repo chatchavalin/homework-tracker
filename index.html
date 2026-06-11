@@ -995,9 +995,7 @@ function updateAppTitle() {
   if (!el) return;
   const kid = KIDS[currentKid];
   const name = kid ? kid.name : '';
-  el.textContent = currentLang === 'en'
-    ? `📚 ${name}'s Homework`
-    : `📚 การบ้านของ${name}`;
+  el.textContent = `📚 ${name}'s Homework`;
 }
 
 function applyKidTheme(kidId) {
