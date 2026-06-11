@@ -751,98 +751,33 @@ input,textarea,select{font-family:inherit}
     <div class="tab-panel" id="tab-settings">
       <div class="sec-label">⚙️ การตั้งค่า</div>
 
-      <!-- Supabase status -->
+      <!-- Notifications -->
       <div class="settings-card">
-        <div class="settings-title">🗄️ Supabase (ซิงค์ครอบครัว)
+        <div class="settings-title">✈️ แจ้งเตือนทุกเช้า (Telegram)
+          <span class="status-dot ok"></span>
+        </div>
+        <div class="info-box" style="margin-bottom:10px">
+          📨 Dad และ Mum ได้รับสรุปการบ้านทุกเช้า 7:00 น. อัตโนมัติ<br>
+          ทำงานแม้ปิดแอป — ส่งจาก server
+        </div>
+        <button class="settings-btn success" onclick="testTelegram()">📨 ทดสอบส่งข้อความตอนนี้</button>
+      </div>
+
+      <!-- Connection -->
+      <div class="settings-card">
+        <div class="settings-title">🗄️ การเชื่อมต่อข้อมูล
           <span id="sb-dot" class="status-dot ok"></span>
           <span id="sb-status" style="font-size:0.72rem;font-weight:600;color:var(--muted)">เชื่อมต่อแล้ว</span>
         </div>
-        <div class="info-box">
-          ✅ เชื่อมต่อกับ Supabase แล้ว ข้อมูลซิงค์ข้ามอุปกรณ์ทั้งหมดในครอบครัว<br>
-          <span style="opacity:0.7">Project: fpdlavhnhqrjgwjoiboe</span>
-        </div>
-      </div>
-
-      <!-- Gemini API Key -->
-      <div class="settings-card">
-        <div class="settings-title">🤖 AI Parser (Groq)
-          <span class="status-dot ok"></span>
-          <span style="font-size:0.72rem;font-weight:600;color:var(--muted)">🔒 Server-side</span>
-        </div>
         <div class="info-box" style="margin-bottom:10px">
-          🔒 <strong>API key เก็บบน Vercel server</strong> — ไม่ได้อยู่ในแอปนี้<br>
-          ✅ ใช้ Groq (Llama 4 Scout) — ฟรี เร็ว 800 tokens/วินาที<br>
-          ✅ Key ปลอดภัย 100% — ไม่มีใครเห็นได้จาก browser
+          ข้อมูลซิงค์อัตโนมัติทุกอุปกรณ์ในครอบครัว
         </div>
-        <div class="settings-row">
-          <label class="settings-label">เปลี่ยน API Key (ถ้าต้องการ)</label>
-          <input class="settings-input" id="api-key-inp" type="password" placeholder="gsk_...">
-        </div>
-        <button class="settings-btn primary" onclick="saveApiKey()">อัปเดต API Key</button>
-        <div class="info-box">
-          รับ key ใหม่ได้ที่ <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a> → Get API Key
-        </div>
-      </div>
-
-      <!-- Telegram — 2 parents -->
-      <div class="settings-card">
-        <div class="settings-title">✈️ Telegram — แจ้งเตือนเช้า
-          <span class="status-dot ok"></span>
-          <span style="font-size:0.72rem;font-weight:600;color:var(--muted)">🔒 Server-side</span>
-        </div>
-        <div class="info-box" style="margin-bottom:10px">
-          ✅ Telegram Bot พร้อมใช้งาน<br>
-          📨 Dad (Ben) และ Mum (Numooy) จะได้รับข้อความทุกเช้า<br>
-          🔒 Token เก็บบน Vercel — ปลอดภัย
-        </div>
-        <button class="settings-btn success" onclick="testTelegram()">📨 ทดสอบส่งข้อความ Telegram</button>
-        <div class="settings-row mt-2">
-          <label class="settings-label">เวลาแจ้งเตือน (ทั้งคู่)</label>
-          <input class="settings-input" id="line-time-inp" type="time" value="07:00">
-        </div>
-
-        <!-- Dad -->
-        <div class="parent-card">
-          <div class="parent-card-title">
-            <span class="parent-status" id="dad-status"></span>
-            👨 Dad
-          </div>
-          <div class="settings-row">
-            <label class="settings-label">Line Token</label>
-            <input class="settings-input" id="dad-token-inp" type="password" placeholder="วาง token ของคุณพ่อ...">
-          </div>
-          <button class="settings-btn primary" onclick="saveParentToken('dad')">บันทึก Token คุณพ่อ</button>
-          <button class="settings-btn success mt-2" onclick="testLineNotify('dad')">🔔 ทดสอบ (คุณพ่อ)</button>
-        </div>
-
-        <!-- Mum -->
-        <div class="parent-card">
-          <div class="parent-card-title">
-            <span class="parent-status" id="mum-status"></span>
-            👩 Mum
-          </div>
-          <div class="settings-row">
-            <label class="settings-label">Line Token</label>
-            <input class="settings-input" id="mum-token-inp" type="password" placeholder="วาง token ของคุณแม่...">
-          </div>
-          <button class="settings-btn primary" onclick="saveParentToken('mum')">บันทึก Token คุณแม่</button>
-          <button class="settings-btn success mt-2" onclick="testLineNotify('mum')">🔔 ทดสอบ (คุณแม่)</button>
-        </div>
-
-        <div class="info-box">
-          วิธีรับ Token (ทำแยกกันแต่ละคน):<br>
-          1. ไปที่ <a href="https://notify-bot.line.me" target="_blank">notify-bot.line.me</a><br>
-          2. Login ด้วย LINE account ของตัวเอง<br>
-          3. "Generate token" → เลือก "1-on-1 chat with LINE Notify"<br>
-          4. Copy token มาวางที่นี่<br><br>
-          ⚠️ แต่ละคนต้องตั้งค่าบนโทรศัพท์ของตัวเอง
-        </div>
+        <button class="settings-btn success" onclick="retrySupabase()">🔄 ลองเชื่อมต่อใหม่</button>
       </div>
 
       <!-- Danger zone -->
       <div class="settings-card">
         <div class="settings-title">⚠️ จัดการข้อมูล</div>
-        <button class="settings-btn success" onclick="retrySupabase()" style="margin-bottom:8px">🔄 ลองเชื่อมต่อ Supabase ใหม่</button>
         <button class="settings-btn danger" onclick="clearAllData()">🗑 ลบข้อมูลทั้งหมด</button>
       </div>
     </div>
@@ -999,9 +934,6 @@ async function init() {
   document.getElementById('loading-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
 
-  // Load saved settings
-  const lineTime = document.getElementById('line-time-inp');
-  if (lineTime) lineTime.value = LINETIME();
 
   // Try Supabase with 6s timeout, fall back to localStorage
   try {
@@ -1154,15 +1086,10 @@ function renderHeader() {
   document.getElementById('prog-fill').style.width = pct + '%';
   document.getElementById('prog-pct').textContent  = pct + '%';
 
-  // API key indicator
+  // AI is server-side now — always ready
   const apiBtn = document.getElementById('api-btn');
-  if (APIKEY()) {
-    apiBtn.textContent = '🤖 Groq ✓';
-    apiBtn.classList.add('set');
-  } else {
-    apiBtn.textContent = '🤖 ใส่ Key';
-    apiBtn.classList.remove('set');
-  }
+  apiBtn.textContent = '🤖 AI ✓';
+  apiBtn.classList.add('set');
 }
 
 /* ═══════════════════════════════════════
@@ -1443,8 +1370,7 @@ function handleImgs(input) {
       loaded++;
       if (loaded === files.length) {
         const pb = document.getElementById('parse-btn');
-        pb.style.display = 'flex'; pb.disabled = !APIKEY();
-        if (!APIKEY()) toast('⚠️ ใส่ Gemini API Key ก่อน (ไปที่ ⚙️ ตั้งค่า)');
+        pb.style.display = 'flex'; pb.disabled = false;
         const txt = document.getElementById('parse-btn-txt');
         txt.textContent = files.length > 1
           ? `✨ อ่าน ${files.length} รูปด้วย AI`
@@ -1663,18 +1589,9 @@ async function sendLineMessage(token, msg) { /* deprecated - using Telegram via 
 /* ═══════════════════════════════════════
    SETTINGS ACTIONS
 ═══════════════════════════════════════ */
-function saveApiKey() {
-  const key = document.getElementById('api-key-inp').value.trim();
-  localStorage.setItem('ht_apikey', key);
-  renderHeader();
-  toast(key ? '🔑 บันทึก API Key แล้ว' : '🗑 ลบ API Key แล้ว');
-}
+// saveApiKey removed — AI key is server-side on Vercel now
 
-function saveLineSettings() {
-  const time = document.getElementById('line-time-inp')?.value || '07:00';
-  localStorage.setItem('ht_linetime', time);
-  toast(`✅ บันทึกเวลาแจ้งเตือน ${time} แล้ว`);
-}
+function saveLineSettings() {}
 
 async function clearAllData() {
   if (!confirm(t().confirmClear)) return;
@@ -1831,6 +1748,14 @@ const LANG = {
     dupWarning: '⚠️ อาจซ้ำ',
     taskNamePh: 'เช่น ทำแบบฝึกหัดคณิตฯ หน้า 20-21',
     pointsPh: 'เช่น 10',
+    greetMorning: '🌅 อรุณสวัสดิ์!', greetAfternoon: '☀️ สวัสดีตอนบ่าย!', greetEvening: '🌆 สวัสดีตอนเย็น!', greetNight: '🌙 สวัสดีตอนกลางคืน!',
+    noUrgent: '🎉 ไม่มีการบ้านด่วน! เก่งมาก',
+    urgentCount1: 'มีการบ้านด่วน 1 ชิ้น', urgentCountN: n => `มีการบ้านด่วน ${n} ชิ้น`,
+    installMsg: 'เพิ่มไปหน้าจอหลักเพื่อใช้งานแบบ fullscreen',
+    addExamStrip: '🎯 เพิ่มรายการสอบ ม.1 → ดูการนับถอยหลัง',
+    studiedStrip: 'เรียนแล้ว', topicsStrip: 'หัวข้อ', daysStrip: 'วัน',
+    undated: 'ไม่มีวันส่ง',
+    markAll: '✅ ทำเครื่องหมายเสร็จทั้งหมด',
   },
   en: {
     appTitle: 'My Homework',
@@ -1868,6 +1793,14 @@ const LANG = {
     dupWarning: '⚠️ Possible duplicate',
     taskNamePh: 'e.g. Math exercise pages 20-21',
     pointsPh: 'e.g. 10',
+    greetMorning: '🌅 Good morning!', greetAfternoon: '☀️ Good afternoon!', greetEvening: '🌆 Good evening!', greetNight: '🌙 Good night!',
+    noUrgent: '🎉 No urgent homework! Great job',
+    urgentCount1: '1 urgent homework', urgentCountN: n => `${n} urgent homework`,
+    installMsg: 'Add to home screen for fullscreen mode',
+    addExamStrip: '🎯 Add ม.1 exam → see countdown',
+    studiedStrip: 'Studied', topicsStrip: 'topics', daysStrip: 'days',
+    undated: 'No due date',
+    markAll: '✅ Mark all done',
   }
 };
 
@@ -1878,8 +1811,8 @@ const t_ = () => LANG[currentLang]; // alias for use inside loops where t is a v
 function toggleLang() {
   currentLang = currentLang === 'th' ? 'en' : 'th';
   localStorage.setItem('ht_lang', currentLang);
-  applyLang();
-  renderAll();
+  renderAll();   // re-render dynamic content (banners, strips, cards) in new language
+  applyLang();   // then update static labels
 }
 
 function applyLang() {
@@ -1891,13 +1824,14 @@ function applyLang() {
   // Header
   document.querySelector('.header h1').textContent = '📚 ' + L.appTitle;
 
-  // Filter tabs - hw
+  // Filter tabs - hw (5 tabs: today, week, month, undated, all)
   const hwTabs = document.querySelectorAll('#tab-hw .f-tab');
-  if (hwTabs.length >= 4) {
-    hwTabs[0].textContent = L.today;
-    hwTabs[1].textContent = L.week;
-    hwTabs[2].textContent = L.month;
-    hwTabs[3].textContent = L.all;
+  if (hwTabs.length >= 5) {
+    hwTabs[0].childNodes[0].textContent = L.today;
+    hwTabs[1].childNodes[0].textContent = L.week;
+    hwTabs[2].childNodes[0].textContent = L.month;
+    hwTabs[3].childNodes[0].textContent = L.undated;
+    hwTabs[4].childNodes[0].textContent = L.all;
   }
 
   // Filter tabs - todo
@@ -1979,6 +1913,10 @@ function applyLang() {
   // Settings
   const settingsSecLabel = document.querySelector('#tab-settings .sec-label');
   if (settingsSecLabel) settingsSecLabel.childNodes[0].textContent = L.settingsTitle + ' ';
+
+  // Mark all button
+  const markAllBtn = document.getElementById('mark-all-btn');
+  if (markAllBtn) markAllBtn.textContent = L.markAll;
 } catch(e) { console.warn("applyLang:", e); }
 }
 
@@ -2430,7 +2368,7 @@ function renderExamStrip() {
   const wrap = document.getElementById('exam-strip-wrap');
   if (!wrap) return;
   if (!STATE.exams.length) {
-    wrap.innerHTML = `<div class="exam-strip-none" onclick="showTab('exam')">🎯 เพิ่มรายการสอบ ม.1 → ดูการนับถอยหลัง</div>`;
+    wrap.innerHTML = `<div class="exam-strip-none" onclick="showTab('exam')">${t().addExamStrip}</div>`;
     return;
   }
   // Find nearest upcoming exam
@@ -2451,11 +2389,11 @@ function renderExamStrip() {
   <div class="exam-strip">
     <div>
       <div class="exam-strip-name">🎯 ${escHtml(upcoming.name)}</div>
-      <div class="exam-strip-label">เรียนแล้ว ${done}/${topics.length} หัวข้อ (${pct}%)</div>
+      <div class="exam-strip-label">${t().studiedStrip} ${done}/${topics.length} ${t().topicsStrip} (${pct}%)</div>
     </div>
     <div style="text-align:right">
       <div class="exam-strip-days" style="color:${daysColor}">${upcoming.diff}</div>
-      <div class="exam-strip-label">วัน</div>
+      <div class="exam-strip-label">${t().daysStrip}</div>
     </div>
   </div>`;
 }
@@ -2523,27 +2461,9 @@ const LINE_TOKENS = () => ({
   mum: localStorage.getItem('ht_line_mum') || '',
 });
 
-function saveParentToken(parent) {
-  const inp = document.getElementById(parent + '-token-inp');
-  if (!inp) return;
-  const token = inp.value.trim();
-  localStorage.setItem('ht_line_' + parent, token);
-  updateParentStatus();
-  toast(`✅ บันทึก Token ${parent === 'dad' ? 'คุณพ่อ' : 'คุณแม่'} แล้ว`);
-}
+function saveParentToken() {}
 
-function updateParentStatus() {
-  const tokens = LINE_TOKENS();
-  const dadDot = document.getElementById('dad-status');
-  const mumDot = document.getElementById('mum-status');
-  if (dadDot) dadDot.classList.toggle('active', !!tokens.dad);
-  if (mumDot) mumDot.classList.toggle('active', !!tokens.mum);
-  // Pre-fill inputs if tokens exist
-  if (tokens.dad && document.getElementById('dad-token-inp'))
-    document.getElementById('dad-token-inp').value = tokens.dad;
-  if (tokens.mum && document.getElementById('mum-token-inp'))
-    document.getElementById('mum-token-inp').value = tokens.mum;
-}
+function updateParentStatus() { /* tokens now server-side */ }
 
 async function testLineNotify(parent) {
   await testTelegram();
@@ -2560,23 +2480,7 @@ async function testTelegram() {
   }
 }
 
-function scheduleLineCheck() {
-  setInterval(async () => {
-    const tokens = LINE_TOKENS();
-    if (!tokens.dad && !tokens.mum) return;
-    const now    = new Date();
-    const hhmm   = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
-    const target = LINETIME();
-    const today_ = new Date().toDateString();
-    const lastSent = localStorage.getItem('ht_lastnotify');
-    if (hhmm === target && lastSent !== today_) {
-      localStorage.setItem('ht_lastnotify', today_);
-      const msg = buildLineMessage();
-      if (tokens.dad) await sendLineMessage(tokens.dad, msg);
-      if (tokens.mum) await sendLineMessage(tokens.mum, msg);
-    }
-  }, 60000);
-}
+function scheduleLineCheck() { /* Vercel cron handles morning push */ }
 
 /* ═══════════════════════════════════════
    OFFLINE INDICATOR
@@ -2702,23 +2606,22 @@ function renderRightNow() {
     .slice(0, 3);
 
   // Greeting based on time
-  let greeting = '🌅 อรุณสวัสดิ์!';
-  if (h >= 12 && h < 17) greeting = '☀️ สวัสดีตอนบ่าย!';
-  if (h >= 17 && h < 21) greeting = '🌆 สวัสดีตอนเย็น!';
-  if (h >= 21) greeting = '🌙 สวัสดีตอนกลางคืน!';
+  const L = t();
+  let greeting = L.greetMorning;
+  if (h >= 12 && h < 17) greeting = L.greetAfternoon;
+  if (h >= 17 && h < 21) greeting = L.greetEvening;
+  if (h >= 21) greeting = L.greetNight;
 
   if (!urgent.length) {
     wrap.innerHTML = `
     <div class="rightnow-banner" style="background:linear-gradient(135deg,#15803d,#16a34a)">
       <div class="rightnow-greeting">${greeting}</div>
-      <div class="rightnow-msg">🎉 ไม่มีการบ้านด่วน! เก่งมาก</div>
+      <div class="rightnow-msg">${L.noUrgent}</div>
     </div>`;
     return;
   }
 
-  const msg = urgent.length === 1
-    ? `มีการบ้านด่วน 1 ชิ้น`
-    : `มีการบ้านด่วน ${urgent.length} ชิ้น`;
+  const msg = urgent.length === 1 ? L.urgentCount1 : L.urgentCountN(urgent.length);
 
   const tasksHTML = urgent.map(t => {
     const dl = dueLabel(t.due_date);
@@ -2906,7 +2809,7 @@ function renderInstallBanner() {
   wrap.innerHTML = `
   <div class="install-banner">
     <span class="install-icon">📲</span>
-    <span>เพิ่มไปหน้าจอหลักเพื่อใช้งานแบบ fullscreen</span>
+    <span>${t().installMsg}</span>
     <button class="install-close" onclick="dismissInstall()">✕</button>
   </div>`;
 }
