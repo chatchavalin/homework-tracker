@@ -487,6 +487,51 @@ input,textarea,select{font-family:inherit}
 /* ── OFFLINE WARNING ─────────────────── */
 .offline-chip{background:#fef9c3;border:1.5px solid #fde047;border-radius:8px;padding:3px 8px;font-size:0.65rem;font-weight:800;color:#713f12;display:none}
 .offline-chip.show{display:inline-block}
+
+/* ── CALENDAR / HOLIDAY ─────────────── */
+.cal-month-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cal-month-title{font-size:1rem;font-weight:800;color:var(--text)}
+.cal-nav{background:var(--primary-lt);border:none;border-radius:8px;padding:6px 12px;font-size:0.9rem;cursor:pointer;color:var(--primary-dk);font-weight:700}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:16px}
+.cal-day-label{text-align:center;font-size:0.62rem;font-weight:800;color:var(--muted);text-transform:uppercase;padding:4px 0}
+.cal-day{aspect-ratio:1;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:0.78rem;font-weight:700;cursor:pointer;position:relative;transition:all 0.15s;gap:1px}
+.cal-day:active{transform:scale(0.92)}
+.cal-day.other-month{opacity:0.25}
+.cal-day.today-cal{background:var(--primary);color:white;box-shadow:0 3px 10px rgba(22,163,74,0.35)}
+.cal-day.is-holiday{background:#fef2f2;color:#991b1b}
+.cal-day.is-break{background:#eff6ff;color:#1d4ed8}
+.cal-day.has-hw::after{content:'';width:5px;height:5px;border-radius:50%;background:var(--med);position:absolute;bottom:3px}
+.cal-day.today-cal.has-hw::after{background:white}
+.cal-day.is-uniform-pe{border:2px solid #fb923c}
+.cal-day.is-uniform-scout{border:2px solid #a855f7}
+
+.uniform-banner{border-radius:14px;padding:12px 16px;margin-bottom:10px;display:flex;align-items:center;gap:10px;font-size:0.85rem;font-weight:700}
+.uniform-banner.pe{background:#fff7ed;border:1.5px solid #fed7aa;color:#9a3412}
+.uniform-banner.scout{background:#faf5ff;border:1.5px solid #e9d5ff;color:#6b21a8}
+.uniform-banner .uni-icon{font-size:1.5rem;flex-shrink:0}
+.uniform-banner .uni-title{font-weight:800;font-size:0.9rem}
+.uniform-banner .uni-sub{font-size:0.72rem;opacity:0.75;margin-top:1px}
+
+.holiday-banner{background:linear-gradient(135deg,#fef9c3,#fef08a);border:1.5px solid #fde047;border-radius:14px;padding:12px 16px;margin-bottom:10px;display:flex;align-items:center;gap:10px;font-size:0.85rem;font-weight:700;color:#713f12}
+.holiday-banner .hol-icon{font-size:1.5rem;flex-shrink:0}
+
+.event-item{background:var(--surface);border-radius:12px;padding:11px 13px;margin-bottom:8px;box-shadow:var(--shadow);display:flex;align-items:center;gap:10px;font-size:0.83rem;font-weight:600}
+.event-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.event-dot.holiday{background:var(--high)}
+.event-dot.break{background:var(--blue)}
+.event-dot.uniform{background:var(--primary)}
+.event-dot.event{background:var(--med)}
+.event-item-body{flex:1}
+.event-item-title{font-weight:700}
+.event-item-date{font-size:0.7rem;color:var(--muted);margin-top:1px}
+.event-delete{color:var(--muted);font-size:0.75rem;padding:4px 6px}
+
+.add-event-form{background:var(--surface);border-radius:var(--r);padding:15px 16px;box-shadow:var(--shadow);margin-bottom:12px;border:1.5px dashed var(--border)}
+.event-type-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.event-type-chip{padding:5px 11px;border-radius:20px;font-size:0.72rem;font-weight:800;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;transition:all 0.15s}
+.event-type-chip.active{background:var(--primary);border-color:var(--primary);color:white}
+
+
 </style>
 </head>
 <body>
@@ -1838,6 +1883,7 @@ function toggleLang() {
 }
 
 function applyLang() {
+  try {
   const L = t();
   const btn = document.getElementById('lang-btn');
   if (btn) btn.textContent = currentLang === 'th' ? '🇹🇭 TH' : '🇬🇧 EN';
@@ -1933,6 +1979,7 @@ function applyLang() {
   // Settings
   const settingsSecLabel = document.querySelector('#tab-settings .sec-label');
   if (settingsSecLabel) settingsSecLabel.childNodes[0].textContent = L.settingsTitle + ' ';
+} catch(e) { console.warn("applyLang:", e); }
 }
 
 /* ═══════════════════════════════════════
@@ -2846,49 +2893,6 @@ function spawnConfetti() {
     setTimeout(() => el.remove(), 4000);
   }
 }
-
-/* ── CALENDAR / HOLIDAY ─────────────── */
-.cal-month-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.cal-month-title{font-size:1rem;font-weight:800;color:var(--text)}
-.cal-nav{background:var(--primary-lt);border:none;border-radius:8px;padding:6px 12px;font-size:0.9rem;cursor:pointer;color:var(--primary-dk);font-weight:700}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:16px}
-.cal-day-label{text-align:center;font-size:0.62rem;font-weight:800;color:var(--muted);text-transform:uppercase;padding:4px 0}
-.cal-day{aspect-ratio:1;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:0.78rem;font-weight:700;cursor:pointer;position:relative;transition:all 0.15s;gap:1px}
-.cal-day:active{transform:scale(0.92)}
-.cal-day.other-month{opacity:0.25}
-.cal-day.today-cal{background:var(--primary);color:white;box-shadow:0 3px 10px rgba(22,163,74,0.35)}
-.cal-day.is-holiday{background:#fef2f2;color:#991b1b}
-.cal-day.is-break{background:#eff6ff;color:#1d4ed8}
-.cal-day.has-hw::after{content:'';width:5px;height:5px;border-radius:50%;background:var(--med);position:absolute;bottom:3px}
-.cal-day.today-cal.has-hw::after{background:white}
-.cal-day.is-uniform-pe{border:2px solid #fb923c}
-.cal-day.is-uniform-scout{border:2px solid #a855f7}
-
-.uniform-banner{border-radius:14px;padding:12px 16px;margin-bottom:10px;display:flex;align-items:center;gap:10px;font-size:0.85rem;font-weight:700}
-.uniform-banner.pe{background:#fff7ed;border:1.5px solid #fed7aa;color:#9a3412}
-.uniform-banner.scout{background:#faf5ff;border:1.5px solid #e9d5ff;color:#6b21a8}
-.uniform-banner .uni-icon{font-size:1.5rem;flex-shrink:0}
-.uniform-banner .uni-title{font-weight:800;font-size:0.9rem}
-.uniform-banner .uni-sub{font-size:0.72rem;opacity:0.75;margin-top:1px}
-
-.holiday-banner{background:linear-gradient(135deg,#fef9c3,#fef08a);border:1.5px solid #fde047;border-radius:14px;padding:12px 16px;margin-bottom:10px;display:flex;align-items:center;gap:10px;font-size:0.85rem;font-weight:700;color:#713f12}
-.holiday-banner .hol-icon{font-size:1.5rem;flex-shrink:0}
-
-.event-item{background:var(--surface);border-radius:12px;padding:11px 13px;margin-bottom:8px;box-shadow:var(--shadow);display:flex;align-items:center;gap:10px;font-size:0.83rem;font-weight:600}
-.event-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-.event-dot.holiday{background:var(--high)}
-.event-dot.break{background:var(--blue)}
-.event-dot.uniform{background:var(--primary)}
-.event-dot.event{background:var(--med)}
-.event-item-body{flex:1}
-.event-item-title{font-weight:700}
-.event-item-date{font-size:0.7rem;color:var(--muted);margin-top:1px}
-.event-delete{color:var(--muted);font-size:0.75rem;padding:4px 6px}
-
-.add-event-form{background:var(--surface);border-radius:var(--r);padding:15px 16px;box-shadow:var(--shadow);margin-bottom:12px;border:1.5px dashed var(--border)}
-.event-type-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
-.event-type-chip{padding:5px 11px;border-radius:20px;font-size:0.72rem;font-weight:800;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;transition:all 0.15s}
-.event-type-chip.active{background:var(--primary);border-color:var(--primary);color:white}
 
 /* ═══════════════════════════════════════
    INSTALL BANNER
