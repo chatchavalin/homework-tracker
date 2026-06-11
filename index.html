@@ -3086,6 +3086,13 @@ Today's date is ${yyyy}-${mm}-${dd} (${dd} ${monthName} ${yyyy}, Buddhist year $
 
 Extract ALL tasks, school events, AND general information from this image (notebook page OR Line/chat screenshot).
 
+COMPLETENESS RULES — extract EVERYTHING:
+- The page may have MULTIPLE sections separated by red/colored horizontal lines. Extract items from ALL sections, including above the first line and below the last.
+- Items numbered 5., 6., 7. etc. at the top of a page are continuations from the previous page — they are still active tasks. Extract them.
+- Handwritten Thai cursive counts — read it carefully even if messy.
+- Do not skip items just because they have no date or no section header.
+- Before finishing, re-scan the image top to bottom and verify you captured every numbered or bulleted line.
+
 DATE RULES — very important:
 - This is a THAI school notebook. ALL dates use Thai DD/MM convention.
 - "11/07" means 11 July (day=11, month=07) — NEVER interpret as November 7th.
