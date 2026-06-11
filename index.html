@@ -581,6 +581,7 @@ input,textarea,select{font-family:inherit}
         <div id="kid-switcher" style="position:relative;display:flex;align-items:center;background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;padding:4px 8px;color:white"></div>
         <span class="offline-chip" id="offline-chip">📴 Offline</span>
         <button class="hdr-btn" id="sync-btn" onclick="showTab('settings')" style="display:none">⚡ Live</button>
+        <button class="hdr-btn" id="music-btn" onclick="toggleMusic()">🎵</button>
         <button class="hdr-btn" id="lang-btn" onclick="toggleLang()">🇬🇧 EN</button>
         <button class="hdr-btn" id="api-btn" onclick="showTab('settings')" style="display:none">🔑 AI</button>
       </div>
@@ -946,6 +947,10 @@ input,textarea,select{font-family:inherit}
 
 <div class="toast" id="toast"></div>
 
+<!-- SoundCloud player (hidden) -->
+<div id="sc-player-wrap" style="position:fixed;bottom:-200px;left:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none"></div>
+<script src="https://w.soundcloud.com/player/api.js"></script>
+
 <script>
 /* ═══════════════════════════════════════
    SUPABASE CONFIG
@@ -964,6 +969,7 @@ let STATE = { tasks: [], exams: [], topics: [], notes: [] };
 const KIDS = {
   ryuji: {
     id: 'ryuji', name: 'Ryuji', emoji: '👦',
+    music: 'https://on.soundcloud.com/Cr7GKo3r1qOViaO8nd',
     theme: {
       '--navy':      '#166534',
       '--primary':   '#16a34a',
@@ -974,6 +980,7 @@ const KIDS = {
   },
   miki: {
     id: 'miki', name: 'Miki', emoji: '👧',
+    music: 'https://on.soundcloud.com/f7WhSEu4TcyTMSuBhy',
     theme: {
       '--navy':      '#6b21a8',
       '--primary':   '#9333ea',
@@ -992,11 +999,62 @@ function applyKidTheme(kidId) {
 }
 let currentKid = localStorage.getItem('ht_current_kid') || 'ryuji';
 
+/* ═══════════════════════════════════════
+   BACKGROUND MUSIC (SoundCloud)
+═══════════════════════════════════════ */
+let scWidget = null;
+let musicOn = localStorage.getItem('ht_music_on') === '1';
+const MUSIC_VOLUME = 8; // minimum loudness (0-100)
+
+function loadMusic(kidId) {
+  const kid = KIDS[kidId];
+  if (!kid || !kid.music) return;
+  const wrap = document.getElementById('sc-player-wrap');
+  if (!wrap) return;
+  // Build embed iframe with the kid's track
+  const embedUrl = 'https://w.soundcloud.com/player/?url=' + encodeURIComponent(kid.music)
+    + '&auto_play=false&loop=true&hide_related=true&show_comments=false&show_user=false&visual=false';
+  wrap.innerHTML = `<iframe id="sc-iframe" width="300" height="80" scrolling="no" frameborder="no" allow="autoplay" src="${embedUrl}"></iframe>`;
+  scWidget = SC.Widget(document.getElementById('sc-iframe'));
+  scWidget.bind(SC.Widget.Events.READY, () => {
+    scWidget.setVolume(MUSIC_VOLUME);
+    if (musicOn) scWidget.play();
+  });
+  // Loop manually in case loop param fails
+  scWidget.bind(SC.Widget.Events.FINISH, () => {
+    if (musicOn) { scWidget.seekTo(0); scWidget.play(); }
+  });
+}
+
+function toggleMusic() {
+  musicOn = !musicOn;
+  localStorage.setItem('ht_music_on', musicOn ? '1' : '0');
+  updateMusicBtn();
+  if (!scWidget) { loadMusic(currentKid); return; }
+  if (musicOn) {
+    scWidget.setVolume(MUSIC_VOLUME);
+    scWidget.play();
+    toast(currentLang==='en' ? '🎵 Music on' : '🎵 เปิดเพลง');
+  } else {
+    scWidget.pause();
+    toast(currentLang==='en' ? '🔇 Music off' : '🔇 ปิดเพลง');
+  }
+}
+
+function updateMusicBtn() {
+  const btn = document.getElementById('music-btn');
+  if (btn) {
+    btn.textContent = musicOn ? '🎵' : '🔇';
+    btn.classList.toggle('set', musicOn);
+  }
+}
+
 function switchKid(id) {
   currentKid = id;
   localStorage.setItem('ht_current_kid', id);
   applyKidTheme(id);
   renderKidSwitcher();
+  loadMusic(id);   // switch to this kid's song
   loadAll();
 }
 
@@ -1124,6 +1182,9 @@ async function init() {
   try {
   // Apply kid theme immediately on load
   applyKidTheme(currentKid);
+  updateMusicBtn();
+  // Load music player (won't auto-play until user taps 🎵 due to browser autoplay rules)
+  setTimeout(() => { try { loadMusic(currentKid); } catch(e) { console.warn('music:', e); } }, 1500);
 
   document.getElementById('loading-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
