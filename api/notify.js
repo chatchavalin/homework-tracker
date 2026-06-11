@@ -27,18 +27,20 @@ export default async function handler(req, res) {
     );
     const exams = await re.json();
 
-    // Build date string (Thai Buddhist year)
+    // Tomorrow-focused: this runs at 9PM for next-day planning
     const today    = new Date();
-    const buddYear = today.getFullYear() + 543;
-    const dateStr  = `${today.getDate()}/${today.getMonth()+1}/${buddYear}`;
-    const dow      = today.getDay();
+    const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
+    const buddYear = tomorrow.getFullYear() + 543;
+    const dateStr  = `${tomorrow.getDate()}/${tomorrow.getMonth()+1}/${buddYear}`;
+    const tDow     = tomorrow.getDay();
     const DOW_TH   = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์'];
 
-    // Uniform reminders
+    // Uniform reminders — for TOMORROW
     let uniformMsg = '';
-    if (dow === 4) uniformMsg = '\n👘 วันนี้ใส่ชุดลูกเสือด้วยนะ!';
-    if (dow === 5) uniformMsg = '\n⚽ วันนี้ใส่ชุดพลศึกษาด้วยนะ!';
-    if (dow === 3) uniformMsg = '\n👔 วันนี้นำผ้ากันเปื้อนมาด้วยนะ!';
+    if (tDow === 4) uniformMsg = '\n👘 พรุ่งนี้ใส่ชุดลูกเสือ!';
+    if (tDow === 5) uniformMsg = '\n⚽ พรุ่งนี้ใส่ชุดพลศึกษา!';
+    if (tDow === 3) uniformMsg = '\n👔 พรุ่งนี้นำผ้ากันเปื้อนมาด้วย!';
+    if (tDow === 0 || tDow === 6) uniformMsg = '\n🏖 พรุ่งนี้วันหยุด ไม่มีเรียน!';
 
     // Split tasks per kid (legacy tasks without kid_id = Ryuji)
     const kidName = { ryuji: 'Ryuji 👦', miki: 'Miki 👧' };
@@ -51,17 +53,18 @@ export default async function handler(req, res) {
       const kt = byKid[kidId];
       if (!kt.length) return `\n\n${kidName[kidId]}: ✅ ไม่มีงานค้าง`;
       // due tomorrow (this runs at 9PM, so warn about tomorrow)
+      const t0 = new Date(today); t0.setHours(0,0,0,0);
       const tmrHw = kt.filter(t => {
         if (!t.due_date || t.type !== 'homework') return false;
         const d = new Date(t.due_date + 'T00:00:00');
-        const diff = Math.round((d - today) / 86400000);
-        return diff <= 1 && diff >= 0;
+        const diff = Math.round((d - t0) / 86400000);
+        return diff <= 1;  // due tomorrow, or overdue — both need attention tonight
       });
       const urgent = kt.filter(t => t.type === 'homework' && t.priority === 'high');
       const todos  = kt.filter(t => t.type === 'todo').slice(0, 3);
       let s = `\n\n*${kidName[kidId]}* — ค้าง ${kt.length} ชิ้น`;
       if (tmrHw.length) {
-        s += `\n🔴 ส่งพรุ่งนี้/วันนี้:`;
+        s += `\n🔴 ต้องส่งพรุ่งนี้:`;
         tmrHw.slice(0,5).forEach(t => { s += `\n  • ${t.parsed_title || t.original_text}`; });
       } else if (urgent.length) {
         s += `\n⚡ งานด่วน:`;
@@ -90,8 +93,8 @@ export default async function handler(req, res) {
     }
 
     // Compose message
-    let msg = `🌙 *สรุปการบ้านคืนนี้ — เตรียมพร้อมสำหรับพรุ่งนี้\\!*\n`;
-    msg += `วัน${DOW_TH[dow]} ${dateStr}`;
+    let msg = `🌙 *แผนสำหรับพรุ่งนี้*\n`;
+    msg += `วัน${DOW_TH[tDow]} ${dateStr}`;
     msg += uniformMsg;
 
     msg += kidSection('ryuji');
