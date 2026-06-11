@@ -1481,9 +1481,9 @@ function renderHW() {
   let tasks;
 
   if (q === '__urgent__') {
-    tasks = STATE.tasks.filter(t => t.type==='homework' && !t.is_done && t.priority==='high');
+    tasks = STATE.tasks.filter(t => !t.is_done && t.priority==='high');
   } else if (q === '__pending__') {
-    tasks = STATE.tasks.filter(t => t.type==='homework' && !t.is_done);
+    tasks = STATE.tasks.filter(t => !t.is_done);
   } else if (q.trim()) {
     const ql = q.toLowerCase();
     tasks = STATE.tasks.filter(t => t.type==='homework' && (
@@ -1505,7 +1505,9 @@ function renderHW() {
 
   if (!tasks.length) {
     const L = t();
-    const msg = q.trim() ? (currentLang==='en'?`No results for "${q}"`:`ไม่พบ "${q}"`) : (dateFilter==='today'?L.noHwToday:L.noHw);
+    const qLabel = q === '__pending__' ? (currentLang==='en'?'pending tasks':'งานค้าง')
+                 : q === '__urgent__' ? (currentLang==='en'?'urgent tasks':'งานด่วน') : q;
+    const msg = q.trim() ? (currentLang==='en'?`No ${q.startsWith('__')?qLabel:'results for "'+qLabel+'"'}`:`ไม่พบ${q.startsWith('__')?qLabel:' "'+qLabel+'"'}`) : (dateFilter==='today'?L.noHwToday:L.noHw);
     el.innerHTML = `<div class="empty"><div class="emoji">${q.trim()?'🔍':'🎉'}</div>
       <div class="msg">${msg}</div>
       <div class="sub">${q.trim()?'':''+L.addNew}</div></div>`; return;
