@@ -52,7 +52,9 @@ input,textarea,select{font-family:inherit}
 
 /* Stats */
 .stats-strip{display:flex;gap:6px;margin-top:12px}
-.stat-pill{flex:1;background:rgba(255,255,255,0.1);border-radius:10px;padding:7px 6px;text-align:center}
+.stat-pill{flex:1;background:rgba(255,255,255,0.1);border-radius:10px;padding:7px 6px;text-align:center;cursor:pointer;transition:background 0.15s,transform 0.1s}
+.stat-pill:hover{background:rgba(255,255,255,0.2)}
+.stat-pill:active{transform:scale(0.95)}
 .stat-pill .n{font-size:1.2rem;font-weight:800;line-height:1}
 .stat-pill .l{font-size:0.6rem;opacity:0.65;font-weight:600;text-transform:uppercase;letter-spacing:0.04em}
 .stat-pill.urgent .n{color:#ff8a8a}
@@ -556,16 +558,16 @@ input,textarea,select{font-family:inherit}
       <div class="hdr-btns">
         <div id="kid-switcher" style="position:relative;display:flex;align-items:center;background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;padding:4px 8px;color:white"></div>
         <span class="offline-chip" id="offline-chip">📴 Offline</span>
-        <button class="hdr-btn" id="sync-btn" onclick="showTab('settings')">⚡ Sync</button>
-        <button class="hdr-btn" id="lang-btn" onclick="toggleLang()">🇹🇭 TH</button>
-        <button class="hdr-btn" id="api-btn" onclick="showTab('settings')">🔑 AI</button>
+        <button class="hdr-btn" id="sync-btn" onclick="showTab('settings')" style="display:none">⚡ Live</button>
+        <button class="hdr-btn" id="lang-btn" onclick="toggleLang()">🇬🇧 EN</button>
+        <button class="hdr-btn" id="api-btn" onclick="showTab('settings')" style="display:none">🔑 AI</button>
       </div>
     </div>
     <div class="stats-strip">
-      <div class="stat-pill urgent"><div class="n" id="s-urgent">0</div><div class="l">ด่วน</div></div>
-      <div class="stat-pill pending"><div class="n" id="s-pending">0</div><div class="l">ค้างอยู่</div></div>
-      <div class="stat-pill done"><div class="n" id="s-done">0</div><div class="l">เสร็จ</div></div>
-      <div class="stat-pill" style="background:rgba(255,255,255,0.1)"><div class="n" id="s-total" style="color:white">0</div><div class="l">ทั้งหมด</div></div>
+      <div class="stat-pill urgent"  onclick="statPillClick('urgent')" title="Show urgent"><div class="n" id="s-urgent">0</div><div class="l" id="sl-urgent">ด่วน</div></div>
+      <div class="stat-pill pending" onclick="statPillClick('pending')" title="Show pending"><div class="n" id="s-pending">0</div><div class="l" id="sl-pending">ค้างอยู่</div></div>
+      <div class="stat-pill done"    onclick="statPillClick('done')" title="Show done"><div class="n" id="s-done">0</div><div class="l" id="sl-done">เสร็จ</div></div>
+      <div class="stat-pill"         onclick="statPillClick('all')" title="Show all" style="background:rgba(255,255,255,0.1)"><div class="n" id="s-total" style="color:white">0</div><div class="l" id="sl-total">ทั้งหมด</div></div>
     </div>
     <div class="progress-row">
       <div class="progress-track"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
@@ -671,7 +673,7 @@ input,textarea,select{font-family:inherit}
 
     <!-- TAB: EXAM -->
     <div class="tab-panel" id="tab-exam">
-      <div class="sec-label">🎯 เตรียมสอบเข้า ม.1</div>
+      <div class="sec-label">🎯 เตรียมสอบ</div>
       <div class="new-exam-form">
         <div class="new-exam-title">+ สร้างการสอบใหม่</div>
         <div class="form-row">
@@ -922,17 +924,40 @@ let STATE = { tasks: [], exams: [], topics: [], notes: [] };
 
 // Kids system
 const KIDS = {
-  ryuji: { id: 'ryuji', name: 'Ryuji', emoji: '👦', color: '#166534', photo: null },
-  miki:  { id: 'miki',  name: 'Miki',  emoji: '👧', color: '#9d174d', photo: null },
+  ryuji: {
+    id: 'ryuji', name: 'Ryuji', emoji: '👦',
+    theme: {
+      '--navy':      '#166534',
+      '--primary':   '#16a34a',
+      '--primary-dk':'#15803d',
+      '--primary-lt':'#dcfce7',
+      '--accent':    '#4ade80',
+    }
+  },
+  miki: {
+    id: 'miki', name: 'Miki', emoji: '👧',
+    theme: {
+      '--navy':      '#6b21a8',
+      '--primary':   '#9333ea',
+      '--primary-dk':'#7e22ce',
+      '--primary-lt':'#f3e8ff',
+      '--accent':    '#c084fc',
+    }
+  },
 };
+
+function applyKidTheme(kidId) {
+  const kid = KIDS[kidId];
+  if (!kid) return;
+  const root = document.documentElement;
+  Object.entries(kid.theme).forEach(([k,v]) => root.style.setProperty(k, v));
+}
 let currentKid = localStorage.getItem('ht_current_kid') || 'ryuji';
 
 function switchKid(id) {
   currentKid = id;
   localStorage.setItem('ht_current_kid', id);
-  // Load kid-specific photo
-  const savedPhoto = localStorage.getItem('ht_photo_' + id);
-  KIDS[id].photo = savedPhoto || null;
+  applyKidTheme(id);
   renderKidSwitcher();
   loadAll();
 }
@@ -1012,6 +1037,9 @@ let USE_LOCAL = false;
 
 async function init() {
   try {
+  // Apply kid theme immediately on load
+  applyKidTheme(currentKid);
+
   document.getElementById('loading-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
 
@@ -1178,10 +1206,9 @@ function renderHeader() {
   document.getElementById('prog-fill').style.width = pct + '%';
   document.getElementById('prog-pct').textContent  = pct + '%';
 
-  // AI is server-side now — always ready
+  // AI is server-side — hide button, only show if missing key
   const apiBtn = document.getElementById('api-btn');
-  apiBtn.textContent = '🤖 AI ✓';
-  apiBtn.classList.add('set');
+  if (apiBtn) apiBtn.style.display = 'none';
 }
 
 /* ═══════════════════════════════════════
@@ -1756,6 +1783,36 @@ function showTab(tab) {
   if (tab === 'notes') renderNotes();
 }
 
+function statPillClick(type) {
+  showTab('hw');
+  // Map pill type to filter
+  if (type === 'done') {
+    // Switch to hw tab, show all, scroll to done section
+    const allBtn = document.querySelector('#tab-hw .f-tab:last-child');
+    if (allBtn) setDateFilter('all', allBtn);
+    // highlight done section after render
+    setTimeout(() => {
+      const doneSection = document.querySelector('#hw-list .sec-label');
+      if (doneSection) doneSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  } else if (type === 'urgent') {
+    // Switch to today filter to show urgent
+    const todayBtn = document.querySelector('#tab-hw .f-tab');
+    if (todayBtn) setDateFilter('today', todayBtn);
+  } else if (type === 'pending') {
+    // Show this week pending
+    const weekBtn = document.querySelectorAll('#tab-hw .f-tab')[1];
+    if (weekBtn) setDateFilter('week', weekBtn);
+  } else {
+    // all
+    const allBtn = document.querySelector('#tab-hw .f-tab:last-child');
+    if (allBtn) setDateFilter('all', allBtn);
+  }
+  toast(currentLang === 'en'
+    ? `Showing ${type} tasks`
+    : `แสดงงาน: ${type}`);
+}
+
 function setDateFilter(f, btn) {
   dateFilter = f;
   document.querySelectorAll('#tab-hw .f-tab').forEach(b=>b.classList.remove('active'));
@@ -1786,9 +1843,17 @@ function setSyncStatus(ok) {
   const dot = document.getElementById('sb-dot');
   const lbl = document.getElementById('sb-status');
   const btn = document.getElementById('sync-btn');
+  const isEn = currentLang === 'en';
   if (dot) dot.className = 'status-dot ' + (ok?'ok':'err');
-  if (lbl) lbl.textContent = ok ? 'เชื่อมต่อแล้ว' : 'เชื่อมต่อไม่ได้';
-  if (btn) { btn.className = 'hdr-btn ' + (ok?'sync-ok':'sync-err'); btn.textContent = ok?'⚡ Live':'⚡ Offline'; }
+  if (lbl) lbl.textContent = ok
+    ? (isEn ? 'Connected' : 'เชื่อมต่อแล้ว')
+    : (isEn ? 'Disconnected' : 'เชื่อมต่อไม่ได้');
+  // Only show sync button when there's a problem
+  if (btn) {
+    btn.style.display = ok ? 'none' : 'inline-block';
+    btn.className = 'hdr-btn ' + (ok?'sync-ok':'sync-err');
+    btn.textContent = ok ? '⚡ Live' : '⚡ Error';
+  }
 }
 
 /* ═══════════════════════════════════════
@@ -1908,7 +1973,7 @@ const LANG = {
     addBtn: '+ เพิ่มงาน',
     hwTypeBtn: '📚 การบ้าน', todoTypeBtn: '📋 สิ่งที่ต้องทำ',
     subjects: ['เลือกวิชา...','คณิตศาสตร์','ภาษาไทย','ภาษาอังกฤษ','วิทยาศาสตร์','สังคมศึกษา','ภาษาจีน','พลศึกษา'],
-    examPrepTitle: '🎯 เตรียมสอบเข้า ม.1',
+    examPrepTitle: '🎯 เตรียมสอบ',
     newExam: '+ สร้างการสอบใหม่', examName: 'ชื่อการสอบ', examDate: 'วันสอบ', createExam: '+ สร้าง',
     examNamePh: 'เช่น สอบเข้า ม.1 Triam Udom',
     topicPh: 'เพิ่มหัวข้อ...',
@@ -1928,7 +1993,7 @@ const LANG = {
     noUrgent: '🎉 ไม่มีการบ้านด่วน! เก่งมาก',
     urgentCount1: 'มีการบ้านด่วน 1 ชิ้น', urgentCountN: n => `มีการบ้านด่วน ${n} ชิ้น`,
     installMsg: 'เพิ่มไปหน้าจอหลักเพื่อใช้งานแบบ fullscreen',
-    addExamStrip: '🎯 เพิ่มรายการสอบ ม.1 → ดูการนับถอยหลัง',
+    addExamStrip: '🎯 เพิ่มรายการสอบ → ดูการนับถอยหลัง',
     studiedStrip: 'เรียนแล้ว', topicsStrip: 'หัวข้อ', daysStrip: 'วัน',
     undated: 'ไม่มีวันส่ง',
     markAll: '✅ ทำเครื่องหมายเสร็จทั้งหมด',
@@ -1973,7 +2038,7 @@ const LANG = {
     addBtn: '+ Add Task',
     hwTypeBtn: '📚 Homework', todoTypeBtn: '📋 To-Do',
     subjects: ['Select subject...','Math','Thai','English','Science','Social','Chinese','PE'],
-    examPrepTitle: '🎯 Exam Prep (ม.1)',
+    examPrepTitle: '🎯 Exam Prep',
     newExam: '+ Create New Exam', examName: 'Exam name', examDate: 'Exam date', createExam: '+ Create',
     examNamePh: 'e.g. ม.1 Entrance – Triam Udom',
     topicPh: 'Add topic...',
@@ -1993,7 +2058,7 @@ const LANG = {
     noUrgent: '🎉 No urgent homework! Great job',
     urgentCount1: '1 urgent homework', urgentCountN: n => `${n} urgent homework`,
     installMsg: 'Add to home screen for fullscreen mode',
-    addExamStrip: '🎯 Add ม.1 exam → see countdown',
+    addExamStrip: '🎯 Add exam → see countdown',
     studiedStrip: 'Studied', topicsStrip: 'topics', daysStrip: 'days',
     undated: 'No due date',
     markAll: '✅ Mark all done',
@@ -2058,10 +2123,10 @@ function applyLang() {
   }
 
   // Stats
-  document.querySelector('.stat-pill.urgent .l').textContent  = L.urgent;
-  document.querySelector('.stat-pill.pending .l').textContent = L.pendingStat;
-  document.querySelector('.stat-pill.done .l').textContent    = L.doneStat;
-  document.querySelectorAll('.stat-pill')[3].querySelector('.l').textContent = L.total;
+  const slUrgent = document.getElementById('sl-urgent');   if (slUrgent)  slUrgent.textContent  = L.urgent;
+  const slPending = document.getElementById('sl-pending'); if (slPending) slPending.textContent = L.pendingStat;
+  const slDone = document.getElementById('sl-done');       if (slDone)    slDone.textContent    = L.doneStat;
+  const slTotal = document.getElementById('sl-total');     if (slTotal)   slTotal.textContent   = L.total;
 
   // Bottom nav
   const navHwLbl = document.getElementById('nav-hw-lbl');       if (navHwLbl) navHwLbl.textContent = L.hwTab;
