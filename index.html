@@ -1570,12 +1570,7 @@ async function confirmParsed() {
 /* ═══════════════════════════════════════
    LINE NOTIFY
 ═══════════════════════════════════════ */
-async function testLineNotify() {
-  const token = LINETOKEN();
-  if (!token) { toast('⚠️ ใส่ Line Notify Token ก่อน'); return; }
-  const msg = buildLineMessage();
-  await sendLineMessage(token, msg);
-}
+// testLineNotify — moved to Telegram version below
 
 function buildLineMessage() {
   const d = new Date();
@@ -1616,25 +1611,7 @@ function buildLineMessage() {
   return msg;
 }
 
-async function sendLineMessage(token, msg) {
-  try {
-    // Use a CORS proxy since Line Notify doesn't support direct browser calls
-    const res = await fetch('https://api.allorigins.win/raw?url=' +
-      encodeURIComponent('https://notify-api.line.me/api/notify'), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: 'message=' + encodeURIComponent(msg) + '&token=' + encodeURIComponent(token)
-    });
-    if (res.ok || res.status === 200) {
-      toast('✅ ส่งข้อความ Line แล้ว!');
-    } else {
-      // Fallback: open Line notify URL instruction
-      toast('⚠️ ลองส่งตรงไม่ได้ — ดูวิธีแก้ที่ ⚙️ ตั้งค่า');
-    }
-  } catch(e) {
-    toast('⚠️ ส่ง Line ไม่ได้จาก browser — ต้องใช้ Vercel backend');
-  }
-}
+async function sendLineMessage(token, msg) { /* deprecated - using Telegram via /api/notify */ }
 
 // scheduleLineCheck moved to 2-parent version above
 
