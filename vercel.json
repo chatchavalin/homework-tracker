@@ -3,6 +3,10 @@
     {
       "path": "/api/notify",
       "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/classroom-sync",
+      "schedule": "0 7,23 * * *"
     }
   ]
 }
