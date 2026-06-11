@@ -574,7 +574,7 @@ input,textarea,select{font-family:inherit}
   <div class="header" onclick="document.querySelector('.content').scrollTop=0" style="cursor:pointer">
     <div class="header-top">
       <div>
-        <h1>📚 การบ้านของฉัน</h1>
+        <h1 id="app-title">📚 Homework</h1>
         <div class="header-date" id="hdr-date"></div>
       </div>
       <div class="hdr-btns" onclick="event.stopPropagation()">
@@ -990,6 +990,16 @@ const KIDS = {
   },
 };
 
+function updateAppTitle() {
+  const el = document.getElementById('app-title');
+  if (!el) return;
+  const kid = KIDS[currentKid];
+  const name = kid ? kid.name : '';
+  el.textContent = currentLang === 'en'
+    ? `📚 ${name}'s Homework`
+    : `📚 การบ้านของ${name}`;
+}
+
 function applyKidTheme(kidId) {
   const kid = KIDS[kidId];
   if (!kid) return;
@@ -1085,6 +1095,7 @@ function switchKid(id) {
   currentKid = id;
   localStorage.setItem('ht_current_kid', id);
   applyKidTheme(id);
+  updateAppTitle();
   renderKidSwitcher();
   loadMusic(id);   // switch to this kid's song
   loadAll();
@@ -1214,6 +1225,7 @@ async function init() {
   try {
   // Apply kid theme immediately on load
   applyKidTheme(currentKid);
+  updateAppTitle();
   updateMusicBtn();
   // Load music player (won't auto-play until user taps 🎵 due to browser autoplay rules)
   setTimeout(() => { try { loadMusic(currentKid); } catch(e) { console.warn('music:', e); } }, 1500);
@@ -2467,7 +2479,7 @@ function applyLang() {
   if (btn) btn.textContent = currentLang === 'th' ? '🇹🇭 TH' : '🇬🇧 EN';
 
   // Header
-  document.querySelector('.header h1').textContent = '📚 ' + L.appTitle;
+  updateAppTitle();
 
   // Filter tabs - hw (5 tabs: today, week, month, undated, all)
   const hwTabs = document.querySelectorAll('#tab-hw .f-tab');
