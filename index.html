@@ -749,36 +749,36 @@ input,textarea,select{font-family:inherit}
 
     <!-- TAB: SETTINGS -->
     <div class="tab-panel" id="tab-settings">
-      <div class="sec-label">⚙️ การตั้งค่า</div>
+      <div class="sec-label" id="settings-sec-label">⚙️ การตั้งค่า</div>
 
       <!-- Notifications -->
       <div class="settings-card">
-        <div class="settings-title">✈️ แจ้งเตือนทุกเช้า (Telegram)
+        <div class="settings-title" id="settings-notify-title">✈️ แจ้งเตือนทุกคืน (Telegram)
           <span class="status-dot ok"></span>
         </div>
-        <div class="info-box" style="margin-bottom:10px">
-          📨 Dad และ Mum ได้รับสรุปการบ้านทุกเช้า 7:00 น. อัตโนมัติ<br>
+        <div class="info-box" style="margin-bottom:10px" id="settings-notify-info">
+          📨 Dad และ Mum ได้รับสรุปการบ้านทุกคืน 21:00 น. อัตโนมัติ<br>
           ทำงานแม้ปิดแอป — ส่งจาก server
         </div>
-        <button class="settings-btn success" onclick="testTelegram()">📨 ทดสอบส่งข้อความตอนนี้</button>
+        <button class="settings-btn success" onclick="testTelegram()" id="settings-test-btn">📨 ทดสอบส่งข้อความตอนนี้</button>
       </div>
 
       <!-- Connection -->
       <div class="settings-card">
-        <div class="settings-title">🗄️ การเชื่อมต่อข้อมูล
+        <div class="settings-title" id="settings-conn-title">🗄️ การเชื่อมต่อข้อมูล
           <span id="sb-dot" class="status-dot ok"></span>
           <span id="sb-status" style="font-size:0.72rem;font-weight:600;color:var(--muted)">เชื่อมต่อแล้ว</span>
         </div>
-        <div class="info-box" style="margin-bottom:10px">
+        <div class="info-box" style="margin-bottom:10px" id="settings-conn-info">
           ข้อมูลซิงค์อัตโนมัติทุกอุปกรณ์ในครอบครัว
         </div>
-        <button class="settings-btn success" onclick="retrySupabase()">🔄 ลองเชื่อมต่อใหม่</button>
+        <button class="settings-btn success" onclick="retrySupabase()" id="settings-retry-btn">🔄 ลองเชื่อมต่อใหม่</button>
       </div>
 
       <!-- Danger zone -->
       <div class="settings-card">
-        <div class="settings-title">⚠️ จัดการข้อมูล</div>
-        <button class="settings-btn danger" onclick="clearAllData()">🗑 ลบข้อมูลทั้งหมด</button>
+        <div class="settings-title" id="settings-danger-title">⚠️ จัดการข้อมูล</div>
+        <button class="settings-btn danger" onclick="clearAllData()" id="settings-clear-btn">🗑 ลบข้อมูลทั้งหมด</button>
       </div>
     </div>
 
@@ -799,34 +799,34 @@ input,textarea,select{font-family:inherit}
 <div class="edit-sheet-overlay" id="edit-overlay" onclick="closeEditSheet(event)">
   <div class="edit-sheet">
     <button class="edit-sheet-close" onclick="closeEditSheetDirect()">✕</button>
-    <div class="edit-sheet-title">✏️ แก้ไขงาน</div>
+    <div class="edit-sheet-title" id="edit-sheet-title">✏️ แก้ไขงาน</div>
     <input class="form-input" id="edit-title" style="margin-bottom:10px" placeholder="ชื่องาน">
-    <div class="form-label" style="margin-bottom:6px">วิชา</div>
+    <div class="form-label" id="edit-subj-label" style="margin-bottom:6px">วิชา</div>
     <div class="edit-subject-row" id="edit-subject-row">
-      <button class="subj-chip" data-subj="Math" onclick="setEditSubj('Math',this)">🔢 คณิต</button>
-      <button class="subj-chip" data-subj="Thai" onclick="setEditSubj('Thai',this)">📖 ไทย</button>
-      <button class="subj-chip" data-subj="English" onclick="setEditSubj('English',this)">🔤 อังกฤษ</button>
-      <button class="subj-chip" data-subj="Science" onclick="setEditSubj('Science',this)">🔬 วิทย์</button>
-      <button class="subj-chip" data-subj="Social" onclick="setEditSubj('Social',this)">🌍 สังคม</button>
-      <button class="subj-chip" data-subj="Chinese" onclick="setEditSubj('Chinese',this)">🀄 จีน</button>
-      <button class="subj-chip" data-subj="PE" onclick="setEditSubj('PE',this)">⚽ พลศึกษา</button>
-      <button class="subj-chip" data-subj="Other" onclick="setEditSubj('Other',this)">📝 อื่นๆ</button>
+      <button class="subj-chip" data-subj="Math" onclick="setEditSubj('Math',this)">🔢 <span class="subj-lbl-math">คณิต</span></button>
+      <button class="subj-chip" data-subj="Thai" onclick="setEditSubj('Thai',this)">📖 <span class="subj-lbl-thai">ไทย</span></button>
+      <button class="subj-chip" data-subj="English" onclick="setEditSubj('English',this)">🔤 <span class="subj-lbl-eng">อังกฤษ</span></button>
+      <button class="subj-chip" data-subj="Science" onclick="setEditSubj('Science',this)">🔬 <span class="subj-lbl-sci">วิทย์</span></button>
+      <button class="subj-chip" data-subj="Social" onclick="setEditSubj('Social',this)">🌍 <span class="subj-lbl-soc">สังคม</span></button>
+      <button class="subj-chip" data-subj="Chinese" onclick="setEditSubj('Chinese',this)">🀄 <span class="subj-lbl-chi">จีน</span></button>
+      <button class="subj-chip" data-subj="PE" onclick="setEditSubj('PE',this)">⚽ <span class="subj-lbl-pe">พลศึกษา</span></button>
+      <button class="subj-chip" data-subj="Other" onclick="setEditSubj('Other',this)">📝 <span class="subj-lbl-other">อื่นๆ</span></button>
     </div>
     <div class="form-row-2" style="margin-bottom:10px">
       <div>
-        <label class="form-label">วันส่ง</label>
+        <label class="form-label" id="edit-due-label">วันส่ง</label>
         <input class="form-input" id="edit-due" type="date">
       </div>
       <div>
-        <label class="form-label">คะแนน</label>
+        <label class="form-label" id="edit-points-label">คะแนน</label>
         <input class="form-input" id="edit-points" type="number" min="0" placeholder="0">
       </div>
     </div>
     <div class="type-toggle" style="margin-bottom:10px">
-      <button class="type-btn active" id="edit-type-hw"   onclick="setEditType('homework')">📚 การบ้าน</button>
-      <button class="type-btn"        id="edit-type-todo" onclick="setEditType('todo')">📋 ต้องทำ</button>
+      <button class="type-btn active" id="edit-type-hw"   onclick="setEditType('homework')">📚 <span id="edit-hw-lbl">การบ้าน</span></button>
+      <button class="type-btn"        id="edit-type-todo" onclick="setEditType('todo')">📋 <span id="edit-todo-lbl">ต้องทำ</span></button>
     </div>
-    <button class="edit-save-btn" onclick="saveEdit()">💾 บันทึก</button>
+    <button class="edit-save-btn" onclick="saveEdit()" id="edit-save-btn">💾 บันทึก</button>
   </div>
 </div>
 
@@ -853,21 +853,21 @@ input,textarea,select{font-family:inherit}
     <div class="fab-quick-form" id="fab-quick-form" style="display:none">
       <input class="fab-quick-input" id="fab-title-inp" placeholder="ชื่องาน..." />
       <div class="fab-subject-row">
-        <button class="fab-subj active" data-s="Other"   onclick="setFabSubj('Other',this)">📝 อื่นๆ</button>
-        <button class="fab-subj"        data-s="Math"    onclick="setFabSubj('Math',this)">🔢 คณิต</button>
-        <button class="fab-subj"        data-s="Thai"    onclick="setFabSubj('Thai',this)">📖 ไทย</button>
-        <button class="fab-subj"        data-s="English" onclick="setFabSubj('English',this)">🔤 อังกฤษ</button>
-        <button class="fab-subj"        data-s="Science" onclick="setFabSubj('Science',this)">🔬 วิทย์</button>
-        <button class="fab-subj"        data-s="Social"  onclick="setFabSubj('Social',this)">🌍 สังคม</button>
-        <button class="fab-subj"        data-s="Chinese" onclick="setFabSubj('Chinese',this)">🀄 จีน</button>
-        <button class="fab-subj"        data-s="PE"      onclick="setFabSubj('PE',this)">⚽ PE</button>
+        <button class="fab-subj active" data-s="Other"   onclick="setFabSubj('Other',this)">📝 <span class="fab-s-other">อื่นๆ</span></button>
+        <button class="fab-subj"        data-s="Math"    onclick="setFabSubj('Math',this)">🔢 <span class="fab-s-math">คณิต</span></button>
+        <button class="fab-subj"        data-s="Thai"    onclick="setFabSubj('Thai',this)">📖 <span class="fab-s-thai">ไทย</span></button>
+        <button class="fab-subj"        data-s="English" onclick="setFabSubj('English',this)">🔤 <span class="fab-s-eng">อังกฤษ</span></button>
+        <button class="fab-subj"        data-s="Science" onclick="setFabSubj('Science',this)">🔬 <span class="fab-s-sci">วิทย์</span></button>
+        <button class="fab-subj"        data-s="Social"  onclick="setFabSubj('Social',this)">🌍 <span class="fab-s-soc">สังคม</span></button>
+        <button class="fab-subj"        data-s="Chinese" onclick="setFabSubj('Chinese',this)">🀄 <span class="fab-s-chi">จีน</span></button>
+        <button class="fab-subj"        data-s="PE"      onclick="setFabSubj('PE',this)">⚽ <span class="fab-s-pe">PE</span></button>
       </div>
       <div class="quick-date-row" id="quick-date-row">
-        <button class="qdate active" id="qd-none" onclick="setQDate('none',this)">ไม่มีวันส่ง</button>
-        <button class="qdate" id="qd-today" onclick="setQDate('today',this)">วันนี้</button>
-        <button class="qdate" id="qd-tomorrow" onclick="setQDate('tomorrow',this)">พรุ่งนี้</button>
-        <button class="qdate" id="qd-friday" onclick="setQDate('friday',this)">ศุกร์นี้</button>
-        <button class="qdate" id="qd-nextweek" onclick="setQDate('nextweek',this)">อาทิตย์หน้า</button>
+        <button class="qdate active" id="qd-none"     onclick="setQDate('none',this)"><span id="qd-none-lbl">ไม่มีวันส่ง</span></button>
+        <button class="qdate"        id="qd-today"    onclick="setQDate('today',this)"><span id="qd-today-lbl">วันนี้</span></button>
+        <button class="qdate"        id="qd-tomorrow" onclick="setQDate('tomorrow',this)"><span id="qd-tmr-lbl">พรุ่งนี้</span></button>
+        <button class="qdate"        id="qd-friday"   onclick="setQDate('friday',this)"><span id="qd-fri-lbl">ศุกร์นี้</span></button>
+        <button class="qdate"        id="qd-nextweek" onclick="setQDate('nextweek',this)"><span id="qd-nw-lbl">อาทิตย์หน้า</span></button>
       </div>
       <div class="fab-row">
         <div class="fab-type-toggle">
@@ -1756,6 +1756,25 @@ const LANG = {
     studiedStrip: 'เรียนแล้ว', topicsStrip: 'หัวข้อ', daysStrip: 'วัน',
     undated: 'ไม่มีวันส่ง',
     markAll: '✅ ทำเครื่องหมายเสร็จทั้งหมด',
+    // Settings
+    notifyTitle: '✈️ แจ้งเตือนทุกคืน (Telegram)',
+    notifyInfo: '📨 Dad และ Mum ได้รับสรุปการบ้านทุกคืน 21:00 น. อัตโนมัติ<br>ทำงานแม้ปิดแอป — ส่งจาก server',
+    testBtn: '📨 ทดสอบส่งข้อความตอนนี้',
+    connTitle: '🗄️ การเชื่อมต่อข้อมูล',
+    connInfo: 'ข้อมูลซิงค์อัตโนมัติทุกอุปกรณ์ในครอบครัว',
+    connStatus: 'เชื่อมต่อแล้ว',
+    dangerTitle: '⚠️ จัดการข้อมูล',
+    // Edit sheet
+    editTitle: '✏️ แก้ไขงาน', editSubjLabel: 'วิชา',
+    editDueLabel: 'วันส่ง', editPointsLabel: 'คะแนน',
+    editSaveBtn: '💾 บันทึก',
+    editHwBtn: '📚 การบ้าน', editTodoBtn: '📋 ต้องทำ',
+    // FAB
+    fabTitle: 'เพิ่มงานใหม่', fabCamera: 'ถ่ายรูป', fabGallery: 'เลือกรูป', fabManual: 'พิมพ์เอง',
+    fabTaskPh: 'ชื่องาน...',
+    qdNone: 'ไม่มีวันส่ง', qdToday: 'วันนี้', qdTmr: 'พรุ่งนี้', qdFri: 'ศุกร์นี้', qdNw: 'อาทิตย์หน้า',
+    // Subject short labels
+    subjMath:'คณิต', subjThai:'ไทย', subjEng:'อังกฤษ', subjSci:'วิทย์', subjSoc:'สังคม', subjChi:'จีน', subjPE:'พลศึกษา', subjOther:'อื่นๆ',
   },
   en: {
     appTitle: 'My Homework',
@@ -1801,6 +1820,25 @@ const LANG = {
     studiedStrip: 'Studied', topicsStrip: 'topics', daysStrip: 'days',
     undated: 'No due date',
     markAll: '✅ Mark all done',
+    // Settings
+    notifyTitle: '✈️ Evening Reminder (Telegram)',
+    notifyInfo: '📨 Dad & Mum receive a homework summary every evening at 9:00 PM automatically<br>Works even when the app is closed — sent from server',
+    testBtn: '📨 Send test message now',
+    connTitle: '🗄️ Data Connection',
+    connInfo: 'Data syncs automatically across all family devices',
+    connStatus: 'Connected',
+    dangerTitle: '⚠️ Manage Data',
+    // Edit sheet
+    editTitle: '✏️ Edit Task', editSubjLabel: 'Subject',
+    editDueLabel: 'Due date', editPointsLabel: 'Points',
+    editSaveBtn: '💾 Save',
+    editHwBtn: '📚 Homework', editTodoBtn: '📋 To-Do',
+    // FAB
+    fabTitle: 'Add new task', fabCamera: 'Take photo', fabGallery: 'Select photo', fabManual: 'Type manually',
+    fabTaskPh: 'Task name...',
+    qdNone: 'No due date', qdToday: 'Today', qdTmr: 'Tomorrow', qdFri: 'This Friday', qdNw: 'Next week',
+    // Subject short labels
+    subjMath:'Math', subjThai:'Thai', subjEng:'English', subjSci:'Science', subjSoc:'Social', subjChi:'Chinese', subjPE:'PE', subjOther:'Other',
   }
 };
 
@@ -1910,9 +1948,77 @@ function applyLang() {
   const createExamBtn = document.querySelector('.new-exam-form .submit-btn');
   if (createExamBtn) createExamBtn.textContent = L.createExam;
 
-  // Settings
+  // Settings tab
   const settingsSecLabel = document.querySelector('#tab-settings .sec-label');
   if (settingsSecLabel) settingsSecLabel.childNodes[0].textContent = L.settingsTitle + ' ';
+  const sNotifyTitle = document.getElementById('settings-notify-title');
+  if (sNotifyTitle) sNotifyTitle.innerHTML = L.notifyTitle + ' <span class="status-dot ok"></span>';
+  const sNotifyInfo = document.getElementById('settings-notify-info');
+  if (sNotifyInfo) sNotifyInfo.innerHTML = L.notifyInfo;
+  const sTestBtn = document.getElementById('settings-test-btn');
+  if (sTestBtn) sTestBtn.textContent = L.testBtn;
+  const sConnTitle = document.getElementById('settings-conn-title');
+  if (sConnTitle) sConnTitle.innerHTML = L.connTitle + ' <span id="sb-dot" class="status-dot ok"></span> <span id="sb-status" style="font-size:0.72rem;font-weight:600;color:var(--muted)">' + L.connStatus + '</span>';
+  const sConnInfo = document.getElementById('settings-conn-info');
+  if (sConnInfo) sConnInfo.textContent = L.connInfo;
+  const sRetryBtn = document.getElementById('settings-retry-btn');
+  if (sRetryBtn) sRetryBtn.textContent = L.retryBtn;
+  const sDangerTitle = document.getElementById('settings-danger-title');
+  if (sDangerTitle) sDangerTitle.textContent = L.dangerTitle;
+  const sClearBtn = document.getElementById('settings-clear-btn');
+  if (sClearBtn) sClearBtn.textContent = L.clearBtn;
+
+  // Edit sheet
+  const editSheetTitle = document.getElementById('edit-sheet-title');
+  if (editSheetTitle) editSheetTitle.textContent = L.editTitle;
+  const editSubjLbl = document.getElementById('edit-subj-label');
+  if (editSubjLbl) editSubjLbl.textContent = L.editSubjLabel;
+  const editDueLbl = document.getElementById('edit-due-label');
+  if (editDueLbl) editDueLbl.textContent = L.editDueLabel;
+  const editPtsLbl = document.getElementById('edit-points-label');
+  if (editPtsLbl) editPtsLbl.textContent = L.editPointsLabel;
+  const editSaveBtn = document.getElementById('edit-save-btn');
+  if (editSaveBtn) editSaveBtn.textContent = L.editSaveBtn;
+  const editHwLbl = document.getElementById('edit-hw-lbl');
+  if (editHwLbl) editHwLbl.textContent = L.editHwBtn.replace('📚 ','');
+  const editTodoLbl = document.getElementById('edit-todo-lbl');
+  if (editTodoLbl) editTodoLbl.textContent = L.editTodoBtn.replace('📋 ','');
+  // Edit sheet subject chips
+  document.querySelectorAll('.subj-lbl-math').forEach(e => e.textContent = L.subjMath);
+  document.querySelectorAll('.subj-lbl-thai').forEach(e => e.textContent = L.subjThai);
+  document.querySelectorAll('.subj-lbl-eng').forEach(e => e.textContent = L.subjEng);
+  document.querySelectorAll('.subj-lbl-sci').forEach(e => e.textContent = L.subjSci);
+  document.querySelectorAll('.subj-lbl-soc').forEach(e => e.textContent = L.subjSoc);
+  document.querySelectorAll('.subj-lbl-chi').forEach(e => e.textContent = L.subjChi);
+  document.querySelectorAll('.subj-lbl-pe').forEach(e => e.textContent = L.subjPE);
+  document.querySelectorAll('.subj-lbl-other').forEach(e => e.textContent = L.subjOther);
+
+  // FAB sheet
+  const fabTitleEl = document.getElementById('fab-title');
+  if (fabTitleEl) fabTitleEl.textContent = L.fabTitle;
+  const fabCamLbl = document.getElementById('fab-cam-lbl');
+  if (fabCamLbl) fabCamLbl.textContent = L.fabCamera;
+  const fabGalLbl = document.getElementById('fab-gal-lbl');
+  if (fabGalLbl) fabGalLbl.textContent = L.fabGallery;
+  const fabManLbl = document.getElementById('fab-man-lbl');
+  if (fabManLbl) fabManLbl.textContent = L.fabManual;
+  const fabInp = document.getElementById('fab-title-inp');
+  if (fabInp) fabInp.placeholder = L.fabTaskPh;
+  // FAB subject labels
+  document.querySelectorAll('.fab-s-math').forEach(e => e.textContent = L.subjMath);
+  document.querySelectorAll('.fab-s-thai').forEach(e => e.textContent = L.subjThai);
+  document.querySelectorAll('.fab-s-eng').forEach(e => e.textContent = L.subjEng);
+  document.querySelectorAll('.fab-s-sci').forEach(e => e.textContent = L.subjSci);
+  document.querySelectorAll('.fab-s-soc').forEach(e => e.textContent = L.subjSoc);
+  document.querySelectorAll('.fab-s-chi').forEach(e => e.textContent = L.subjChi);
+  document.querySelectorAll('.fab-s-pe').forEach(e => e.textContent = L.subjPE);
+  document.querySelectorAll('.fab-s-other').forEach(e => e.textContent = L.subjOther);
+  // Quick date buttons
+  const qdNoneLbl = document.getElementById('qd-none-lbl');   if (qdNoneLbl) qdNoneLbl.textContent = L.qdNone;
+  const qdTodayLbl = document.getElementById('qd-today-lbl'); if (qdTodayLbl) qdTodayLbl.textContent = L.qdToday;
+  const qdTmrLbl = document.getElementById('qd-tmr-lbl');     if (qdTmrLbl) qdTmrLbl.textContent = L.qdTmr;
+  const qdFriLbl = document.getElementById('qd-fri-lbl');     if (qdFriLbl) qdFriLbl.textContent = L.qdFri;
+  const qdNwLbl = document.getElementById('qd-nw-lbl');       if (qdNwLbl) qdNwLbl.textContent = L.qdNw;
 
   // Mark all button
   const markAllBtn = document.getElementById('mark-all-btn');
