@@ -29,16 +29,16 @@ export default async function handler(req, res) {
 
     // Build date string (Thai Buddhist year)
     const today    = new Date();
-    const buddYear = today.getFullYear() + 543;
-    const dateStr  = `${today.getDate()}/${today.getMonth()+1}/${buddYear}`;
     const dow      = today.getDay();
-    const DOW_TH   = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์'];
+    const DOW_EN   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const MON_EN   = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const dateStr  = `${DOW_EN[dow]} ${today.getDate()} ${MON_EN[today.getMonth()]} ${today.getFullYear()}`;
 
     // Uniform reminders
     let uniformMsg = '';
-    if (dow === 4) uniformMsg = '\n👘 วันนี้ใส่ชุดลูกเสือด้วยนะ!';
-    if (dow === 5) uniformMsg = '\n⚽ วันนี้ใส่ชุดพลศึกษาด้วยนะ!';
-    if (dow === 3) uniformMsg = '\n👔 วันนี้นำผ้ากันเปื้อนมาด้วยนะ!';
+    if (dow === 4) uniformMsg = '\n👘 Tomorrow is Scout uniform day!';
+    if (dow === 5) uniformMsg = '\n⚽ Tomorrow is PE uniform day!';
+    if (dow === 3) uniformMsg = '\n👔 Bring apron tomorrow!';
 
     // Split tasks per kid (legacy tasks without kid_id = Ryuji)
     const kidName = { ryuji: 'Ryuji 👦', miki: 'Miki 👧' };
@@ -49,7 +49,7 @@ export default async function handler(req, res) {
 
     function kidSection(kidId) {
       const kt = byKid[kidId];
-      if (!kt.length) return `\n\n${kidName[kidId]}: ✅ ไม่มีงานค้าง`;
+      if (!kt.length) return `\n\n${kidName[kidId]}: ✅ All done!`;
       // due tomorrow (this runs at 9PM, so warn about tomorrow)
       const tmrHw = kt.filter(t => {
         if (!t.due_date || t.type !== 'homework') return false;
@@ -59,16 +59,16 @@ export default async function handler(req, res) {
       });
       const urgent = kt.filter(t => t.type === 'homework' && t.priority === 'high');
       const todos  = kt.filter(t => t.type === 'todo').slice(0, 3);
-      let s = `\n\n*${kidName[kidId]}* — ค้าง ${kt.length} ชิ้น`;
+      let s = `\n\n*${kidName[kidId]}* — ${kt.length} pending`;
       if (tmrHw.length) {
-        s += `\n🔴 ส่งพรุ่งนี้/วันนี้:`;
+        s += `\n🔴 Due today/tomorrow:`;
         tmrHw.slice(0,5).forEach(t => { s += `\n  • ${t.parsed_title || t.original_text}`; });
       } else if (urgent.length) {
-        s += `\n⚡ งานด่วน:`;
+        s += `\n⚡ Urgent:`;
         urgent.slice(0,4).forEach(t => { s += `\n  • ${t.parsed_title || t.original_text}`; });
       }
       if (todos.length) {
-        s += `\n📋 ต้องทำ:`;
+        s += `\n📋 To-do:`;
         todos.forEach(t => { s += `\n  • ${t.parsed_title || t.original_text}`; });
       }
       return s;
@@ -86,12 +86,12 @@ export default async function handler(req, res) {
       .filter(e => e.diff >= 0)
       .sort((a,b) => a.diff - b.diff)[0];
     if (upcoming) {
-      examMsg = `\n\n🎯 *${upcoming.name}* — อีก ${upcoming.diff} วัน!`;
+      examMsg = `\n\n🎯 *${upcoming.name}* — ${upcoming.diff} days to go!`;
     }
 
     // Compose message
-    let msg = `🌙 *สรุปการบ้านคืนนี้ — เตรียมพร้อมสำหรับพรุ่งนี้\\!*\n`;
-    msg += `วัน${DOW_TH[dow]} ${dateStr}`;
+    let msg = `🌙 *Evening Homework Summary — get ready for tomorrow\\!*\n`;
+    msg += dateStr;
     msg += uniformMsg;
 
     msg += kidSection('ryuji');
