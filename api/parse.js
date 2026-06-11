@@ -1,5 +1,4 @@
 export default async function handler(req, res) {
-  // Only allow POST
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -66,9 +65,9 @@ Return ONLY a valid JSON array. No markdown, no backticks, no explanation.`;
       return res.status(response.status).json({ error: err.error?.message || 'Groq error' });
     }
 
-    const data = await response.json();
-    const raw  = data.choices?.[0]?.message?.content || '[]';
-    const clean = raw.replace(/```json|```/g, '').trim();
+    const data   = await response.json();
+    const raw    = data.choices?.[0]?.message?.content || '[]';
+    const clean  = raw.replace(/```json|```/g, '').trim();
     const parsed = JSON.parse(clean);
     return res.status(200).json({ tasks: parsed });
 
