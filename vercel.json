@@ -6,7 +6,7 @@
     },
     {
       "path": "/api/classroom-sync",
-      "schedule": "0 20,6,10 * * *"
+      "schedule": "0 6 * * *"
     }
   ]
 }
