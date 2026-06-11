@@ -44,7 +44,7 @@ Return ONLY a valid JSON array. No markdown, no backticks, no explanation.`;
         'Authorization': `Bearer ${GROQ_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'meta-llama/llama-4-maverick-17b-128e-instruct',
+        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
         max_tokens: 4096,
         temperature: 0.1,
         messages: [{
