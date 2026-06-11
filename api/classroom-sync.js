@@ -22,6 +22,22 @@ export default async function handler(req, res) {
     // 2. Parse VEVENTs
     const events = parseICS(ics);
 
+    // DEBUG MODE: ?debug=1 shows what's in the feed
+    if (req.query && req.query.debug) {
+      const allEvents = parseICSAll(ics);
+      return res.status(200).json({
+        feedBytes: ics.length,
+        totalVEVENTs: (ics.match(/BEGIN:VEVENT/g) || []).length,
+        parsedWithDates: events.length,
+        sample: allEvents.slice(0, 15).map(e => ({
+          summary: e.summary || '(no title)',
+          dtstart: e.dtstart || null,
+          dtend: e.dtend || null,
+          due: e.due ? e.due.toISOString().slice(0,10) : null
+        }))
+      });
+    }
+
     // 3. Keep only future or recent events (last 7 days onward)
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - 7);
@@ -95,9 +111,8 @@ export default async function handler(req, res) {
 }
 
 // ── Minimal ICS parser ──
-function parseICS(ics) {
+function parseICSAll(ics) {
   const events = [];
-  // Unfold lines (RFC 5545: lines starting with space/tab continue previous)
   const unfolded = ics.replace(/\r?\n[ \t]/g, '');
   const lines = unfolded.split(/\r?\n/);
   let cur = null;
@@ -116,7 +131,11 @@ function parseICS(ics) {
     if (key === 'DESCRIPTION') cur.description = unescapeICS(value).slice(0, 300);
     if (key === 'UID') cur.uid = value;
   }
-  return events.filter(e => e.summary && e.due);
+  return events;
+}
+
+function parseICS(ics) {
+  return parseICSAll(ics).filter(e => e.summary && e.due);
 }
 
 function finalize(ev) {
