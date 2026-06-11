@@ -73,7 +73,7 @@ input,textarea,select{font-family:inherit}
 @keyframes syncpulse{0%{opacity:0.4}50%{opacity:1}100%{opacity:0.4}}
 
 /* Content */
-.content{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:14px 14px 100px;scroll-behavior:smooth}
+.content{flex:1;overflow-y:auto;overscroll-behavior-y:contain;padding:14px 14px 100px;scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
 .content::-webkit-scrollbar{width:0}
 
 /* Bottom nav */
@@ -549,13 +549,13 @@ input,textarea,select{font-family:inherit}
 <div id="app" style="display:none">
 
   <!-- HEADER -->
-  <div class="header">
+  <div class="header" onclick="document.querySelector('.content').scrollTop=0" style="cursor:pointer">
     <div class="header-top">
       <div>
         <h1>📚 การบ้านของฉัน</h1>
         <div class="header-date" id="hdr-date"></div>
       </div>
-      <div class="hdr-btns">
+      <div class="hdr-btns" onclick="event.stopPropagation()">
         <div id="kid-switcher" style="position:relative;display:flex;align-items:center;background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;padding:4px 8px;color:white"></div>
         <span class="offline-chip" id="offline-chip">📴 Offline</span>
         <button class="hdr-btn" id="sync-btn" onclick="showTab('settings')" style="display:none">⚡ Live</button>
@@ -1779,6 +1779,9 @@ function showTab(tab) {
     document.getElementById('tab-'+t)?.classList.toggle('active', t===tab);
     document.getElementById('nav-'+t)?.classList.toggle('active', t===tab);
   });
+  // Always scroll content back to top when switching tabs
+  const content = document.querySelector('.content');
+  if (content) content.scrollTop = 0;
   if (tab === 'cal') { renderCalendar(); renderEventList(); renderUniformBanner(); renderHolidayBanner(); }
   if (tab === 'notes') renderNotes();
 }
