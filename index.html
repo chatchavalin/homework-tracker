@@ -3437,7 +3437,8 @@ async function fabAddTask() {
 ═══════════════════════════════════════ */
 function renderVerdict() {
   const wrap = document.getElementById('verdict-wrap');
-  if (!wrap) return;
+  if (wrap) wrap.innerHTML = '';
+  return; // disabled per user request
   const all = STATE.allTasks || STATE.tasks || [];
   if (!all.length) { wrap.innerHTML = ''; return; }
   const isEn = currentLang === 'en';
