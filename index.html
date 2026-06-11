@@ -581,6 +581,7 @@ input,textarea,select{font-family:inherit}
         <div id="kid-switcher" style="position:relative;display:flex;align-items:center;background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;padding:4px 8px;color:white"></div>
         <span class="offline-chip" id="offline-chip">📴 Offline</span>
         <button class="hdr-btn" id="sync-btn" onclick="showTab('settings')" style="display:none">⚡ Live</button>
+        <button class="hdr-btn" id="hdr-cam-btn" onclick="headerCamera()" style="font-size:0.95rem">📷</button>
         <button class="hdr-btn" id="music-btn" onclick="toggleMusic()">🎵</button>
         <button class="hdr-btn" id="lang-btn" onclick="toggleLang()">🇬🇧 EN</button>
         <button class="hdr-btn" id="api-btn" onclick="showTab('settings')" style="display:none">🔑 AI</button>
@@ -610,6 +611,7 @@ input,textarea,select{font-family:inherit}
         <div class="ptr-spinner" id="ptr-spinner"></div>
         <span id="ptr-text">Release to refresh</span>
       </div>
+      <div id="verdict-wrap"></div>
       <div id="rightnow-wrap"></div>
       <div id="install-wrap"></div>
       <div class="search-wrap" id="hw-search-wrap">
@@ -1314,6 +1316,7 @@ async function loadAll() {
   if (tasksRes.error)  throw tasksRes.error;
   if (examsRes.error)  throw examsRes.error;
   if (topicsRes.error) throw topicsRes.error;
+  STATE.allTasks = tasksRes.data || [];
   STATE.tasks  = filterByKid(tasksRes.data);
   STATE.exams  = examsRes.data  || [];
   STATE.topics = topicsRes.data || [];
@@ -1329,7 +1332,7 @@ function setupRealtime() {
   sb.channel('homework-changes')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, async () => {
       const r = await sb.from('tasks').select('*').order('created_at', { ascending: false });
-      if (!r.error) { STATE.tasks = filterByKid(r.data); renderAll(); }
+      if (!r.error) { STATE.allTasks = r.data || []; STATE.tasks = filterByKid(r.data); renderAll(); }
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'exams' }, async () => {
       const r = await sb.from('exams').select('*').order('created_at', { ascending: true });
@@ -1590,6 +1593,39 @@ function renderExams() {
       </div>
     </div>`;
   }).join('');
+}
+
+/* ═══════════════════════════════════════
+   CELEBRATION 🎉
+═══════════════════════════════════════ */
+function checkCelebration() {
+  // Fire when ALL of current kid's tasks are done
+  const remaining = STATE.tasks.filter(t => !t.is_done);
+  if (remaining.length > 0) return;
+  fireConfetti();
+  setTimeout(() => {
+    toast(currentLang==='en'
+      ? `🎉 ${KIDS[currentKid].name} — all done! Go play!`
+      : `🎉 ${KIDS[currentKid].name} เสร็จหมดแล้ว ไปเล่นได้เลย!`);
+  }, 300);
+  navigator.vibrate && navigator.vibrate([80,40,80,40,160]);
+}
+
+function fireConfetti() {
+  const colors = ['#f87171','#fbbf24','#34d399','#60a5fa','#a78bfa','#f472b6'];
+  for (let i = 0; i < 60; i++) {
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    p.style.left = Math.random()*100 + 'vw';
+    p.style.top = '-20px';
+    p.style.background = colors[Math.floor(Math.random()*colors.length)];
+    p.style.width = (5+Math.random()*7) + 'px';
+    p.style.height = (8+Math.random()*8) + 'px';
+    p.style.animationDelay = (Math.random()*0.8) + 's';
+    p.style.transform = `rotate(${Math.random()*360}deg)`;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 3500);
+  }
 }
 
 /* ═══════════════════════════════════════
@@ -2319,6 +2355,7 @@ function renderAll() {
   renderTodo();
   renderExams();
   renderNotes();
+  renderVerdict();
   renderRightNow();
   renderUniformBanner();
   renderHolidayBanner();
@@ -3330,6 +3367,12 @@ function closeFab() {
   document.getElementById('fab-sheet').classList.remove('open');
   document.getElementById('fab-btn').classList.remove('open');
 }
+function headerCamera() {
+  // One-tap photo from anywhere: jump to Add tab and open camera
+  showTab('add');
+  setTimeout(() => document.getElementById('cam-input').click(), 250);
+}
+
 function fabCamera() {
   closeFab();
   showTab('add');
@@ -3384,6 +3427,59 @@ async function fabAddTask() {
   closeFab();
   navigator.vibrate && navigator.vibrate(40);
   toast('✅ เพิ่มงานแล้ว');
+}
+
+/* ═══════════════════════════════════════
+   PARENT VERDICT BANNER — both kids at a glance
+═══════════════════════════════════════ */
+function renderVerdict() {
+  const wrap = document.getElementById('verdict-wrap');
+  if (!wrap) return;
+  const all = STATE.allTasks || STATE.tasks || [];
+  if (!all.length) { wrap.innerHTML = ''; return; }
+  const isEn = currentLang === 'en';
+  const t0 = new Date(); t0.setHours(0,0,0,0);
+
+  function kidVerdict(kidId) {
+    const kt = all.filter(t => (t.kid_id === kidId || (!t.kid_id && kidId === 'ryuji')) && !t.is_done);
+    // tasks due today or tomorrow (the "tonight matters" set)
+    const urgent = kt.filter(t => {
+      if (t.type !== 'homework') return false;
+      if (!t.due_date) return t.priority === 'high';
+      const d = new Date(t.due_date + 'T00:00:00');
+      const diff = Math.round((d - t0) / 86400000);
+      return diff <= 1;
+    });
+    return { kid: KIDS[kidId], urgent: urgent.length, pending: kt.length };
+  }
+
+  const rows = ['ryuji','miki'].map(id => {
+    const v = kidVerdict(id);
+    const photo = localStorage.getItem('ht_photo_' + id);
+    const avatar = photo
+      ? `<img src="${photo}" style="width:24px;height:24px;border-radius:50%;object-fit:cover">`
+      : `<span style="font-size:1rem">${v.kid.emoji}</span>`;
+    let status, color;
+    if (v.urgent > 0) {
+      status = isEn ? `${v.urgent} due soon 🔴` : `ด่วน ${v.urgent} ชิ้น 🔴`;
+      color = '#fde0e0';
+    } else if (v.pending > 0) {
+      status = isEn ? `${v.pending} pending 🟡` : `ค้าง ${v.pending} ชิ้น 🟡`;
+      color = '#fff3c0';
+    } else {
+      status = isEn ? `all done ✅` : `เสร็จหมด ✅`;
+      color = '#d4f5e5';
+    }
+    return `<div onclick="switchKid('${id}')" style="flex:1;display:flex;align-items:center;gap:6px;background:${color};border-radius:10px;padding:7px 10px;cursor:pointer">
+      ${avatar}
+      <div style="line-height:1.2;min-width:0">
+        <div style="font-size:0.72rem;font-weight:800;color:#1a1a2e">${v.kid.name}</div>
+        <div style="font-size:0.68rem;font-weight:700;color:#4a4a5a;white-space:nowrap">${status}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  wrap.innerHTML = `<div style="display:flex;gap:8px;margin-bottom:12px">${rows}</div>`;
 }
 
 /* ═══════════════════════════════════════
