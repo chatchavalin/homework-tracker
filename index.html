@@ -1549,6 +1549,29 @@ function showParsedPreview(items) {
   const L = t();
   document.getElementById('parsed-list').innerHTML = items.map((task,i) => {
     const dup = isDuplicate(task);
+    const isTask = task.record_type !== 'event' && task.record_type !== 'info';
+    const isEvent = task.record_type === 'event';
+    const isInfo = task.record_type === 'info';
+
+    // Type badge
+    let typeBadge = '';
+    if (isInfo) typeBadge = `<span class="tag" style="background:#ede9fe;color:#5b21b6">📝 ${L.infoType}</span>`;
+    else if (isEvent) typeBadge = `<span class="tag tag-today">📅 Event</span>`;
+    else typeBadge = `<span class="tag ${task.type==='homework'?'tag-hw':'tag-todo'}">${task.type==='homework'?L.hwType:L.todoType}</span>`;
+
+    // Editable date row — shown for tasks and events
+    const showDate = isTask || isEvent;
+    const dateVal = task.due_date || task.date || '';
+    const dateLabel = currentLang === 'en' ? 'Date' : 'วันที่';
+    const dateRow = showDate ? `
+      <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
+        <span style="font-size:0.68rem;font-weight:800;color:var(--muted);text-transform:uppercase">${dateLabel}</span>
+        <input type="date" id="pi-date-${i}" value="${dateVal}"
+          style="flex:1;padding:4px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.75rem;font-family:inherit;outline:none;color:var(--text);background:var(--surface)"
+          onchange="parsedResults[${i}].due_date=this.value;parsedResults[${i}].date=this.value">
+        ${dateVal ? '' : `<span style="font-size:0.65rem;color:var(--med);font-weight:700">⚠️ ${currentLang==='en'?'No date — check!':'ไม่มีวันที่ — ตรวจสอบ!'}</span>`}
+      </div>` : '';
+
     return `
     <div class="parsed-item" style="${dup?'opacity:0.6;border-color:#fca5a5':''}">
       <input type="checkbox" ${dup?'':'checked'} id="pi-${i}">
@@ -1559,20 +1582,21 @@ function showParsedPreview(items) {
         ${task.original_text!==task.parsed_title?`<div class="parsed-item-orig">${escHtml(task.original_text)}</div>`:''}
         <div class="parsed-item-tags">
           ${subjectTag(task.subject)}
-          <span class="tag ${task.type==='homework'?'tag-hw':'tag-todo'}">${task.type==='homework'?L.hwType:L.todoType}</span>
-          ${task.points?`<span class="tag tag-points">⭐${task.points}</span>`:''}
-          ${task.due_date?`<span class="tag" style="background:#fff3e0;color:#e65100">📅${task.due_date}</span>`:''}
+          ${typeBadge}
+          ${task.points?`<span class="tag tag-points">⭐${task.points}%</span>`:''}
+          ${dateVal?`<span class="tag" style="background:#fff3e0;color:#e65100">📅 ${dateVal}</span>`:''}
         </div>
+        ${dateRow}
       </div>
     </div>`;
   }).join('');
   document.getElementById('parsed-preview').classList.add('visible');
 
-  // Count duplicates
+  // Warn about missing dates
+  const missingDates = items.filter(t => (t.record_type==='task') && !t.due_date).length;
   const dupCount = items.filter(isDuplicate).length;
-  if (dupCount > 0) {
-    toast(`⚠️ พบ ${dupCount} งานที่อาจซ้ำ — ยกเลิกการเลือกแล้ว`);
-  }
+  if (missingDates > 0) toast(`📅 ${missingDates} ${currentLang==='en'?'item(s) have no date — please check':'งานไม่มีวันที่ — กรุณาตรวจสอบ'}`);
+  else if (dupCount > 0) toast(`⚠️ พบ ${dupCount} งานที่อาจซ้ำ`);
 }
 
 async function confirmParsed() {
@@ -2524,35 +2548,50 @@ function renderHolidayBanner() {
 }
 
 /* ── Update AI parse prompt to detect holidays/events ── */
-const PARSE_SYSTEM_PROMPT = `You are a homework parser for a Thai P.6 student preparing for ม.1 entrance exams.
-Extract ALL tasks, school events, AND general information from this notebook image.
+const PARSE_SYSTEM_PROMPT = (() => {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth()+1).padStart(2,'0');
+  const dd = String(now.getDate()).padStart(2,'0');
+  const monthName = now.toLocaleString('en-GB',{month:'long'});
+  return `You are a homework and activity parser for a Thai P.6 student preparing for ม.1 entrance exams.
+Today's date is ${yyyy}-${mm}-${dd} (${dd} ${monthName} ${yyyy}, Buddhist year ${yyyy+543}).
+
+Extract ALL tasks, school events, AND general information from this image (notebook page OR Line/chat screenshot).
+
+DATE RULES — very important:
+- If only a day number is mentioned (e.g. "วัน11", "วันที่ 16", "day 11"), assume it means that day in the CURRENT month (${yyyy}-${mm}-XX).
+- If the day number has already passed this month and context suggests a future date, use next month instead.
+- If month is explicitly stated, use it exactly.
+- Always output dates as YYYY-MM-DD.
 
 For each TASK return JSON with:
 - record_type: "task"
 - original_text: exact text as written (preserve Thai and English exactly)
-- parsed_title: clean concise English/Thai summary (max 80 chars)
+- parsed_title: clean concise English summary (max 80 chars)
 - type: "homework" or "todo"
 - subject: Math | Thai | English | Science | Social | Chinese | PE | Other
-- due_date: YYYY-MM-DD if a date is mentioned, else null
-- points: integer if points/marks mentioned, else null
+- due_date: YYYY-MM-DD (apply date rules above), else null
+- points: integer if points/marks/% mentioned, else null
 - priority: "high" if has points OR due within 2 days, "med" if due this week, "low" otherwise
 
-For each SCHOOL EVENT (holidays, ceremonies, breaks, special days, uniform changes) return:
+For each SCHOOL EVENT (holidays, ceremonies, breaks, special days, uniform changes, competitions) return:
 - record_type: "event"
 - name: event name (Thai/English as written)
-- type: "holiday" | "break" | "event" | "uniform"
-- date: YYYY-MM-DD (single day) or null
+- type: "holiday" | "break" | "event" | "uniform" | "competition"
+- date: YYYY-MM-DD (apply date rules above, single day) or null
 - start: YYYY-MM-DD (if range) or null
 - end: YYYY-MM-DD (if range) or null
 
-For GENERAL INFORMATION that is NOT a task or event (e.g. score rubrics, grading criteria, school rules, subject info, announcements, login credentials, fees, fund details, notebook color assignments, class schedules) return:
+For GENERAL INFORMATION that is NOT a task or event (score rubrics, grading criteria, school rules, announcements, login credentials, fees, fund details, schedules, selection/tryout criteria) return:
 - record_type: "info"
 - original_text: exact text as written
-- parsed_title: clean concise summary (max 80 chars)
+- parsed_title: clean concise English summary (max 80 chars)
 - subject: Math | Thai | English | Science | Social | Chinese | PE | Other | General
-- category: "grading" | "schedule" | "rules" | "announcement" | "credentials" | "fees" | "other"
+- category: "grading" | "schedule" | "rules" | "announcement" | "credentials" | "fees" | "competition" | "other"
 
-Return ONLY a valid JSON array mixing tasks, events, and info. No markdown, no backticks, no explanation.`;
+Return ONLY a valid JSON array. No markdown, no backticks, no explanation.`;
+})();
 
 /* ═══════════════════════════════════════
    EDIT TASK
