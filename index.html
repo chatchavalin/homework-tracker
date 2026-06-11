@@ -1004,28 +1004,37 @@ function renderKidSwitcher() {
   const kid = KIDS[currentKid];
   const el = document.getElementById('kid-switcher');
   if (!el) return;
-  const photo = kid.photo
-    ? `<img src="${kid.photo}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.5)">`
-    : `<span style="font-size:1.1rem">${kid.emoji}</span>`;
+  const photo = localStorage.getItem('ht_photo_' + currentKid);
+  const avatar = photo
+    ? `<img src="${photo}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2.5px solid rgba(255,255,255,0.7);flex-shrink:0">`
+    : `<div style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.25);border:2.5px solid rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0">${kid.emoji}</div>`;
+
   el.innerHTML = `
-    <div style="display:flex;align-items:center;gap:6px;cursor:pointer" onclick="toggleKidMenu()">
-      ${photo}
-      <span style="font-size:0.8rem;font-weight:800">${kid.name}</span>
-      <span style="font-size:0.6rem;opacity:0.7">▼</span>
+    <div style="display:flex;align-items:center;gap:7px;cursor:pointer" onclick="toggleKidMenu()">
+      ${avatar}
+      <div style="display:flex;flex-direction:column;line-height:1.2">
+        <span style="font-size:0.78rem;font-weight:800">${kid.name}</span>
+        <span style="font-size:0.58rem;opacity:0.65">▼ switch</span>
+      </div>
     </div>
-    <div id="kid-menu" style="display:none;position:absolute;top:38px;right:0;background:white;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.15);padding:8px;z-index:50;min-width:140px">
-      ${Object.values(KIDS).map(k => `
-        <div onclick="switchKid('${k.id}')" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:0.85rem;font-weight:700;color:#1a1a2e;${currentKid===k.id?'background:#f0fdf4':''}">
-          ${localStorage.getItem('ht_photo_'+k.id)
-            ? `<img src="${localStorage.getItem('ht_photo_'+k.id)}" style="width:24px;height:24px;border-radius:50%;object-fit:cover">`
-            : `<span>${k.emoji}</span>`}
-          ${k.name} ${currentKid===k.id?'✓':''}
-        </div>`).join('')}
-      <div style="border-top:1px solid #e8e4dc;margin:6px 0"></div>
-      <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:0.8rem;font-weight:700;color:#6b7280">
-        <span>📷</span> ${currentLang==='en'?'Change photo':'เปลี่ยนรูป'}
-        <input type="file" accept="image/*" style="display:none" onchange="saveKidPhoto(event)">
-      </label>
+    <div id="kid-menu" style="display:none;position:absolute;top:54px;right:0;background:white;border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,0.18);padding:8px;z-index:200;min-width:160px">
+      ${Object.values(KIDS).map(k => {
+        const kPhoto = localStorage.getItem('ht_photo_' + k.id);
+        const kAvatar = kPhoto
+          ? `<img src="${kPhoto}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0">`
+          : `<div style="width:32px;height:32px;border-radius:50%;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0">${k.emoji}</div>`;
+        return `
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;cursor:pointer;${currentKid===k.id?'background:var(--primary-lt)':''}">
+          <div onclick="switchKid('${k.id}')" style="display:flex;align-items:center;gap:8px;flex:1">
+            ${kAvatar}
+            <span style="font-size:0.88rem;font-weight:700;color:#1a1a2e">${k.name} ${currentKid===k.id?'✓':''}</span>
+          </div>
+          <label style="cursor:pointer;padding:4px 6px;border-radius:6px;background:#f3f4f6;font-size:0.65rem;color:#6b7280;font-weight:700;white-space:nowrap" title="Change photo">
+            📷
+            <input type="file" accept="image/*" capture="user" style="display:none" onchange="saveKidPhoto(event,'${k.id}')">
+          </label>
+        </div>`;
+      }).join('')}
     </div>`;
 }
 
@@ -1042,17 +1051,18 @@ document.addEventListener('click', e => {
   }
 });
 
-function saveKidPhoto(e) {
+function saveKidPhoto(e, kidId) {
+  const targetKid = kidId || currentKid;
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = ev => {
-    localStorage.setItem('ht_photo_' + currentKid, ev.target.result);
-    KIDS[currentKid].photo = ev.target.result;
+    localStorage.setItem('ht_photo_' + targetKid, ev.target.result);
+    if (KIDS[targetKid]) KIDS[targetKid].photo = ev.target.result;
     renderKidSwitcher();
     const menu = document.getElementById('kid-menu');
     if (menu) menu.style.display = 'none';
-    toast(currentLang==='en' ? '📷 Photo saved!' : '📷 บันทึกรูปแล้ว');
+    toast(currentLang==='en' ? `📷 ${KIDS[targetKid]?.name || ''} photo saved!` : `📷 บันทึกรูป ${KIDS[targetKid]?.name || ''} แล้ว`);
   };
   reader.readAsDataURL(file);
 }
