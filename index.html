@@ -149,6 +149,8 @@ input,textarea,select{font-family:inherit}
 .due-chip.urgent{color:var(--high)}
 .due-chip.soon{color:var(--med)}
 .task-delete{position:absolute;top:10px;right:10px;color:var(--muted);font-size:0.75rem;opacity:0;transition:opacity 0.15s;padding:4px}
+.task-edit-btn{position:absolute;top:9px;right:32px;background:none;border:none;font-size:0.8rem;cursor:pointer;padding:4px;opacity:0.45}
+.task-edit-btn:active{opacity:1}
 .task-card:hover .task-delete{opacity:1}
 
 /* Empty */
@@ -1318,7 +1320,7 @@ async function loadAll() {
   if (topicsRes.error) throw topicsRes.error;
   STATE.allTasks = tasksRes.data || [];
   STATE.tasks  = filterByKid(tasksRes.data);
-  STATE.exams  = examsRes.data  || [];
+  STATE.exams  = (examsRes.data || []).filter(e => e.kid_id === currentKid || (!e.kid_id && currentKid === 'miki'));
   STATE.topics = topicsRes.data || [];
   saveLocal();
   setSyncing(false);
@@ -1336,7 +1338,7 @@ function setupRealtime() {
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'exams' }, async () => {
       const r = await sb.from('exams').select('*').order('created_at', { ascending: true });
-      if (!r.error) { STATE.exams = r.data; renderExams(); }
+      if (!r.error) { STATE.exams = (r.data||[]).filter(e => e.kid_id === currentKid || (!e.kid_id && currentKid === 'miki')); renderExams(); }
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'exam_topics' }, async () => {
       const r = await sb.from('exam_topics').select('*').order('sort_order', { ascending: true });
@@ -1459,6 +1461,7 @@ function taskCardHTML(t) {
         ${pointsTag}${overdueTag}${dueHTML}
       </div>
     </div>
+    <button class="task-edit-btn" onclick="event.stopPropagation();openEditSheet('${t.id}')" title="Edit">✏️</button>
     <button class="task-delete" onclick="softDeleteTask('${t.id}')">✕</button>
   </div>`;}
 
