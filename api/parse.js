@@ -3,7 +3,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { imageBase64, mimeType } = req.body;
+  const { imageBase64, mimeType, prompt } = req.body;
   if (!imageBase64) {
     return res.status(400).json({ error: 'No image provided' });
   }
@@ -44,8 +44,8 @@ Return ONLY a valid JSON array. No markdown, no backticks, no explanation.`;
         'Authorization': `Bearer ${GROQ_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-        max_tokens: 2048,
+        model: 'meta-llama/llama-4-maverick-17b-128e-instruct',
+        max_tokens: 4096,
         temperature: 0.1,
         messages: [{
           role: 'user',
@@ -54,7 +54,7 @@ Return ONLY a valid JSON array. No markdown, no backticks, no explanation.`;
               type: 'image_url',
               image_url: { url: `data:${mimeType || 'image/jpeg'};base64,${imageBase64}` }
             },
-            { type: 'text', text: PROMPT }
+            { type: 'text', text: prompt || PROMPT }
           ]
         }]
       })
