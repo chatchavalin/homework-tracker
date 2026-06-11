@@ -2625,10 +2625,14 @@ Today's date is ${yyyy}-${mm}-${dd} (${dd} ${monthName} ${yyyy}, Buddhist year $
 Extract ALL tasks, school events, AND general information from this image (notebook page OR Line/chat screenshot).
 
 DATE RULES — very important:
-- If only a day number is mentioned (e.g. "วัน11", "วันที่ 16", "day 11"), assume it means that day in the CURRENT month (${yyyy}-${mm}-XX).
-- If the day number has already passed this month and context suggests a future date, use next month instead.
-- If month is explicitly stated, use it exactly.
-- Always output dates as YYYY-MM-DD.
+- This is a THAI school notebook. ALL dates use Thai DD/MM convention.
+- "11/07" means 11 July (day=11, month=07) — NEVER interpret as November 7th.
+- "11/07/26" or "11/07/69" = 11 July 2026 (Buddhist year 2569 = 2026 CE).
+- Buddhist short years: 69 = 2569 = 2026 CE. Subtract 543 from Buddhist year for CE year.
+- If only a day number (e.g. "วัน11", "วันที่ 16", "day 11"), assume CURRENT month (${yyyy}-${mm}-XX).
+- If that day has passed and context suggests future, use next month.
+- If month is stated explicitly, use it exactly.
+- Always output as YYYY-MM-DD in CE year (not Buddhist).
 
 For each TASK return JSON with:
 - record_type: "task"
