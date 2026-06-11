@@ -947,9 +947,8 @@ input,textarea,select{font-family:inherit}
 
 <div class="toast" id="toast"></div>
 
-<!-- SoundCloud player (hidden) -->
-<div id="sc-player-wrap" style="position:fixed;bottom:-200px;left:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none"></div>
-<script src="https://w.soundcloud.com/player/api.js"></script>
+<!-- Background music player -->
+<audio id="bg-music" loop preload="none" style="display:none"></audio>
 
 <script>
 /* ═══════════════════════════════════════
@@ -969,7 +968,7 @@ let STATE = { tasks: [], exams: [], topics: [], notes: [] };
 const KIDS = {
   ryuji: {
     id: 'ryuji', name: 'Ryuji', emoji: '👦',
-    music: 'https://on.soundcloud.com/Cr7GKo3r1qOViaO8nd',
+    music: '/music/ryuji.mp3',
     theme: {
       '--navy':      '#166534',
       '--primary':   '#16a34a',
@@ -980,7 +979,7 @@ const KIDS = {
   },
   miki: {
     id: 'miki', name: 'Miki', emoji: '👧',
-    music: 'https://on.soundcloud.com/f7WhSEu4TcyTMSuBhy',
+    music: '/music/miki.mp3',
     theme: {
       '--navy':      '#6b21a8',
       '--primary':   '#9333ea',
@@ -1000,61 +999,53 @@ function applyKidTheme(kidId) {
 let currentKid = localStorage.getItem('ht_current_kid') || 'ryuji';
 
 /* ═══════════════════════════════════════
-   BACKGROUND MUSIC (SoundCloud)
+   BACKGROUND MUSIC (local MP3)
 ═══════════════════════════════════════ */
-let scWidget = null;
 let musicOn = localStorage.getItem('ht_music_on') === '1';
-const MUSIC_VOLUME = 20; // quiet background level (0-100)
+const MUSIC_VOLUME = 0.15; // background level (0.0 - 1.0)
 
 function loadMusic(kidId) {
   const kid = KIDS[kidId];
-  if (!kid || !kid.music) return;
-  const wrap = document.getElementById('sc-player-wrap');
-  if (!wrap) return;
-  // Build embed iframe with the kid's track
-  const embedUrl = 'https://w.soundcloud.com/player/?url=' + encodeURIComponent(kid.music)
-    + '&auto_play=false&loop=true&hide_related=true&show_comments=false&show_user=false&visual=false';
-  wrap.innerHTML = `<iframe id="sc-iframe" width="300" height="80" scrolling="no" frameborder="no" allow="autoplay" src="${embedUrl}"></iframe>`;
-  if (typeof SC === 'undefined') {
-    console.warn('SoundCloud API not loaded');
-    return;
+  const audio = document.getElementById('bg-music');
+  if (!kid || !kid.music || !audio) return;
+  const wasPlaying = musicOn && !audio.paused;
+  // Only reload if track changed
+  const newSrc = kid.music;
+  if (!audio.src.endsWith(newSrc)) {
+    audio.src = newSrc;
+    audio.volume = MUSIC_VOLUME;
+    audio.load();
   }
-  scWidget = SC.Widget(document.getElementById('sc-iframe'));
-  let readyFired = false;
-  scWidget.bind(SC.Widget.Events.READY, () => {
-    readyFired = true;
-    scWidget.setVolume(MUSIC_VOLUME);
-    if (musicOn) scWidget.play();
-  });
-  scWidget.bind(SC.Widget.Events.ERROR, () => {
-    toast(currentLang==='en' ? '❌ Music track failed to load' : '❌ โหลดเพลงไม่ได้');
-  });
-  scWidget.bind(SC.Widget.Events.PLAY, () => {
-    scWidget.setVolume(MUSIC_VOLUME);
-  });
-  // Detect track that never becomes ready (bad/short URL)
-  setTimeout(() => {
-    if (!readyFired && musicOn) {
-      toast(currentLang==='en' ? '⚠️ Music not loading — check track URL' : '⚠️ เพลงโหลดไม่ได้');
-    }
-  }, 6000);
-  // Loop manually in case loop param fails
-  scWidget.bind(SC.Widget.Events.FINISH, () => {
-    if (musicOn) { scWidget.seekTo(0); scWidget.play(); }
-  });
+  if (musicOn) {
+    audio.volume = MUSIC_VOLUME;
+    audio.play().catch(e => {
+      // Autoplay blocked — wait for user tap
+      console.warn('Autoplay blocked:', e);
+    });
+  }
 }
 
 function toggleMusic() {
+  const audio = document.getElementById('bg-music');
+  if (!audio) return;
   musicOn = !musicOn;
   localStorage.setItem('ht_music_on', musicOn ? '1' : '0');
   updateMusicBtn();
-  if (!scWidget) { loadMusic(currentKid); return; }
   if (musicOn) {
-    scWidget.setVolume(MUSIC_VOLUME);
-    scWidget.play();
-    toast(currentLang==='en' ? '🎵 Music on' : '🎵 เปิดเพลง');
+    if (!audio.src) {
+      const kid = KIDS[currentKid];
+      if (kid && kid.music) { audio.src = kid.music; audio.load(); }
+    }
+    audio.volume = MUSIC_VOLUME;
+    audio.play().then(() => {
+      toast(currentLang==='en' ? '🎵 Music on' : '🎵 เปิดเพลง');
+    }).catch(e => {
+      toast(currentLang==='en' ? '❌ Cannot play: ' + e.message : '❌ เล่นไม่ได้');
+      musicOn = false;
+      updateMusicBtn();
+    });
   } else {
-    scWidget.pause();
+    audio.pause();
     toast(currentLang==='en' ? '🔇 Music off' : '🔇 ปิดเพลง');
   }
 }
