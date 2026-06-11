@@ -76,6 +76,28 @@ input,textarea,select{font-family:inherit}
 .content{flex:1;overflow-y:auto;overscroll-behavior-y:contain;padding:14px 14px 100px;scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
 .content::-webkit-scrollbar{width:0}
 
+/* Pull to refresh */
+.ptr-indicator{display:flex;align-items:center;justify-content:center;gap:8px;height:0;overflow:hidden;transition:height 0.2s;font-size:0.78rem;font-weight:700;color:var(--muted)}
+.ptr-indicator.pulling{height:44px}
+.ptr-indicator.refreshing{height:44px}
+.ptr-spinner{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.7s linear infinite}
+
+/* Search */
+.search-wrap{position:relative;margin-bottom:12px}
+.search-input{width:100%;padding:10px 14px 10px 36px;border:1.5px solid var(--border);border-radius:20px;font-size:0.85rem;font-family:inherit;background:var(--surface);color:var(--text);outline:none;transition:border-color 0.15s;box-shadow:var(--shadow)}
+.search-input:focus{border-color:var(--primary)}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:0.95rem;pointer-events:none}
+.search-clear{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:var(--border);border:none;border-radius:50%;width:18px;height:18px;font-size:0.6rem;cursor:pointer;display:none;align-items:center;justify-content:center;color:var(--muted);font-weight:800}
+.search-clear.show{display:flex}
+.autocomplete-list{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;box-shadow:var(--shadow-md);z-index:50;max-height:220px;overflow-y:auto;display:none}
+.autocomplete-list.show{display:block}
+.autocomplete-item{padding:10px 14px;font-size:0.83rem;font-weight:600;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.autocomplete-item:last-child{border-bottom:none}
+.autocomplete-item:hover,.autocomplete-item:active{background:var(--surface2)}
+.autocomplete-item .ac-subject{font-size:0.65rem;font-weight:800;padding:2px 6px;border-radius:5px;flex-shrink:0}
+.autocomplete-item .ac-match{color:var(--primary);font-weight:800}
+.search-results-label{font-size:0.72rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;padding-left:2px}
+
 /* Bottom nav */
 .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--surface);border-top:1.5px solid var(--border);display:flex;padding:8px 0 max(8px,env(safe-area-inset-bottom));z-index:100}
 .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;color:var(--muted);font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;transition:color 0.15s}
@@ -583,8 +605,18 @@ input,textarea,select{font-family:inherit}
 
     <!-- TAB: HOMEWORK -->
     <div class="tab-panel active" id="tab-hw">
+      <div class="ptr-indicator" id="ptr-indicator">
+        <div class="ptr-spinner" id="ptr-spinner"></div>
+        <span id="ptr-text">Release to refresh</span>
+      </div>
       <div id="rightnow-wrap"></div>
       <div id="install-wrap"></div>
+      <div class="search-wrap" id="hw-search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" id="hw-search" placeholder="Search homework..." oninput="onSearch(this,'hw')" onkeydown="onSearchKey(event,'hw')">
+        <button class="search-clear" id="hw-search-clear" onclick="clearSearch('hw')">✕</button>
+        <div class="autocomplete-list" id="hw-ac-list"></div>
+      </div>
       <div class="filter-row" id="hw-filter-row">
         <button class="f-tab active" id="ftab-today"   onclick="setDateFilter('today',this)">วันนี้</button>
         <button class="f-tab"        id="ftab-week"    onclick="setDateFilter('week',this)">สัปดาห์นี้</button>
@@ -598,6 +630,12 @@ input,textarea,select{font-family:inherit}
 
     <!-- TAB: TODO -->
     <div class="tab-panel" id="tab-todo">
+      <div class="search-wrap" id="todo-search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" id="todo-search" placeholder="Search to-dos..." oninput="onSearch(this,'todo')" onkeydown="onSearchKey(event,'todo')">
+        <button class="search-clear" id="todo-search-clear" onclick="clearSearch('todo')">✕</button>
+        <div class="autocomplete-list" id="todo-ac-list"></div>
+      </div>
       <div class="filter-row">
         <button class="f-tab active" onclick="setTodoFilter('pending',this)">ค้างอยู่</button>
         <button class="f-tab" onclick="setTodoFilter('done',this)">เสร็จแล้ว</button>
@@ -1021,6 +1059,7 @@ function saveKidPhoto(e) {
 let currentTab   = 'hw';
 let dateFilter   = 'today';
 let todoFilter   = 'pending';
+let searchQuery  = { hw: '', todo: '' };
 let manualType   = 'homework';
 let parsedResults = [];
 let currentImgB64 = null;
@@ -1258,7 +1297,24 @@ function taskCardHTML(t) {
 ═══════════════════════════════════════ */
 function renderHW() {
   const el = document.getElementById('hw-list');
-  let tasks = STATE.tasks.filter(t => t.type==='homework' && inDateFilter(t));
+  const q = searchQuery.hw || '';
+  let tasks;
+
+  if (q === '__urgent__') {
+    tasks = STATE.tasks.filter(t => t.type==='homework' && !t.is_done && t.priority==='high');
+  } else if (q === '__pending__') {
+    tasks = STATE.tasks.filter(t => t.type==='homework' && !t.is_done);
+  } else if (q.trim()) {
+    const ql = q.toLowerCase();
+    tasks = STATE.tasks.filter(t => t.type==='homework' && (
+      (t.parsed_title||'').toLowerCase().includes(ql) ||
+      (t.original_text||'').toLowerCase().includes(ql) ||
+      (t.subject||'').toLowerCase().includes(ql)
+    ));
+  } else {
+    tasks = STATE.tasks.filter(t => t.type==='homework' && inDateFilter(t));
+  }
+
   tasks.sort((a,b) => {
     const po = {high:0,med:1,low:2};
     const pd = (po[a.priority]||2)-(po[b.priority]||2);
@@ -1266,15 +1322,24 @@ function renderHW() {
     if (a.due_date && b.due_date) return a.due_date.localeCompare(b.due_date);
     return a.due_date ? -1 : b.due_date ? 1 : 0;
   });
+
   if (!tasks.length) {
     const L = t();
-    el.innerHTML = `<div class="empty"><div class="emoji">🎉</div>
-      <div class="msg">${dateFilter==='today'?L.noHwToday:L.noHw}</div>
-      <div class="sub">${L.addNew}</div></div>`; return;
+    const msg = q.trim() ? (currentLang==='en'?`No results for "${q}"`:`ไม่พบ "${q}"`) : (dateFilter==='today'?L.noHwToday:L.noHw);
+    el.innerHTML = `<div class="empty"><div class="emoji">${q.trim()?'🔍':'🎉'}</div>
+      <div class="msg">${msg}</div>
+      <div class="sub">${q.trim()?'':''+L.addNew}</div></div>`; return;
   }
+
+  // Show search result count
+  let header = '';
+  if (q.trim() && q !== '__urgent__' && q !== '__pending__') {
+    header = `<div class="search-results-label">🔍 ${tasks.length} result${tasks.length!==1?'s':''}</div>`;
+  }
+
   const pending = tasks.filter(t=>!t.is_done);
   const done    = tasks.filter(t=>t.is_done);
-  let html = pending.map(taskCardHTML).join('');
+  let html = header + pending.map(taskCardHTML).join('');
   if (done.length) html += `<div class="sec-label">✅ ${t().doneSection} (${done.length})</div>` + done.map(taskCardHTML).join('');
   el.innerHTML = html;
   attachSwipeListeners();
@@ -1282,16 +1347,27 @@ function renderHW() {
 
 function renderTodo() {
   const el = document.getElementById('todo-list');
+  const q = searchQuery.todo || '';
   let tasks = STATE.tasks.filter(t => t.type==='todo');
   if (todoFilter==='pending') tasks = tasks.filter(t=>!t.is_done);
   if (todoFilter==='done')    tasks = tasks.filter(t=>t.is_done);
+  if (q.trim()) {
+    const ql = q.toLowerCase();
+    tasks = tasks.filter(t =>
+      (t.parsed_title||'').toLowerCase().includes(ql) ||
+      (t.original_text||'').toLowerCase().includes(ql) ||
+      (t.subject||'').toLowerCase().includes(ql)
+    );
+  }
   if (!tasks.length) {
     const L = t();
-    el.innerHTML = `<div class="empty"><div class="emoji">✨</div>
-      <div class="msg">${L.noTodo}</div>
-      <div class="sub">${L.addTodo}</div></div>`; return;
+    const msg = q.trim() ? (currentLang==='en'?`No results for "${q}"`:`ไม่พบ "${q}"`) : L.noTodo;
+    el.innerHTML = `<div class="empty"><div class="emoji">${q.trim()?'🔍':'✨'}</div>
+      <div class="msg">${msg}</div>
+      <div class="sub">${q.trim()?'':L.addTodo}</div></div>`; return;
   }
-  el.innerHTML = tasks.map(taskCardHTML).join('');
+  let header = q.trim() ? `<div class="search-results-label">🔍 ${tasks.length} result${tasks.length!==1?'s':''}</div>` : '';
+  el.innerHTML = header + tasks.map(taskCardHTML).join('');
   attachSwipeListeners();
 }
 
@@ -1788,33 +1864,173 @@ function showTab(tab) {
 
 function statPillClick(type) {
   showTab('hw');
-  // Map pill type to filter
+  const allBtn   = document.getElementById('ftab-all');
+  const todayBtn = document.getElementById('ftab-today');
+  const weekBtn  = document.getElementById('ftab-week');
+
   if (type === 'done') {
-    // Switch to hw tab, show all, scroll to done section
-    const allBtn = document.querySelector('#tab-hw .f-tab:last-child');
+    // Show ALL tasks (not filtered by date) so all 20 done items appear
     if (allBtn) setDateFilter('all', allBtn);
-    // highlight done section after render
+    // Clear search, then scroll to done section
+    clearSearch('hw');
     setTimeout(() => {
-      const doneSection = document.querySelector('#hw-list .sec-label');
-      if (doneSection) doneSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
+      const doneSec = document.querySelector('#hw-list .sec-label');
+      if (doneSec) {
+        const content = document.querySelector('.content');
+        if (content) content.scrollTo({ top: doneSec.offsetTop - 60, behavior: 'smooth' });
+      }
+    }, 150);
+    toast(currentLang==='en' ? `Showing all done tasks` : `แสดงงานที่เสร็จทั้งหมด`);
   } else if (type === 'urgent') {
-    // Switch to today filter to show urgent
-    const todayBtn = document.querySelector('#tab-hw .f-tab');
-    if (todayBtn) setDateFilter('today', todayBtn);
-  } else if (type === 'pending') {
-    // Show this week pending
-    const weekBtn = document.querySelectorAll('#tab-hw .f-tab')[1];
-    if (weekBtn) setDateFilter('week', weekBtn);
-  } else {
-    // all
-    const allBtn = document.querySelector('#tab-hw .f-tab:last-child');
     if (allBtn) setDateFilter('all', allBtn);
+    // Search for high priority
+    const inp = document.getElementById('hw-search');
+    if (inp) { inp.value = ''; }
+    clearSearch('hw');
+    // Filter to show only high priority pending
+    searchQuery.hw = '__urgent__';
+    renderHW();
+    toast(currentLang==='en' ? 'Showing urgent tasks' : 'แสดงงานด่วน');
+  } else if (type === 'pending') {
+    if (allBtn) setDateFilter('all', allBtn);
+    clearSearch('hw');
+    searchQuery.hw = '__pending__';
+    renderHW();
+    toast(currentLang==='en' ? 'Showing pending tasks' : 'แสดงงานที่ค้างอยู่');
+  } else {
+    if (allBtn) setDateFilter('all', allBtn);
+    clearSearch('hw');
+    toast(currentLang==='en' ? 'Showing all tasks' : 'แสดงงานทั้งหมด');
   }
-  toast(currentLang === 'en'
-    ? `Showing ${type} tasks`
-    : `แสดงงาน: ${type}`);
 }
+
+/* ═══════════════════════════════════════
+   SEARCH & AUTOCOMPLETE
+═══════════════════════════════════════ */
+function onSearch(input, tab) {
+  const q = input.value;
+  searchQuery[tab] = q;
+  const clearBtn = document.getElementById(`${tab}-search-clear`);
+  if (clearBtn) clearBtn.classList.toggle('show', q.length > 0);
+  showAutocomplete(q, tab);
+  if (tab === 'hw') renderHW();
+  if (tab === 'todo') renderTodo();
+}
+
+function showAutocomplete(q, tab) {
+  const list = document.getElementById(`${tab}-ac-list`);
+  if (!list) return;
+  if (!q.trim() || q.length < 2) { list.classList.remove('show'); return; }
+  const ql = q.toLowerCase();
+  const type = tab === 'hw' ? 'homework' : 'todo';
+  const matches = STATE.tasks
+    .filter(t => t.type === type && (
+      (t.parsed_title||'').toLowerCase().includes(ql) ||
+      (t.original_text||'').toLowerCase().includes(ql)
+    ))
+    .slice(0, 6);
+  if (!matches.length) { list.classList.remove('show'); return; }
+  list.innerHTML = matches.map(m => {
+    const title = escHtml(m.parsed_title || m.original_text);
+    const hi = title.replace(new RegExp(`(${escHtml(q)})`, 'gi'), '<span class="ac-match">$1</span>');
+    const subCls = `tag tag-${(m.subject||'other').toLowerCase()}`;
+    return `<div class="autocomplete-item" onclick="selectAC('${escHtml(m.parsed_title||m.original_text)}','${tab}')">
+      <span class="ac-subject ${subCls}">${m.subject||'?'}</span>
+      <span>${hi}</span>
+      ${m.is_done ? '<span style="color:var(--low);font-size:0.7rem">✓</span>' : ''}
+    </div>`;
+  }).join('');
+  list.classList.add('show');
+}
+
+function selectAC(text, tab) {
+  const inp = document.getElementById(`${tab}-search`);
+  if (inp) { inp.value = text; onSearch(inp, tab); }
+  const list = document.getElementById(`${tab}-ac-list`);
+  if (list) list.classList.remove('show');
+}
+
+function onSearchKey(e, tab) {
+  if (e.key === 'Escape') clearSearch(tab);
+  if (e.key === 'Enter') {
+    const list = document.getElementById(`${tab}-ac-list`);
+    if (list) list.classList.remove('show');
+    e.target.blur();
+  }
+}
+
+function clearSearch(tab) {
+  searchQuery[tab] = '';
+  const inp = document.getElementById(`${tab}-search`);
+  if (inp) inp.value = '';
+  const clearBtn = document.getElementById(`${tab}-search-clear`);
+  if (clearBtn) clearBtn.classList.remove('show');
+  const list = document.getElementById(`${tab}-ac-list`);
+  if (list) list.classList.remove('show');
+  if (tab === 'hw') renderHW();
+  if (tab === 'todo') renderTodo();
+}
+
+// Close autocomplete on outside tap
+document.addEventListener('click', e => {
+  if (!e.target.closest('.search-wrap')) {
+    document.querySelectorAll('.autocomplete-list').forEach(l => l.classList.remove('show'));
+  }
+});
+
+/* ═══════════════════════════════════════
+   PULL TO REFRESH
+═══════════════════════════════════════ */
+(function initPullToRefresh() {
+  let startY = 0, pulling = false, threshold = 70;
+  const content = () => document.querySelector('.content');
+  const indicator = () => document.getElementById('ptr-indicator');
+  const ptrText = () => document.getElementById('ptr-text');
+
+  document.addEventListener('touchstart', e => {
+    const c = content();
+    if (c && c.scrollTop === 0) {
+      startY = e.touches[0].clientY;
+      pulling = true;
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchmove', e => {
+    if (!pulling) return;
+    const dy = e.touches[0].clientY - startY;
+    const ind = indicator();
+    if (dy > 10 && dy < threshold * 1.5) {
+      if (ind) {
+        ind.classList.add('pulling');
+        const pct = Math.min(dy / threshold, 1);
+        if (ptrText()) ptrText().textContent = pct >= 1
+          ? (currentLang==='en'?'Release to refresh':'ปล่อยเพื่อรีเฟรช')
+          : (currentLang==='en'?'Pull to refresh':'ดึงเพื่อรีเฟรช');
+        const spinner = document.getElementById('ptr-spinner');
+        if (spinner) spinner.style.transform = `rotate(${pct * 360}deg)`;
+      }
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', async e => {
+    if (!pulling) return;
+    pulling = false;
+    const dy = e.changedTouches[0].clientY - startY;
+    const ind = indicator();
+    if (dy >= threshold) {
+      if (ind) {
+        ind.classList.add('refreshing');
+        if (ptrText()) ptrText().textContent = currentLang==='en'?'Refreshing...':'กำลังรีเฟรช...';
+        const spinner = document.getElementById('ptr-spinner');
+        if (spinner) spinner.style.animation = 'spin 0.7s linear infinite';
+      }
+      try { await loadAll(); } catch(e) { loadFromLocal(); }
+      renderAll();
+      toast(currentLang==='en'?'✅ Refreshed':'✅ รีเฟรชแล้ว');
+    }
+    if (ind) ind.classList.remove('pulling','refreshing');
+  }, { passive: true });
+})();
 
 function setDateFilter(f, btn) {
   dateFilter = f;
@@ -2269,6 +2485,12 @@ function applyLang() {
   // Mark all button
   const markAllBtn = document.getElementById('mark-all-btn');
   if (markAllBtn) markAllBtn.textContent = L.markAll;
+
+  // Search placeholders
+  const hwSearch = document.getElementById('hw-search');
+  if (hwSearch) hwSearch.placeholder = currentLang==='en' ? 'Search homework...' : 'ค้นหาการบ้าน...';
+  const todoSearch = document.getElementById('todo-search');
+  if (todoSearch) todoSearch.placeholder = currentLang==='en' ? 'Search to-dos...' : 'ค้นหาสิ่งที่ต้องทำ...';
 } catch(e) { console.warn("applyLang:", e); }
 }
 
