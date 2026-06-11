@@ -1277,6 +1277,11 @@ function saveLocal() {
 /* ═══════════════════════════════════════
    SUPABASE LOAD
 ═══════════════════════════════════════ */
+// Tasks with no kid_id (legacy) belong to Ryuji
+function filterByKid(tasks) {
+  return (tasks||[]).filter(t => t.kid_id === currentKid || (!t.kid_id && currentKid === 'ryuji'));
+}
+
 async function loadAll() {
   setSyncing(true);
   const [tasksRes, examsRes, topicsRes] = await Promise.all([
@@ -1287,11 +1292,12 @@ async function loadAll() {
   if (tasksRes.error)  throw tasksRes.error;
   if (examsRes.error)  throw examsRes.error;
   if (topicsRes.error) throw topicsRes.error;
-  STATE.tasks  = tasksRes.data  || [];
+  STATE.tasks  = filterByKid(tasksRes.data);
   STATE.exams  = examsRes.data  || [];
   STATE.topics = topicsRes.data || [];
   saveLocal();
   setSyncing(false);
+  renderAll();
 }
 
 /* ═══════════════════════════════════════
@@ -1301,7 +1307,7 @@ function setupRealtime() {
   sb.channel('homework-changes')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, async () => {
       const r = await sb.from('tasks').select('*').order('created_at', { ascending: false });
-      if (!r.error) { STATE.tasks = r.data; renderAll(); }
+      if (!r.error) { STATE.tasks = filterByKid(r.data); renderAll(); }
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'exams' }, async () => {
       const r = await sb.from('exams').select('*').order('created_at', { ascending: true });
@@ -1603,6 +1609,7 @@ async function addManual() {
     subject: subj, due_date: due, points,
     priority: calcPriority(due, points),
     is_done: false, source: 'manual',
+    kid_id: currentKid,
     created_at: new Date().toISOString()
   };
   STATE.tasks.unshift(task); renderAll();
@@ -3316,6 +3323,7 @@ async function fabAddTask() {
     subject: fabSubject, due_date: fabQDateVal, points: null,
     priority: calcPriority(fabQDateVal, null),
     is_done: false, source: 'manual',
+    kid_id: currentKid,
     created_at: new Date().toISOString()
   };
   STATE.tasks.unshift(task); renderAll();
