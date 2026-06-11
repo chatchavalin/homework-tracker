@@ -1813,7 +1813,8 @@ async function parseImage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           imageBase64: img.b64,
-          mimeType: 'image/jpeg'
+          mimeType: 'image/jpeg',
+          prompt: PARSE_SYSTEM_PROMPT
         })
       });
       if (!res.ok) {
