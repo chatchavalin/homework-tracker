@@ -792,6 +792,18 @@ input,textarea,select{font-family:inherit}
     <!-- TAB: NOTES -->
     <div class="tab-panel" id="tab-notes">
       <div class="sec-label" id="notes-sec-label">📝 Notes & General Info</div>
+
+      <!-- Quick note writer -->
+      <div class="settings-card" style="margin-bottom:12px">
+        <textarea id="quick-note-input" rows="3"
+          style="width:100%;border:1.5px solid #c4b5fd;border-radius:10px;padding:10px;font-family:inherit;font-size:0.95rem;resize:vertical;outline:none;color:#1e1b4b;background:#faf5ff"
+          placeholder="จดโน้ตที่นี่... / Write a note here..."></textarea>
+        <button onclick="saveQuickNote()"
+          style="margin-top:8px;width:100%;background:#7c3aed;color:#fff;border:none;border-radius:10px;padding:10px;font-size:1rem;font-family:inherit;cursor:pointer">
+          💾 บันทึก / Save
+        </button>
+      </div>
+
       <div id="notes-list"></div>
     </div>
 
@@ -2271,6 +2283,28 @@ function renderNotes() {
     </div>`).join('');
 }
 
+function saveQuickNote() {
+  const input = document.getElementById('quick-note-input');
+  const text = (input.value || '').trim();
+  if (!text) return toast('✏️ กรุณาพิมพ์โน้ตก่อน');
+  const note = {
+    id: 'qn_' + Date.now(),
+    kid_id: currentKid,
+    parsed_title: text,
+    original_text: text,
+    category: 'other',
+    subject: '',
+    created_at: new Date().toISOString()
+  };
+  STATE.notes = [note, ...(STATE.notes || [])];
+  const all = JSON.parse(localStorage.getItem('ht_notes') || '[]');
+  all.unshift(note);
+  localStorage.setItem('ht_notes', JSON.stringify(all));
+  input.value = '';
+  renderNotes();
+  toast(currentLang === 'en' ? '📝 Note saved!' : '📝 บันทึกแล้ว!');
+}
+
 function deleteNote(id) {
   STATE.notes = (STATE.notes||[]).filter(n => n.id !== id);
   const all = JSON.parse(localStorage.getItem('ht_notes')||'[]').filter(n => n.id !== id);
@@ -3592,3 +3626,4 @@ init();
 </script>
 </body>
 </html>
+
