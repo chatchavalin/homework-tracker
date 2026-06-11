@@ -948,7 +948,7 @@ input,textarea,select{font-family:inherit}
 <div class="toast" id="toast"></div>
 
 <!-- Background music player -->
-<audio id="bg-music" loop preload="none" style="display:none"></audio>
+<audio id="bg-music" loop preload="none" crossorigin="anonymous" style="display:none"></audio>
 
 <script>
 /* ═══════════════════════════════════════
@@ -1004,24 +1004,44 @@ let currentKid = localStorage.getItem('ht_current_kid') || 'ryuji';
 let musicOn = localStorage.getItem('ht_music_on') === '1';
 const MUSIC_VOLUME = 0.05; // background level (0.0 - 1.0)
 
+// Web Audio API — mobile browsers ignore audio.volume, but respect GainNode
+let audioCtx = null, gainNode = null, audioSourceConnected = false;
+
+function setupAudioGain() {
+  const audio = document.getElementById('bg-music');
+  if (!audio || audioSourceConnected) return;
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = audioCtx.createMediaElementSource(audio);
+    gainNode = audioCtx.createGain();
+    gainNode.gain.value = MUSIC_VOLUME;
+    source.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    audioSourceConnected = true;
+  } catch(e) {
+    console.warn('WebAudio setup failed, fallback to audio.volume:', e);
+  }
+}
+
+function applyVolume() {
+  const audio = document.getElementById('bg-music');
+  if (gainNode) gainNode.gain.value = MUSIC_VOLUME;
+  if (audio) audio.volume = MUSIC_VOLUME; // fallback for desktop
+}
+
 function loadMusic(kidId) {
   const kid = KIDS[kidId];
   const audio = document.getElementById('bg-music');
   if (!kid || !kid.music || !audio) return;
-  const wasPlaying = musicOn && !audio.paused;
-  // Only reload if track changed
   const newSrc = kid.music;
   if (!audio.src.endsWith(newSrc)) {
     audio.src = newSrc;
-    audio.volume = MUSIC_VOLUME;
     audio.load();
   }
+  applyVolume();
   if (musicOn) {
-    audio.volume = MUSIC_VOLUME;
-    audio.play().catch(e => {
-      // Autoplay blocked — wait for user tap
-      console.warn('Autoplay blocked:', e);
-    });
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    audio.play().catch(e => console.warn('Autoplay blocked:', e));
   }
 }
 
@@ -1036,9 +1056,12 @@ function toggleMusic() {
       const kid = KIDS[currentKid];
       if (kid && kid.music) { audio.src = kid.music; audio.load(); }
     }
-    audio.volume = MUSIC_VOLUME;
+    setupAudioGain();             // must be created after user gesture
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    applyVolume();
     audio.play().then(() => {
-      toast(currentLang==='en' ? '🎵 Music on' : '🎵 เปิดเพลง');
+      applyVolume();
+      toast(currentLang==='en' ? '🎵 Music on (quiet)' : '🎵 เปิดเพลง (เบาๆ)');
     }).catch(e => {
       toast(currentLang==='en' ? '❌ Cannot play: ' + e.message : '❌ เล่นไม่ได้');
       musicOn = false;
