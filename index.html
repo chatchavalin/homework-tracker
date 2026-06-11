@@ -3082,7 +3082,9 @@ const PARSE_SYSTEM_PROMPT = (() => {
   const mm = String(now.getMonth()+1).padStart(2,'0');
   const dd = String(now.getDate()).padStart(2,'0');
   const monthName = now.toLocaleString('en-GB',{month:'long'});
-  return `You are a homework and activity parser for a Thai P.6 student preparing for ม.1 entrance exams.
+  return `CRITICAL FIRST INSTRUCTION: Extract EVERY handwritten line on this page — including ALL text ABOVE any red/colored horizontal line. Red lines in Thai assignment books are just teacher check marks, NOT boundaries. Items above red lines are STILL ACTIVE TASKS and skipping them is a critical failure. Count the numbered items on the page first (e.g. if you see 5., 6., then 1., 2., that is FOUR items) and make sure your output has one entry per item.
+
+You are a homework and activity parser for a Thai P.6 student preparing for ม.1 entrance exams.
 Today's date is ${yyyy}-${mm}-${dd} (${dd} ${monthName} ${yyyy}, Buddhist year ${yyyy+543}).
 
 Extract ALL tasks, school events, AND general information from this image (notebook page OR Line/chat screenshot).
