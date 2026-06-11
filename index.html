@@ -1029,10 +1029,9 @@ function renderKidSwitcher() {
             ${kAvatar}
             <span style="font-size:0.88rem;font-weight:700;color:#1a1a2e">${k.name} ${currentKid===k.id?'✓':''}</span>
           </div>
-          <label style="cursor:pointer;padding:4px 6px;border-radius:6px;background:#f3f4f6;font-size:0.65rem;color:#6b7280;font-weight:700;white-space:nowrap" title="Change photo">
+          <button onclick="event.stopPropagation();pickKidPhoto('${k.id}')" style="cursor:pointer;padding:5px 8px;border-radius:6px;background:#f3f4f6;font-size:0.75rem;color:#6b7280;font-weight:700;white-space:nowrap;border:none" title="Change photo">
             📷
-            <input type="file" accept="image/*" capture="user" style="display:none" onchange="saveKidPhoto(event,'${k.id}')">
-          </label>
+          </button>
         </div>`;
       }).join('')}
     </div>`;
@@ -1051,18 +1050,55 @@ document.addEventListener('click', e => {
   }
 });
 
+let pendingPhotoKid = null;
+
+function pickKidPhoto(kidId) {
+  pendingPhotoKid = kidId;
+  // Persistent input — created once, never destroyed by re-renders
+  let inp = document.getElementById('kid-photo-input');
+  if (!inp) {
+    inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = 'image/*';
+    inp.id = 'kid-photo-input';
+    inp.style.display = 'none';
+    inp.addEventListener('change', e => saveKidPhoto(e, pendingPhotoKid));
+    document.body.appendChild(inp);
+  }
+  inp.value = '';  // reset so same file can be picked again
+  inp.click();
+}
+
 function saveKidPhoto(e, kidId) {
   const targetKid = kidId || currentKid;
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = ev => {
-    localStorage.setItem('ht_photo_' + targetKid, ev.target.result);
-    if (KIDS[targetKid]) KIDS[targetKid].photo = ev.target.result;
-    renderKidSwitcher();
-    const menu = document.getElementById('kid-menu');
-    if (menu) menu.style.display = 'none';
-    toast(currentLang==='en' ? `📷 ${KIDS[targetKid]?.name || ''} photo saved!` : `📷 บันทึกรูป ${KIDS[targetKid]?.name || ''} แล้ว`);
+    // Resize to max 200px to fit comfortably in localStorage
+    const img = new Image();
+    img.onload = () => {
+      const size = 200;
+      const canvas = document.createElement('canvas');
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      // Center-crop square
+      const min = Math.min(img.width, img.height);
+      const sx = (img.width - min) / 2;
+      const sy = (img.height - min) / 2;
+      ctx.drawImage(img, sx, sy, min, min, 0, 0, size, size);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      try {
+        localStorage.setItem('ht_photo_' + targetKid, dataUrl);
+        if (KIDS[targetKid]) KIDS[targetKid].photo = dataUrl;
+        renderKidSwitcher();
+        toast(currentLang==='en' ? `📷 ${KIDS[targetKid]?.name || ''} photo saved!` : `📷 บันทึกรูป ${KIDS[targetKid]?.name || ''} แล้ว`);
+      } catch(err) {
+        toast(currentLang==='en' ? '❌ Photo too large' : '❌ รูปใหญ่เกินไป');
+      }
+    };
+    img.onerror = () => toast(currentLang==='en' ? '❌ Cannot read image' : '❌ อ่านรูปไม่ได้');
+    img.src = ev.target.result;
   };
   reader.readAsDataURL(file);
 }
