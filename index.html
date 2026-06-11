@@ -720,15 +720,14 @@ input,textarea,select{font-family:inherit}
 
       <!-- Gemini API Key -->
       <div class="settings-card">
-        <div class="settings-title">🤖 Groq API Key (อ่านรูปด้วย AI)
+        <div class="settings-title">🤖 AI Parser (Groq)
           <span class="status-dot ok"></span>
-          <span style="font-size:0.72rem;font-weight:600;color:var(--muted)">ฟรี</span>
+          <span style="font-size:0.72rem;font-weight:600;color:var(--muted)">🔒 Server-side</span>
         </div>
         <div class="info-box" style="margin-bottom:10px">
-          ✅ ใช้ Groq (Llama 4 Scout) — <strong>ฟรี</strong> ไม่ต้องใส่บัตรเครดิต<br>
-          ⚡ เร็วมาก 800 tokens/วินาที<br>
-          รับ key ได้ที่ <a href="https://console.groq.com" target="_blank">console.groq.com</a> → API Keys<br>
-          Key เก็บในเครื่องนี้เท่านั้น ไม่อัปโหลดไปที่ใด
+          🔒 <strong>API key เก็บบน Vercel server</strong> — ไม่ได้อยู่ในแอปนี้<br>
+          ✅ ใช้ Groq (Llama 4 Scout) — ฟรี เร็ว 800 tokens/วินาที<br>
+          ✅ Key ปลอดภัย 100% — ไม่มีใครเห็นได้จาก browser
         </div>
         <div class="settings-row">
           <label class="settings-label">เปลี่ยน API Key (ถ้าต้องการ)</label>
@@ -740,10 +739,19 @@ input,textarea,select{font-family:inherit}
         </div>
       </div>
 
-      <!-- Line Notify — 2 parents -->
+      <!-- Telegram — 2 parents -->
       <div class="settings-card">
-        <div class="settings-title">💬 Line Notify — แจ้งเตือนเช้า</div>
-        <div class="settings-row">
+        <div class="settings-title">✈️ Telegram — แจ้งเตือนเช้า
+          <span class="status-dot ok"></span>
+          <span style="font-size:0.72rem;font-weight:600;color:var(--muted)">🔒 Server-side</span>
+        </div>
+        <div class="info-box" style="margin-bottom:10px">
+          ✅ Telegram Bot พร้อมใช้งาน<br>
+          📨 Dad (Ben) และ Mum (Numooy) จะได้รับข้อความทุกเช้า<br>
+          🔒 Token เก็บบน Vercel — ปลอดภัย
+        </div>
+        <button class="settings-btn success" onclick="testTelegram()">📨 ทดสอบส่งข้อความ Telegram</button>
+        <div class="settings-row mt-2">
           <label class="settings-label">เวลาแจ้งเตือน (ทั้งคู่)</label>
           <input class="settings-input" id="line-time-inp" type="time" value="07:00">
         </div>
@@ -1419,38 +1427,21 @@ async function parseImage() {
     for (let i = 0; i < total; i++) {
       txt.textContent = total > 1 ? `กำลังอ่านรูป ${i+1}/${total}...` : 'กำลังอ่าน...';
       const img = pendingImages[i];
-      const res = await fetch(
-        'https://api.groq.com/openai/v1/chat/completions',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${APIKEY()}`
-          },
-          body: JSON.stringify({
-            model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-            max_tokens: 2048,
-            temperature: 0.1,
-            messages: [{
-              role: 'user',
-              content: [
-                {
-                  type: 'image_url',
-                  image_url: { url: `data:image/jpeg;base64,${img.b64}` }
-                },
-                { type: 'text', text: PROMPT }
-              ]
-            }]
-          })
-        }
-      );
+      // Call our secure Vercel API route — key never touches browser
+      const res = await fetch('/api/parse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          imageBase64: img.b64,
+          mimeType: 'image/jpeg'
+        })
+      });
       if (!res.ok) {
         const e = await res.json().catch(()=>({}));
-        throw new Error(e.error?.message || `HTTP ${res.status}`);
+        throw new Error(e.error || `HTTP ${res.status}`);
       }
-      const data = await res.json();
-      const raw  = data.choices?.[0]?.message?.content || '[]';
-      const items = JSON.parse(raw.replace(/```json|```/g,'').trim());
+      const data  = await res.json();
+      const items = data.tasks || [];
       if (Array.isArray(items)) parsedResults.push(...items);
     }
 
@@ -2531,14 +2522,18 @@ function updateParentStatus() {
 }
 
 async function testLineNotify(parent) {
-  const tokens = LINE_TOKENS();
-  const token = parent ? tokens[parent] : (tokens.dad || tokens.mum);
-  if (!token) {
-    toast(`⚠️ ยังไม่มี Token ${parent === 'dad' ? 'คุณพ่อ' : 'คุณแม่'}`);
-    return;
+  await testTelegram();
+}
+
+async function testTelegram() {
+  try {
+    const res = await fetch('/api/notify');
+    const data = await res.json();
+    if (data.success) toast(`📨 ส่ง Telegram แล้ว (${data.sent} คน)!`);
+    else toast('❌ ส่งไม่ได้: ' + (data.error || 'unknown'));
+  } catch(e) {
+    toast('❌ ' + e.message);
   }
-  const msg = buildLineMessage();
-  await sendLineMessage(token, msg);
 }
 
 function scheduleLineCheck() {
