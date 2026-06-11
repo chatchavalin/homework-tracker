@@ -1004,7 +1004,7 @@ let currentKid = localStorage.getItem('ht_current_kid') || 'ryuji';
 ═══════════════════════════════════════ */
 let scWidget = null;
 let musicOn = localStorage.getItem('ht_music_on') === '1';
-const MUSIC_VOLUME = 8; // minimum loudness (0-100)
+const MUSIC_VOLUME = 20; // quiet background level (0-100)
 
 function loadMusic(kidId) {
   const kid = KIDS[kidId];
@@ -1015,11 +1015,29 @@ function loadMusic(kidId) {
   const embedUrl = 'https://w.soundcloud.com/player/?url=' + encodeURIComponent(kid.music)
     + '&auto_play=false&loop=true&hide_related=true&show_comments=false&show_user=false&visual=false';
   wrap.innerHTML = `<iframe id="sc-iframe" width="300" height="80" scrolling="no" frameborder="no" allow="autoplay" src="${embedUrl}"></iframe>`;
+  if (typeof SC === 'undefined') {
+    console.warn('SoundCloud API not loaded');
+    return;
+  }
   scWidget = SC.Widget(document.getElementById('sc-iframe'));
+  let readyFired = false;
   scWidget.bind(SC.Widget.Events.READY, () => {
+    readyFired = true;
     scWidget.setVolume(MUSIC_VOLUME);
     if (musicOn) scWidget.play();
   });
+  scWidget.bind(SC.Widget.Events.ERROR, () => {
+    toast(currentLang==='en' ? '❌ Music track failed to load' : '❌ โหลดเพลงไม่ได้');
+  });
+  scWidget.bind(SC.Widget.Events.PLAY, () => {
+    scWidget.setVolume(MUSIC_VOLUME);
+  });
+  // Detect track that never becomes ready (bad/short URL)
+  setTimeout(() => {
+    if (!readyFired && musicOn) {
+      toast(currentLang==='en' ? '⚠️ Music not loading — check track URL' : '⚠️ เพลงโหลดไม่ได้');
+    }
+  }, 6000);
   // Loop manually in case loop param fails
   scWidget.bind(SC.Widget.Events.FINISH, () => {
     if (musicOn) { scWidget.seekTo(0); scWidget.play(); }
