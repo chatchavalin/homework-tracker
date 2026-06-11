@@ -3013,7 +3013,13 @@ DATE RULES — very important:
 - If only a day number (e.g. "วัน11", "วันที่ 16", "day 11"), assume CURRENT month (${yyyy}-${mm}-XX).
 - If that day has passed and context suggests future, use next month.
 - If month is stated explicitly, use it exactly.
-- Always output as YYYY-MM-DD in CE year (not Buddhist).
+- THAI MONTH ABBREVIATIONS — you MUST recognize these:
+  ม.ค.=01 Jan, ก.พ.=02 Feb, มี.ค.=03 Mar, เม.ย.=04 Apr, พ.ค.=05 May, มิ.ย.=06 Jun,
+  ก.ค.=07 Jul, ส.ค.=08 Aug, ก.ย.=09 Sep, ต.ค.=10 Oct, พ.ย.=11 Nov, ธ.ค.=12 Dec
+- Example: "พ. 17 มิ.ย. 69" = Wednesday 17 June 2569 BE = 2026-06-17. The leading จ./อ./พ./พฤ./ศ./ส./อา. is the weekday, ignore it for the date.
+- TIME: if a time or time range is written (e.g. "07.00-08.10 น."), include it in parsed_title, like "Rehearsal (07:00-08:10)".
+- Always output due_date/date as YYYY-MM-DD in CE year (not Buddhist).
+- NEVER leave due_date null when a Thai date like "17 มิ.ย. 69" appears in the text — parse it.
 
 For each TASK return JSON with:
 - record_type: "task"
