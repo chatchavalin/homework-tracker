@@ -554,6 +554,7 @@ input,textarea,select{font-family:inherit}
         <div class="header-date" id="hdr-date"></div>
       </div>
       <div class="hdr-btns">
+        <div id="kid-switcher" style="position:relative;display:flex;align-items:center;background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;padding:4px 8px;color:white"></div>
         <span class="offline-chip" id="offline-chip">📴 Offline</span>
         <button class="hdr-btn" id="sync-btn" onclick="showTab('settings')">⚡ Sync</button>
         <button class="hdr-btn" id="lang-btn" onclick="toggleLang()">🇹🇭 TH</button>
@@ -747,6 +748,12 @@ input,textarea,select{font-family:inherit}
       <div id="event-list"></div>
     </div>
 
+    <!-- TAB: NOTES -->
+    <div class="tab-panel" id="tab-notes">
+      <div class="sec-label" id="notes-sec-label">📝 Notes & General Info</div>
+      <div id="notes-list"></div>
+    </div>
+
     <!-- TAB: SETTINGS -->
     <div class="tab-panel" id="tab-settings">
       <div class="sec-label" id="settings-sec-label">⚙️ การตั้งค่า</div>
@@ -786,11 +793,11 @@ input,textarea,select{font-family:inherit}
 
   <!-- BOTTOM NAV -->
   <div class="bottom-nav">
-    <button class="nav-btn active" id="nav-hw" onclick="showTab('hw')"><span class="icon">📚</span>การบ้าน</button>
-    <button class="nav-btn" id="nav-todo" onclick="showTab('todo')"><span class="icon">📋</span>ต้องทำ</button>
-    <button class="nav-btn" id="nav-add" onclick="showTab('add')"><span class="icon">➕</span>เพิ่มงาน</button>
-    <button class="nav-btn" id="nav-cal" onclick="showTab('cal')"><span class="icon">📅</span>ปฏิทิน</button>
-    <button class="nav-btn" id="nav-settings" onclick="showTab('settings')"><span class="icon">⚙️</span>ตั้งค่า</button>
+    <button class="nav-btn active" id="nav-hw" onclick="showTab('hw')"><span class="icon">📚</span><span id="nav-hw-lbl">Homework</span></button>
+    <button class="nav-btn" id="nav-todo" onclick="showTab('todo')"><span class="icon">📋</span><span id="nav-todo-lbl">To-Do</span></button>
+    <button class="nav-btn" id="nav-add" onclick="showTab('add')"><span class="icon">➕</span><span id="nav-add-lbl">Add</span></button>
+    <button class="nav-btn" id="nav-notes" onclick="showTab('notes')"><span class="icon">📝</span><span id="nav-notes-lbl">Notes</span></button>
+    <button class="nav-btn" id="nav-settings" onclick="showTab('settings')"><span class="icon">⚙️</span><span id="nav-settings-lbl">Settings</span></button>
   </div>
 
 </div><!-- /app -->
@@ -911,7 +918,81 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 /* ═══════════════════════════════════════
    LOCAL STATE (cache from Supabase)
 ═══════════════════════════════════════ */
-let STATE = { tasks: [], exams: [], topics: [] };
+let STATE = { tasks: [], exams: [], topics: [], notes: [] };
+
+// Kids system
+const KIDS = {
+  ryuji: { id: 'ryuji', name: 'Ryuji', emoji: '👦', color: '#166534', photo: null },
+  miki:  { id: 'miki',  name: 'Miki',  emoji: '👧', color: '#9d174d', photo: null },
+};
+let currentKid = localStorage.getItem('ht_current_kid') || 'ryuji';
+
+function switchKid(id) {
+  currentKid = id;
+  localStorage.setItem('ht_current_kid', id);
+  // Load kid-specific photo
+  const savedPhoto = localStorage.getItem('ht_photo_' + id);
+  KIDS[id].photo = savedPhoto || null;
+  renderKidSwitcher();
+  loadAll();
+}
+
+function renderKidSwitcher() {
+  const kid = KIDS[currentKid];
+  const el = document.getElementById('kid-switcher');
+  if (!el) return;
+  const photo = kid.photo
+    ? `<img src="${kid.photo}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.5)">`
+    : `<span style="font-size:1.1rem">${kid.emoji}</span>`;
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;gap:6px;cursor:pointer" onclick="toggleKidMenu()">
+      ${photo}
+      <span style="font-size:0.8rem;font-weight:800">${kid.name}</span>
+      <span style="font-size:0.6rem;opacity:0.7">▼</span>
+    </div>
+    <div id="kid-menu" style="display:none;position:absolute;top:38px;right:0;background:white;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.15);padding:8px;z-index:50;min-width:140px">
+      ${Object.values(KIDS).map(k => `
+        <div onclick="switchKid('${k.id}')" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:0.85rem;font-weight:700;color:#1a1a2e;${currentKid===k.id?'background:#f0fdf4':''}">
+          ${localStorage.getItem('ht_photo_'+k.id)
+            ? `<img src="${localStorage.getItem('ht_photo_'+k.id)}" style="width:24px;height:24px;border-radius:50%;object-fit:cover">`
+            : `<span>${k.emoji}</span>`}
+          ${k.name} ${currentKid===k.id?'✓':''}
+        </div>`).join('')}
+      <div style="border-top:1px solid #e8e4dc;margin:6px 0"></div>
+      <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:0.8rem;font-weight:700;color:#6b7280">
+        <span>📷</span> ${currentLang==='en'?'Change photo':'เปลี่ยนรูป'}
+        <input type="file" accept="image/*" style="display:none" onchange="saveKidPhoto(event)">
+      </label>
+    </div>`;
+}
+
+function toggleKidMenu() {
+  const menu = document.getElementById('kid-menu');
+  if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
+
+// Close kid menu when clicking outside
+document.addEventListener('click', e => {
+  if (!e.target.closest('#kid-switcher')) {
+    const menu = document.getElementById('kid-menu');
+    if (menu) menu.style.display = 'none';
+  }
+});
+
+function saveKidPhoto(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    localStorage.setItem('ht_photo_' + currentKid, ev.target.result);
+    KIDS[currentKid].photo = ev.target.result;
+    renderKidSwitcher();
+    const menu = document.getElementById('kid-menu');
+    if (menu) menu.style.display = 'none';
+    toast(currentLang==='en' ? '📷 Photo saved!' : '📷 บันทึกรูปแล้ว');
+  };
+  reader.readAsDataURL(file);
+}
 let currentTab   = 'hw';
 let dateFilter   = 'today';
 let todoFilter   = 'pending';
@@ -972,15 +1053,19 @@ async function init() {
    LOCALSTORAGE FALLBACK
 ═══════════════════════════════════════ */
 function loadFromLocal() {
-  STATE.tasks  = JSON.parse(localStorage.getItem('ht_tasks')  || '[]');
+  const allTasks  = JSON.parse(localStorage.getItem('ht_tasks')  || '[]');
+  STATE.tasks  = allTasks.filter(t => !t.kid_id || t.kid_id === currentKid);
   STATE.exams  = JSON.parse(localStorage.getItem('ht_exams')  || '[]');
   STATE.topics = JSON.parse(localStorage.getItem('ht_topics') || '[]');
+  const allNotes = JSON.parse(localStorage.getItem('ht_notes') || '[]');
+  STATE.notes  = allNotes.filter(n => !n.kid_id || n.kid_id === currentKid);
 }
 
 function saveLocal() {
   localStorage.setItem('ht_tasks',  JSON.stringify(STATE.tasks));
   localStorage.setItem('ht_exams',  JSON.stringify(STATE.exams));
   localStorage.setItem('ht_topics', JSON.stringify(STATE.topics));
+  localStorage.setItem('ht_notes',  JSON.stringify(STATE.notes));
 }
 
 /* ═══════════════════════════════════════
@@ -1067,9 +1152,16 @@ function calcPriority(due, points) {
 ═══════════════════════════════════════ */
 function renderHeader() {
   const d = new Date();
-  const days = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์'];
-  document.getElementById('hdr-date').textContent =
-    `วัน${days[d.getDay()]} ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()+543}`;
+  if (currentLang === 'en') {
+    const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    document.getElementById('hdr-date').textContent =
+      `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+  } else {
+    const days = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์'];
+    document.getElementById('hdr-date').textContent =
+      `วัน${days[d.getDay()]} ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()+543}`;
+  }
 
   const hw      = STATE.tasks.filter(t => t.type==='homework');
   const urgent  = hw.filter(t => !t.is_done && t.priority==='high').length;
@@ -1487,7 +1579,7 @@ async function confirmParsed() {
   const selected = parsedResults.filter((_,i) => document.getElementById('pi-'+i)?.checked);
   if (!selected.length) { toast('⚠️ กรุณาเลือกอย่างน้อย 1 งาน'); return; }
 
-  // Split events from tasks
+  // Split events, info, tasks
   const autoEvents = selected.filter(r => r.record_type === 'event');
   autoEvents.forEach(ev => {
     if (ev.name) {
@@ -1497,15 +1589,33 @@ async function confirmParsed() {
   });
   if (autoEvents.length) { saveEvents(); toast(`📅 บันทึก ${autoEvents.length} กิจกรรมอัตโนมัติ`); }
 
-  const taskItems = selected.filter(r => r.record_type !== 'event');
-  if (!taskItems.length && autoEvents.length) {
-    closeFab(); showTab('cal'); renderCalendar(); renderEventList(); return;
+  // Save info notes to localStorage
+  const infoItems = selected.filter(r => r.record_type === 'info');
+  if (infoItems.length) {
+    const existing = JSON.parse(localStorage.getItem('ht_notes') || '[]');
+    infoItems.forEach(n => existing.unshift({
+      id: uid(),
+      original_text: n.original_text || '',
+      parsed_title: n.parsed_title || n.original_text,
+      subject: n.subject || 'General',
+      category: n.category || 'other',
+      created_at: new Date().toISOString(),
+      kid_id: currentKid
+    }));
+    localStorage.setItem('ht_notes', JSON.stringify(existing));
+    STATE.notes = existing;
+    toast(`📝 บันทึก ${infoItems.length} โน้ตแล้ว`);
+  }
+
+  const taskItems = selected.filter(r => r.record_type !== 'event' && r.record_type !== 'info');
+  if (!taskItems.length && (autoEvents.length || infoItems.length)) {
+    closeFab(); if (infoItems.length) showTab('notes'); else { showTab('cal'); renderCalendar(); renderEventList(); } return;
   }
   const btn = document.getElementById('confirm-btn');
   const txt = document.getElementById('confirm-txt');
   const spin = document.getElementById('confirm-spinner');
   btn.disabled = true; txt.textContent = 'กำลังบันทึก...'; spin.classList.remove('hidden');
-  const newTasks = selected.map(t => ({
+  const newTasks = taskItems.map(t => ({
     id: uid(), type: t.type||'homework',
     original_text: t.original_text||'',
     parsed_title: t.parsed_title||t.original_text,
@@ -1514,6 +1624,7 @@ async function confirmParsed() {
     points: t.points||null,
     priority: t.priority||calcPriority(t.due_date,t.points),
     is_done: false, source: 'photo',
+    kid_id: currentKid,
     created_at: new Date().toISOString()
   }));
   // Optimistic
@@ -1613,11 +1724,12 @@ async function clearAllData() {
 ═══════════════════════════════════════ */
 function showTab(tab) {
   currentTab = tab;
-  ['hw','todo','add','exam','cal','settings'].forEach(t => {
+  ['hw','todo','add','exam','cal','notes','settings'].forEach(t => {
     document.getElementById('tab-'+t)?.classList.toggle('active', t===tab);
     document.getElementById('nav-'+t)?.classList.toggle('active', t===tab);
   });
   if (tab === 'cal') { renderCalendar(); renderEventList(); renderUniformBanner(); renderHolidayBanner(); }
+  if (tab === 'notes') renderNotes();
 }
 
 function setDateFilter(f, btn) {
@@ -1667,16 +1779,54 @@ function attachSwipeListeners() {
   });
 }
 
+function renderNotes() {
+  const el = document.getElementById('notes-list');
+  if (!el) return;
+  const notes = STATE.notes || [];
+  if (!notes.length) {
+    const L = t();
+    el.innerHTML = `<div class="empty"><div class="emoji">📝</div>
+      <div class="msg">${L.noInfo}</div>
+      <div class="sub">${currentLang==='en'?'Notes from photos appear here automatically':'โน้ตจากรูปจะปรากฏที่นี่อัตโนมัติ'}</div></div>`;
+    return;
+  }
+  const CAT_ICONS = { grading:'📊', schedule:'📅', rules:'📋', announcement:'📢', credentials:'🔐', fees:'💰', other:'📝' };
+  el.innerHTML = notes.map(n => `
+    <div class="task-card p-low" style="border-left-color:#8b5cf6">
+      <div style="font-size:1.2rem;flex-shrink:0;margin-top:2px">${CAT_ICONS[n.category]||'📝'}</div>
+      <div class="task-body">
+        <div class="task-title">${escHtml(n.parsed_title)}</div>
+        ${n.original_text !== n.parsed_title ? `<div class="task-original">${escHtml(n.original_text)}</div>` : ''}
+        <div class="task-meta">
+          ${subjectTag(n.subject)}
+          <span class="tag" style="background:#ede9fe;color:#5b21b6">${n.category||'note'}</span>
+          <span class="due-chip">${new Date(n.created_at).toLocaleDateString(currentLang==='en'?'en-GB':'th-TH',{day:'numeric',month:'short'})}</span>
+        </div>
+      </div>
+      <button class="task-delete" onclick="deleteNote('${n.id}')">✕</button>
+    </div>`).join('');
+}
+
+function deleteNote(id) {
+  STATE.notes = (STATE.notes||[]).filter(n => n.id !== id);
+  const all = JSON.parse(localStorage.getItem('ht_notes')||'[]').filter(n => n.id !== id);
+  localStorage.setItem('ht_notes', JSON.stringify(all));
+  renderNotes();
+  toast(currentLang==='en'?'🗑 Note deleted':'🗑 ลบโน้ตแล้ว');
+}
+
 function renderAll() {
   renderHeader();
   renderHW();
   renderTodo();
   renderExams();
+  renderNotes();
   renderRightNow();
   renderUniformBanner();
   renderHolidayBanner();
   renderInstallBanner();
   renderExamStrip();
+  renderKidSwitcher();
   updateFilterCounts();
   updateOfflineChip();
   updateParentStatus();
@@ -1721,6 +1871,8 @@ const LANG = {
     noHwToday: 'ไม่มีการบ้านวันนี้', noHw: 'ไม่มีการบ้าน', addNew: 'เพิ่มงานใหม่ที่แท็บ "เพิ่มงาน"',
     noTodo: 'ไม่มีรายการ', addTodo: 'เพิ่มสิ่งที่ต้องทำที่แท็บ "เพิ่มงาน"',
     noExam: 'ยังไม่มีรายการสอบ', addExam: 'สร้างรายการสอบด้านบน',
+    infoTab: 'โน้ต', noInfo: 'ไม่มีบันทึก', infoSection: '📝 บันทึก / ข้อมูลทั่วไป',
+    infoType: 'บันทึก',
     doneSection: 'เสร็จแล้ว',
     hwType: 'การบ้าน', todoType: 'ต้องทำ',
     takePhoto: '📷 ถ่ายรูป', selectPhoto: '🖼️ เลือกหลายรูป',
@@ -1756,7 +1908,6 @@ const LANG = {
     studiedStrip: 'เรียนแล้ว', topicsStrip: 'หัวข้อ', daysStrip: 'วัน',
     undated: 'ไม่มีวันส่ง',
     markAll: '✅ ทำเครื่องหมายเสร็จทั้งหมด',
-    // Settings
     notifyTitle: '✈️ แจ้งเตือนทุกคืน (Telegram)',
     notifyInfo: '📨 Dad และ Mum ได้รับสรุปการบ้านทุกคืน 21:00 น. อัตโนมัติ<br>ทำงานแม้ปิดแอป — ส่งจาก server',
     testBtn: '📨 ทดสอบส่งข้อความตอนนี้',
@@ -1785,6 +1936,8 @@ const LANG = {
     noHwToday: 'No homework today!', noHw: 'No homework', addNew: 'Add tasks in the "Add" tab',
     noTodo: 'No items', addTodo: 'Add to-dos in the "Add" tab',
     noExam: 'No exams yet', addExam: 'Create an exam above',
+    infoTab: 'Notes', noInfo: 'No notes yet', infoSection: '📝 Notes & General Info',
+    infoType: 'Note',
     doneSection: 'Done',
     hwType: 'Homework', todoType: 'To-Do',
     takePhoto: '📷 Take Photo', selectPhoto: '🖼️ Select Photos',
@@ -1842,7 +1995,7 @@ const LANG = {
   }
 };
 
-let currentLang = localStorage.getItem('ht_lang') || 'th';
+let currentLang = localStorage.getItem('ht_lang') || 'en';
 const t = () => LANG[currentLang];
 const t_ = () => LANG[currentLang]; // alias for use inside loops where t is a variable
 
@@ -1887,14 +2040,15 @@ function applyLang() {
   document.querySelectorAll('.stat-pill')[3].querySelector('.l').textContent = L.total;
 
   // Bottom nav
-  const navLabels = document.querySelectorAll('.nav-btn');
-  if (navLabels.length >= 5) {
-    navLabels[0].lastChild.textContent = L.hwTab;
-    navLabels[1].lastChild.textContent = L.todoTab;
-    navLabels[2].lastChild.textContent = L.addTab;
-    navLabels[3].lastChild.textContent = L.examTab;
-    navLabels[4].lastChild.textContent = L.settingsTab;
-  }
+  const navHwLbl = document.getElementById('nav-hw-lbl');       if (navHwLbl) navHwLbl.textContent = L.hwTab;
+  const navTodoLbl = document.getElementById('nav-todo-lbl');   if (navTodoLbl) navTodoLbl.textContent = L.todoTab;
+  const navAddLbl = document.getElementById('nav-add-lbl');     if (navAddLbl) navAddLbl.textContent = L.addTab;
+  const navNotesLbl = document.getElementById('nav-notes-lbl'); if (navNotesLbl) navNotesLbl.textContent = L.infoTab;
+  const navSetLbl = document.getElementById('nav-settings-lbl');if (navSetLbl) navSetLbl.textContent = L.settingsTab;
+
+  // Notes section
+  const notesSec = document.getElementById('notes-sec-label');
+  if (notesSec) notesSec.textContent = L.infoSection;
 
   // Add tab
   const camBtn  = document.querySelector('.up-btn.primary');
@@ -2064,8 +2218,8 @@ const SCHOOL_TERMS = [
 
 // Uniform schedule
 const UNIFORM_SCHEDULE = [
-  { day: 5, type:'pe',    icon:'⚽', name:'ชุดพลศึกษา', sub:'ทุกวันศุกร์ใส่ชุด PE' },
-  { day: 4, type:'scout', icon:'👘', name:'ชุดลูกเสือ', sub:'ทุกวันพฤหัสใส่ชุดลูกเสือ' },
+  { day: 5, type:'pe',    icon:'⚽', name:'ชุดพลศึกษา', name_en:'PE Uniform',    sub:'ทุกวันศุกร์ใส่ชุด PE',        sub_en:'Every Friday — wear PE uniform' },
+  { day: 4, type:'scout', icon:'👘', name:'ชุดลูกเสือ', name_en:'Scout Uniform',  sub:'ทุกวันพฤหัสใส่ชุดลูกเสือ',   sub_en:'Every Thursday — wear Scout uniform' },
 ];
 
 // User events stored in localStorage
@@ -2342,12 +2496,13 @@ function renderUniformBanner() {
   const todayStr = fmtDate(new Date());
   const uniforms = getUniformForDate(todayStr);
   if (!uniforms.length) { wrap.innerHTML = ''; return; }
+  const isEn = currentLang === 'en';
   wrap.innerHTML = uniforms.map(u => `
     <div class="uniform-banner ${u.type}">
       <span class="uni-icon">${u.icon}</span>
       <div>
-        <div class="uni-title">วันนี้ใส่${u.name}</div>
-        <div class="uni-sub">${u.sub}</div>
+        <div class="uni-title">${isEn ? 'Today: ' + u.name_en : 'วันนี้ใส่' + u.name}</div>
+        <div class="uni-sub">${isEn ? u.sub_en : u.sub}</div>
       </div>
     </div>`).join('');
 }
@@ -2359,16 +2514,18 @@ function renderHolidayBanner() {
   const todayStr = fmtDate(new Date());
   const evs = getEventsForDate(todayStr).filter(e => e.type === 'holiday' || e.type === 'break');
   if (!evs.length) { wrap.innerHTML = ''; return; }
+  const isEn = currentLang === 'en';
   wrap.innerHTML = evs.map(ev => `
     <div class="holiday-banner">
       <span class="hol-icon">🎉</span>
-      <div><strong>${escHtml(ev.name)}</strong><br><span style="font-size:0.75rem;opacity:0.8">วันหยุด — ไม่ต้องไปโรงเรียน</span></div>
+      <div><strong>${escHtml(ev.name)}</strong><br>
+      <span style="font-size:0.75rem;opacity:0.8">${isEn ? 'Holiday — no school today' : 'วันหยุด — ไม่ต้องไปโรงเรียน'}</span></div>
     </div>`).join('');
 }
 
 /* ── Update AI parse prompt to detect holidays/events ── */
 const PARSE_SYSTEM_PROMPT = `You are a homework parser for a Thai P.6 student preparing for ม.1 entrance exams.
-Extract ALL tasks AND school events from this notebook image.
+Extract ALL tasks, school events, AND general information from this notebook image.
 
 For each TASK return JSON with:
 - record_type: "task"
@@ -2388,7 +2545,14 @@ For each SCHOOL EVENT (holidays, ceremonies, breaks, special days, uniform chang
 - start: YYYY-MM-DD (if range) or null
 - end: YYYY-MM-DD (if range) or null
 
-Return ONLY a valid JSON array mixing tasks and events. No markdown, no backticks, no explanation.`;
+For GENERAL INFORMATION that is NOT a task or event (e.g. score rubrics, grading criteria, school rules, subject info, announcements, login credentials, fees, fund details, notebook color assignments, class schedules) return:
+- record_type: "info"
+- original_text: exact text as written
+- parsed_title: clean concise summary (max 80 chars)
+- subject: Math | Thai | English | Science | Social | Chinese | PE | Other | General
+- category: "grading" | "schedule" | "rules" | "announcement" | "credentials" | "fees" | "other"
+
+Return ONLY a valid JSON array mixing tasks, events, and info. No markdown, no backticks, no explanation.`;
 
 /* ═══════════════════════════════════════
    EDIT TASK
