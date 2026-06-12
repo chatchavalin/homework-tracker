@@ -970,7 +970,7 @@ input,textarea,select{font-family:inherit}
 <!-- Undo toast -->
 <div class="undo-toast" id="undo-toast">
   <span id="undo-msg">ลบแล้ว</span>
-  <button class="undo-btn" onclick="undoDelete()">ยกเลิก</button>
+  <button class="undo-btn" id="undo-action-btn" onclick="undoDelete()">↩ Undo</button>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -1652,7 +1652,17 @@ function fireConfetti() {
 ═══════════════════════════════════════ */
 async function toggleTask(id) {
   const t = STATE.tasks.find(x=>x.id===id); if (!t) return;
+  const prevDone = t.is_done;
   const newVal = !t.is_done;
+  // Save undo state BEFORE changing
+  clearTimeout(undoTimer);
+  undoStack = { action: newVal ? 'complete' : 'uncomplete', task: { ...t }, prevDone };
+  const undoLabel = newVal
+    ? (currentLang==='en' ? `✅ Done — tap to undo` : `✅ เสร็จแล้ว — แตะเพื่อยกเลิก`)
+    : (currentLang==='en' ? `↩ Marked pending` : `↩ ยกเลิกเครื่องหมาย`);
+  showUndoToast(undoLabel);
+  undoTimer = setTimeout(() => { undoStack = null; hideUndoToast(); }, 5000);
+
   t.is_done = newVal; renderAll();
   attachSwipeListeners();
   if (newVal) checkCelebration();
@@ -3722,16 +3732,17 @@ function addSwipeListeners(el, taskId) {
 /* ═══════════════════════════════════════
    UNDO DELETE
 ═══════════════════════════════════════ */
-let undoStack = null;
+let undoStack = null;  // { action:'delete'|'complete'|'uncomplete', task, prevDone }
 let undoTimer = null;
 
 function softDeleteTask(id) {
   const task = STATE.tasks.find(x => x.id === id);
   if (!task) return;
-  undoStack = { ...task };
+  undoStack = { action: 'delete', task: { ...task } };
   STATE.tasks = STATE.tasks.filter(x => x.id !== id);
   renderAll();
-  showUndoToast(`ลบ "${task.parsed_title.slice(0,20)}..." แล้ว`);
+  const label = currentLang === 'en' ? `Deleted "${task.parsed_title.slice(0,25)}"` : `ลบ "${task.parsed_title.slice(0,20)}" แล้ว`;
+  showUndoToast(label);
   undoTimer = setTimeout(() => commitDelete(id), 5000);
 }
 
@@ -3744,13 +3755,27 @@ async function commitDelete(id) {
 async function undoDelete() {
   if (!undoStack) return;
   clearTimeout(undoTimer);
-  STATE.tasks.unshift(undoStack);
-  if (USE_LOCAL) saveLocal();
-  else await sb.from('tasks').insert(undoStack);
+  const { action, task, prevDone } = undoStack;
+
+  if (action === 'delete') {
+    STATE.tasks.unshift(task);
+    if (USE_LOCAL) saveLocal();
+    else await sb.from('tasks').insert(task);
+    toast(currentLang === 'en' ? '↩ Task restored' : '↩ คืนงานแล้ว');
+
+  } else if (action === 'complete' || action === 'uncomplete') {
+    const t = STATE.tasks.find(x => x.id === task.id);
+    if (t) {
+      t.is_done = prevDone;
+      if (USE_LOCAL) saveLocal();
+      else await sb.from('tasks').update({ is_done: prevDone }).eq('id', task.id);
+    }
+    toast(currentLang === 'en' ? '↩ Undone' : '↩ ยกเลิกแล้ว');
+  }
+
   undoStack = null;
   hideUndoToast();
   renderAll();
-  toast('↩ คืนงานแล้ว');
 }
 
 let _undoTimer2 = null;
