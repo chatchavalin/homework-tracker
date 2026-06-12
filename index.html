@@ -83,6 +83,11 @@ input,textarea,select{font-family:inherit}
 .content{flex:1;overflow-y:auto;overscroll-behavior-y:contain;padding:14px 14px 100px;scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
 .content::-webkit-scrollbar{width:0}
 
+/* Drag to merge */
+.task-card.drag-over{border:2.5px dashed var(--primary);background:var(--primary-lt);transform:scale(1.01)}
+.task-card.dragging{opacity:0.4;transform:scale(0.97)}
+.merge-toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--navy);color:white;padding:16px 22px;border-radius:16px;font-size:0.88rem;font-weight:700;z-index:200;text-align:center;pointer-events:none;opacity:0;transition:opacity 0.25s}
+.merge-toast.show{opacity:1}
 /* Pull to refresh */
 .ptr-indicator{display:flex;align-items:center;justify-content:center;gap:8px;height:0;overflow:hidden;transition:height 0.2s;font-size:0.78rem;font-weight:700;color:var(--muted)}
 .ptr-indicator.pulling{height:44px}
@@ -970,6 +975,7 @@ input,textarea,select{font-family:inherit}
 
 <div class="toast" id="toast"></div>
 
+<div class="merge-toast" id="merge-toast"></div>
 <!-- Background music player -->
 <audio id="bg-music" loop preload="none" crossorigin="anonymous" style="display:none"></audio>
 
@@ -1525,6 +1531,7 @@ function renderHW() {
   if (done.length) html += `<div class="sec-label">✅ ${t().doneSection} (${done.length})</div>` + done.map(taskCardHTML).join('');
   el.innerHTML = html;
   attachSwipeListeners();
+  initMerge();
 }
 
 function renderTodo() {
@@ -2302,6 +2309,102 @@ function attachSwipeListeners() {
     const id = el.id.replace('tc-','');
     addSwipeListeners(el, id);
   });
+}
+
+/* ═══════════════════════════════════════
+   DRAG TO MERGE TASKS
+═══════════════════════════════════════ */
+let dragSourceId = null;
+
+function initMerge() {
+  document.querySelectorAll('.task-card[id^="tc-"]').forEach(card => {
+    card.setAttribute('draggable', 'true');
+
+    card.addEventListener('dragstart', e => {
+      dragSourceId = card.id.replace('tc-', '');
+      card.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    card.addEventListener('dragend', () => {
+      card.classList.remove('dragging');
+      document.querySelectorAll('.task-card').forEach(c => c.classList.remove('drag-over'));
+    });
+    card.addEventListener('dragover', e => {
+      e.preventDefault();
+      const targetId = card.id.replace('tc-', '');
+      if (targetId !== dragSourceId) card.classList.add('drag-over');
+    });
+    card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
+    card.addEventListener('drop', e => {
+      e.preventDefault();
+      card.classList.remove('drag-over');
+      const targetId = card.id.replace('tc-', '');
+      if (targetId && dragSourceId && targetId !== dragSourceId) {
+        mergeTasksConfirm(dragSourceId, targetId);
+      }
+      dragSourceId = null;
+    });
+
+    // Touch-based long-press to enter merge mode (mobile)
+    let touchTimer = null;
+    card.addEventListener('touchstart', e => {
+      touchTimer = setTimeout(() => {
+        showMergeToast(currentLang === 'en'
+          ? '🔗 Drag another task here to merge'
+          : '🔗 ลากงานอื่นมาวางเพื่อรวม', 2000);
+        dragSourceId = card.id.replace('tc-', '');
+        card.style.opacity = '0.5';
+      }, 600);
+    }, { passive: true });
+    card.addEventListener('touchend', () => {
+      clearTimeout(touchTimer);
+      card.style.opacity = '';
+    });
+  });
+}
+
+async function mergeTasksConfirm(sourceId, targetId) {
+  const src = STATE.tasks.find(t => t.id === sourceId);
+  const tgt = STATE.tasks.find(t => t.id === targetId);
+  if (!src || !tgt) return;
+
+  // Merge: combine titles and original text, keep target's date/subject/priority
+  const mergedTitle = tgt.parsed_title + ' + ' + src.parsed_title;
+  const mergedOrig  = (tgt.original_text || tgt.parsed_title) + ' | ' + (src.original_text || src.parsed_title);
+  const merged = {
+    ...tgt,
+    parsed_title:  mergedTitle.slice(0, 120),
+    original_text: mergedOrig,
+    priority: tgt.priority === 'high' || src.priority === 'high' ? 'high'
+             : tgt.priority === 'med'  || src.priority === 'med'  ? 'med' : 'low',
+    points: (tgt.points || 0) + (src.points || 0) || null,
+  };
+
+  // Update target, delete source
+  STATE.tasks = STATE.tasks.map(t => t.id === targetId ? merged : t)
+                            .filter(t => t.id !== sourceId);
+  renderAll();
+
+  if (!USE_LOCAL) {
+    await sb.from('tasks').update({
+      parsed_title: merged.parsed_title,
+      original_text: merged.original_text,
+      priority: merged.priority,
+      points: merged.points
+    }).eq('id', targetId);
+    await sb.from('tasks').delete().eq('id', sourceId);
+  } else {
+    saveLocal();
+  }
+  showMergeToast(currentLang === 'en' ? '🔗 Tasks merged!' : '🔗 รวมงานแล้ว!', 2000);
+}
+
+function showMergeToast(msg, duration) {
+  const el = document.getElementById('merge-toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), duration);
 }
 
 function renderNotes() {
@@ -3090,6 +3193,12 @@ You are a homework and activity parser for a Thai P.6 student preparing for ม.
 Today's date is ${yyyy}-${mm}-${dd} (${dd} ${monthName} ${yyyy}, Buddhist year ${yyyy+543}).
 
 Extract ALL tasks, school events, AND general information from this image (notebook page OR Line/chat screenshot).
+
+SUB-ITEM MERGING — very important:
+- If numbered items have indented sub-lines below them (e.g. "q①", "q②", "ข้อ 2", bullet points, lettered parts), those sub-lines belong to the PARENT item above them.
+- Merge them into ONE task. Put the parent as parsed_title and list sub-items in original_text.
+- Example: "5. Do Math ex 7 page 53-54" followed by indented "q② (1,2,4,5,6,8,9,10)" and "q③ (all except 17,19)" → ONE task: title="Do Math Ex 7 Page 53-54", original_text="5. Do Math ex 7 page 53-54 | q② (1,2,4,5,6,8,9,10) | q③ (all except 17,19)"
+- Do NOT create separate tasks for indented sub-items.
 
 COMPLETENESS RULES — extract EVERYTHING:
 - The page may have MULTIPLE sections separated by red/colored horizontal lines. Extract items from ALL sections, including above the first line and below the last.
