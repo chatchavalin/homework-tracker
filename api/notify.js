@@ -27,20 +27,26 @@ export default async function handler(req, res) {
     );
     const exams = await re.json();
 
-    // Tomorrow-focused: this runs at 9PM for next-day planning
-    const today    = new Date();
-    const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
-    const buddYear = tomorrow.getFullYear() + 543;
-    const dateStr  = `${tomorrow.getDate()}/${tomorrow.getMonth()+1}/${buddYear}`;
-    const tDow     = tomorrow.getDay();
+    const now      = new Date();
+    const utcHour   = now.getUTCHours();
+    // 23:00 UTC = 06:00 Bangkok (morning), 14:00 UTC = 21:00 Bangkok (evening)
+    const isMorning = utcHour === 23 || utcHour === 0;
+
+    // Morning shows TODAY, evening shows TOMORROW
+    const target   = new Date(now);
+    if (!isMorning) target.setDate(target.getDate() + 1);
+    const buddYear = target.getFullYear() + 543;
+    const dateStr  = `${target.getDate()}/${target.getMonth()+1}/${buddYear}`;
+    const tDow     = target.getDay();
     const DOW_TH   = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์'];
 
-    // Uniform reminders — for TOMORROW
+    // Uniform reminders
     let uniformMsg = '';
-    if (tDow === 4) uniformMsg = '\n👘 พรุ่งนี้ใส่ชุดลูกเสือ!';
-    if (tDow === 5) uniformMsg = '\n⚽ พรุ่งนี้ใส่ชุดพลศึกษา!';
-    if (tDow === 3) uniformMsg = '\n👔 พรุ่งนี้นำผ้ากันเปื้อนมาด้วย!';
-    if (tDow === 0 || tDow === 6) uniformMsg = '\n🏖 พรุ่งนี้วันหยุด ไม่มีเรียน!';
+    const dayLabel = isMorning ? 'วันนี้' : 'พรุ่งนี้';
+    if (tDow === 4) uniformMsg = `\n👘 ${dayLabel}ใส่ชุดลูกเสือ!`;
+    if (tDow === 5) uniformMsg = `\n⚽ ${dayLabel}ใส่ชุดพลศึกษา!`;
+    if (tDow === 3) uniformMsg = `\n👔 ${dayLabel}นำผ้ากันเปื้อนมาด้วย!`;
+    if (tDow === 0 || tDow === 6) uniformMsg = `\n🏖 ${dayLabel}วันหยุด ไม่มีเรียน!`;
 
     // Split tasks per kid (legacy tasks without kid_id = Ryuji)
     const kidName = { ryuji: 'Ryuji 👦', miki: 'Miki 👧' };
@@ -53,12 +59,12 @@ export default async function handler(req, res) {
       const kt = byKid[kidId];
       if (!kt.length) return `\n\n${kidName[kidId]}: ✅ ไม่มีงานค้าง`;
       // due tomorrow (this runs at 9PM, so warn about tomorrow)
-      const t0 = new Date(today); t0.setHours(0,0,0,0);
+      const t0 = new Date(now); t0.setHours(0,0,0,0);
       const tmrHw = kt.filter(t => {
         if (!t.due_date || t.type !== 'homework') return false;
         const d = new Date(t.due_date + 'T00:00:00');
         const diff = Math.round((d - t0) / 86400000);
-        return diff <= 1;  // due tomorrow, or overdue — both need attention tonight
+        return isMorning ? diff === 0 : diff <= 1; // morning=today, evening=tomorrow+overdue
       });
       const urgent = kt.filter(t => t.type === 'homework' && t.priority === 'high');
       const todos  = kt.filter(t => t.type === 'todo').slice(0, 3);
@@ -93,7 +99,8 @@ export default async function handler(req, res) {
     }
 
     // Compose message
-    let msg = `🌙 *แผนสำหรับพรุ่งนี้*\n`;
+    const greeting = isMorning ? '🌅 *สวัสดีตอนเช้า — สรุปการบ้านวันนี้*' : '🌙 *แผนสำหรับพรุ่งนี้*';
+    let msg = `${greeting}\n`;
     msg += `วัน${DOW_TH[tDow]} ${dateStr}`;
     msg += uniformMsg;
 
