@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/notify",
-      "schedule": "0 14 * * *"
+      "schedule": "0 23 * * *"
     },
     {
       "path": "/api/classroom-sync",
