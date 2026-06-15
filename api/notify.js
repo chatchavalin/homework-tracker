@@ -29,8 +29,8 @@ export default async function handler(req, res) {
 
     const now      = new Date();
     const utcHour   = now.getUTCHours();
-    // 23:00 UTC = 06:00 Bangkok (morning), 14:00 UTC = 21:00 Bangkok (evening)
-    const isMorning = utcHour === 23 || utcHour === 0;
+    // 22:30 UTC = 05:30 Bangkok (morning), 14:00 UTC = 21:00 Bangkok (evening)
+    const isMorning = utcHour === 22;
 
     // Morning shows TODAY, evening shows TOMORROW
     const target   = new Date(now);
