@@ -4,5 +4,18 @@
       "path": "/api/notify",
       "schedule": "30 22,14 * * *"
     }
+  ],
+  "functions": {
+    "api/parse.js": {
+      "maxDuration": 30
+    }
+  },
+  "headers": [
+    {
+      "source": "/api/parse",
+      "headers": [
+        { "key": "x-vercel-max-body-size", "value": "20mb" }
+      ]
+    }
   ]
 }
