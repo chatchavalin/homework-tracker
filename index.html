@@ -1789,14 +1789,29 @@ function handleImgs(input) {
   };
   reader0.readAsDataURL(files[0]);
 
-  // Read all as base64
+  // Read all, resize to max 1200px / 0.80q to stay well under Vercel's 4MB body limit
   let loaded = 0;
   files.forEach((file, i) => {
     const r = new FileReader();
     r.onload = e => {
-      pendingImages[i] = { b64: e.target.result.split(',')[1], name: file.name };
-      loaded++;
-      if (loaded === files.length) {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 1200;
+        let w = img.width, h = img.height;
+        if (Math.max(w, h) > MAX) {
+          const s = MAX / Math.max(w, h);
+          w = Math.round(w * s); h = Math.round(h * s);
+        }
+        const cv = document.createElement('canvas');
+        cv.width = w; cv.height = h;
+        const ctx = cv.getContext('2d');
+        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h);
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, w, h);
+        pendingImages[i] = { b64: cv.toDataURL('image/jpeg', 0.80).split(',')[1], name: file.name };
+        loaded++;
+        if (loaded === files.length) {
         const pb = document.getElementById('parse-btn');
         pb.style.display = 'flex'; pb.disabled = false;
         const txt = document.getElementById('parse-btn-txt');
@@ -1804,6 +1819,16 @@ function handleImgs(input) {
           ? `✨ อ่าน ${files.length} รูปด้วย AI`
           : '✨ อ่านการบ้านด้วย AI';
       }
+      };
+      img.onerror = () => {
+        pendingImages[i] = { b64: e.target.result.split(',')[1], name: file.name };
+        loaded++;
+        if (loaded === files.length) {
+          const pb = document.getElementById('parse-btn');
+          pb.style.display = 'flex'; pb.disabled = false;
+        }
+      };
+      img.src = e.target.result;
     };
     r.readAsDataURL(file);
   });
