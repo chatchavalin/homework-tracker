@@ -3243,7 +3243,11 @@ COMPLETENESS RULES — extract EVERYTHING:
 - Before finishing, re-scan the image top to bottom and verify you captured every numbered or bulleted line.
 
 DATE RULES — very important:
-- This is a THAI school notebook. ALL dates use Thai DD/MM convention.
+- This is a THAI school notebook with a TABLE layout. The table has columns: วันรับงาน (date received) | รายการ (task description) | วันกำหนดส่ง (due date) | ลงนาม (signature).
+- The DUE DATE is in the RIGHT column "วันกำหนดส่ง" — read the number written in that column on the SAME ROW as the task. Always associate the due date from the right column with the task on the same row.
+- Example: row has "1. Do Math page 81-85" in the middle column and "19/06/26" in the right column → due_date = 2026-06-19.
+- If the right column is blank for a row, due_date = null.
+- ALL dates use Thai DD/MM convention.
 - "11/07" means 11 July (day=11, month=07) — NEVER interpret as November 7th.
 - "11/07/26" or "11/07/69" = 11 July 2026 (Buddhist year 2569 = 2026 CE).
 - Buddhist short years: 69 = 2569 = 2026 CE. Subtract 543 from Buddhist year for CE year.
