@@ -5,11 +5,9 @@ export default async function handler(req, res) {
   const CHAT_DAD      = process.env.TELEGRAM_CHAT_DAD;
   const CHAT_MUM      = process.env.TELEGRAM_CHAT_MUM;
 
-  if (!SUPABASE_URL || !SUPABASE_KEY) {
-    return res.status(500).json({ error: 'Supabase not configured' });
-  }
-  if (!BOT_TOKEN) {
-    return res.status(500).json({ error: 'Telegram bot not configured' });
+  const envState = { supabaseUrl: !!SUPABASE_URL, supabaseKey: !!SUPABASE_KEY, bot: !!BOT_TOKEN, dad: !!CHAT_DAD, mum: !!CHAT_MUM };
+  if (!SUPABASE_URL || !SUPABASE_KEY || !BOT_TOKEN) {
+    return res.status(200).json({ skipped: true, reason: 'missing env vars', env: envState });
   }
 
   try {
@@ -130,6 +128,6 @@ export default async function handler(req, res) {
 
   } catch (err) {
     console.error('Notify error:', err);
-    return res.status(500).json({ error: err.message });
+    return res.status(200).json({ ok: false, error: String(err && err.message || err) });
   }
 }
