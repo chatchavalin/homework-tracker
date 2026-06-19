@@ -30,7 +30,11 @@ export default async function handler(req, res) {
     const now      = new Date();
     const utcHour   = now.getUTCHours();
     // 22:30 UTC = 05:30 Bangkok (morning), 14:00 UTC = 21:00 Bangkok (evening)
-    const isMorning = utcHour === 22;
+    // Explicit override via ?mode=morning|evening (used by GitHub Actions cron, immune to scheduling delay)
+  const modeParam = (req.query && req.query.mode) ? String(req.query.mode) : '';
+  const isMorning = modeParam === 'morning' ? true
+                  : modeParam === 'evening' ? false
+                  : utcHour === 22;
 
     // Morning shows TODAY, evening shows TOMORROW
     const target   = new Date(now);
