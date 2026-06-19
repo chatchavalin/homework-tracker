@@ -159,6 +159,13 @@ input,textarea,select{font-family:inherit}
 .tag-todo{background:#e0f2fe;color:#075985}
 .tag-points{background:#fef3c7;color:#92400e}
 .created-stamp{font-size:0.58rem;color:var(--muted);opacity:0.65;margin-top:5px;font-weight:600}
+.task-photo-thumb{display:block;width:52px;height:52px;object-fit:cover;border-radius:9px;margin-top:7px;border:1.5px solid var(--border);cursor:pointer;transition:transform 0.12s}
+.task-photo-thumb:active{transform:scale(0.94)}
+#photo-lightbox{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.88);display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;padding:18px;animation:plFade 0.18s ease}
+#photo-lightbox.open{display:flex}
+#photo-lightbox img{max-width:100%;max-height:82vh;object-fit:contain;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.5)}
+#photo-lightbox .pl-hint{color:rgba(255,255,255,0.7);font-size:0.8rem;font-weight:600}
+@keyframes plFade{from{opacity:0}to{opacity:1}}
 .due-chip{font-size:0.65rem;font-weight:700;color:var(--muted);margin-left:auto;white-space:nowrap}
 .due-chip.urgent{color:var(--high)}
 .due-chip.soon{color:var(--med)}
@@ -1431,6 +1438,32 @@ function typeChip(type) {
   return '';
 }
 
+async function uploadTaskPhoto(b64) {
+  try {
+    if (!b64) return null;
+    const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    const path  = `${currentKid}/${Date.now()}-${Math.random().toString(36).slice(2,8)}.jpg`;
+    const { error } = await sb.storage.from('task-photos')
+      .upload(path, bytes, { contentType: 'image/jpeg', upsert: false });
+    if (error) { console.warn('photo upload failed:', error.message); return null; }
+    const { data } = sb.storage.from('task-photos').getPublicUrl(path);
+    return data?.publicUrl || null;
+  } catch (e) { console.warn('photo upload error:', e); return null; }
+}
+
+function openPhoto(url) {
+  if (!url) return;
+  let ov = document.getElementById('photo-lightbox');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'photo-lightbox';
+    ov.onclick = () => ov.classList.remove('open');
+    document.body.appendChild(ov);
+  }
+  ov.innerHTML = `<img src="${url}" alt="original photo"><div class="pl-hint">${currentLang==='en'?'tap to close':'แตะเพื่อปิด'}</div>`;
+  ov.classList.add('open');
+}
+
 function createdStamp(iso) {
   if (!iso) return '';
   const d = new Date(iso);
@@ -1459,6 +1492,7 @@ function taskCardHTML(t) {
     <div class="task-body">
       <div class="task-title">${escHtml(title)}</div>
       ${metaHTML}
+      ${t.image_url ? `<img class="task-photo-thumb" src="${t.image_url}" loading="lazy" onclick="event.stopPropagation();openPhoto('${t.image_url}')" alt="photo">` : ''}
       ${createdStamp(t.created_at)}
     </div>
     <button class="task-edit-btn" onclick="event.stopPropagation();openEditSheet('${t.id}')" title="Edit">✏️</button>
@@ -1851,7 +1885,10 @@ async function parseImage() {
       }
       const data  = await res.json();
       const items = data.tasks || [];
-      if (Array.isArray(items)) parsedResults.push(...items);
+      if (Array.isArray(items)) {
+        items.forEach(it => { it._srcB64 = img.b64; });   // keep original photo for this item
+        parsedResults.push(...items);
+      }
     }
 
     if (!parsedResults.length) { toast('⚠️ ไม่พบงานในรูปนี้'); return; }
@@ -1947,6 +1984,18 @@ async function confirmParsed() {
   const selected = parsedResults.filter((_,i) => document.getElementById('pi-'+i)?.checked);
   if (!selected.length) { toast('⚠️ กรุณาเลือกอย่างน้อย 1 งาน'); return; }
 
+  // Upload each distinct source photo once, map it to a public URL
+  const photoUrlCache = new Map();
+  const withPhotos = selected.filter(r => r._srcB64 && r.record_type !== 'event');
+  if (withPhotos.length && !USE_LOCAL) {
+    for (const r of withPhotos) {
+      if (!photoUrlCache.has(r._srcB64)) {
+        photoUrlCache.set(r._srcB64, await uploadTaskPhoto(r._srcB64));
+      }
+    }
+  }
+  const photoUrlFor = r => (r._srcB64 ? (photoUrlCache.get(r._srcB64) || null) : null);
+
   // Split events, info, tasks
   const autoEvents = selected.filter(r => r.record_type === 'event');
   autoEvents.forEach(ev => {
@@ -1967,6 +2016,7 @@ async function confirmParsed() {
       parsed_title: n.parsed_title || n.original_text,
       subject: n.subject || 'General',
       category: n.category || 'other',
+      image_url: photoUrlFor(n),
       created_at: new Date().toISOString(),
       kid_id: currentKid
     }));
@@ -1993,12 +2043,18 @@ async function confirmParsed() {
     priority: t.priority||calcPriority(t.due_date,t.points),
     is_done: false, source: 'photo',
     kid_id: currentKid,
+    image_url: photoUrlFor(t),
     created_at: new Date().toISOString()
   }));
   // Optimistic
   STATE.tasks.unshift(...newTasks); renderAll();
   if (!USE_LOCAL) {
-    const { error } = await sb.from('tasks').insert(newTasks);
+    let { error } = await sb.from('tasks').insert(newTasks);
+    if (error && /image_url/i.test(error.message || '')) {
+      // image_url column not added yet — strip it so saving still works
+      const stripped = newTasks.map(({ image_url, ...rest }) => rest);
+      ({ error } = await sb.from('tasks').insert(stripped));
+    }
     if (error) {
       newTasks.forEach(t => { STATE.tasks = STATE.tasks.filter(x=>x.id!==t.id); });
       btn.disabled = false; txt.textContent = '💾 บันทึกที่เลือก'; spin.classList.add('hidden');
@@ -2435,6 +2491,7 @@ function renderNotes() {
           ${subjectTag(n.subject)}
           <span class="tag" style="background:#ede9fe;color:#5b21b6">${n.category||'note'}</span>
         </div>
+        ${n.image_url ? `<img class="task-photo-thumb" src="${n.image_url}" loading="lazy" onclick="event.stopPropagation();openPhoto('${n.image_url}')" alt="photo">` : ''}
         ${createdStamp(n.created_at)}
       </div>
       <button class="task-delete" onclick="deleteNote('${n.id}')">✕</button>
