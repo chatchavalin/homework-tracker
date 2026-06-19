@@ -570,6 +570,25 @@ input,textarea,select{font-family:inherit}
 .event-type-chip.active{background:var(--primary);border-color:var(--primary);color:white}
 
 
+/* ===== Minimal UI refresh ===== */
+.content{padding:12px 14px 100px}
+.search-input{border-radius:14px;box-shadow:none}
+.task-card{box-shadow:none;border:1px solid var(--border);border-left-width:3px;padding:12px 13px;margin-bottom:8px;border-radius:14px;background:var(--surface)}
+.task-card.p-high{background:var(--surface)}
+.task-card.p-high.overdue{background:#fff5f5}
+.task-title{font-size:0.92rem;font-weight:600}
+.task-meta{margin-top:6px;gap:6px}
+.type-chip{font-size:0.62rem;font-weight:800;padding:2px 8px;border-radius:6px;letter-spacing:.02em;text-transform:uppercase}
+.chip-exam{background:#fff3e0;color:#e65100}
+.chip-note{background:#ede9fe;color:#5b21b6}
+.due-chip{font-size:0.68rem;font-weight:600}
+.sec-label{margin:16px 0 8px 2px}
+.type-toggle.three .type-btn,.fab-type-toggle.three .fab-type-btn{flex:1}
+.img-thumbs{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 0}
+.img-thumb{position:relative;width:72px;height:72px;border-radius:10px;overflow:hidden;border:1px solid var(--border)}
+.img-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.img-thumb-x{position:absolute;top:2px;right:2px;width:18px;height:18px;border:none;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font-size:.6rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.up-btn.add-more{width:100%;margin-top:10px;background:var(--surface);color:var(--primary-dk);border:1.5px dashed var(--primary);border-radius:12px;padding:10px;font-weight:700}
 </style>
 </head>
 <body>
@@ -634,18 +653,10 @@ input,textarea,select{font-family:inherit}
         <button class="search-clear" id="hw-search-clear" onclick="clearSearch('hw')">✕</button>
         <div class="autocomplete-list" id="hw-ac-list"></div>
       </div>
-      <div class="filter-row" id="hw-filter-row">
-        <button class="f-tab active" id="ftab-today"   onclick="setDateFilter('today',this)">วันนี้</button>
-        <button class="f-tab"        id="ftab-week"    onclick="setDateFilter('week',this)">สัปดาห์นี้</button>
-        <button class="f-tab"        id="ftab-month"   onclick="setDateFilter('month',this)">เดือนนี้</button>
-        <button class="f-tab"        id="ftab-undated" onclick="setDateFilter('undated',this)">ไม่มีวันส่ง</button>
-        <button class="f-tab"        id="ftab-all"     onclick="setDateFilter('all',this)">ทั้งหมด</button>
-      </div>
-      <button class="mark-all-btn" id="mark-all-btn" onclick="markAllDone()">✅ ทำเครื่องหมายเสร็จทั้งหมด</button>
       <div id="hw-list"></div>
     </div>
 
-    <!-- TAB: TODO -->
+    <!-- TAB: TODO (merged into Tasks; kept hidden for compatibility) -->
     <div class="tab-panel" id="tab-todo">
       <div class="search-wrap" id="todo-search-wrap">
         <span class="search-icon">🔍</span>
@@ -670,7 +681,9 @@ input,textarea,select{font-family:inherit}
       </div>
       <input type="file" id="cam-input" accept="image/*" capture="environment" class="hidden" onchange="handleImgs(this)">
       <input type="file" id="file-input" accept="image/*" multiple class="hidden" onchange="handleImgs(this)">
-      <img id="img-preview" class="img-preview" alt="preview">
+      <div id="img-thumbs" class="img-thumbs"></div>
+      <button class="up-btn add-more" id="add-more-btn" style="display:none" onclick="document.getElementById('cam-input').click()">➕ ถ่ายรูปเพิ่ม</button>
+      <img id="img-preview" class="img-preview" alt="preview" style="display:none">
       <button class="parse-btn" id="parse-btn" onclick="parseImage()" disabled>
         <span id="parse-btn-txt">✨ อ่านการบ้านด้วย AI</span>
         <div class="spinner hidden" id="parse-spinner"></div>
@@ -691,28 +704,10 @@ input,textarea,select{font-family:inherit}
         </div>
         <div class="form-row">
           <label class="form-label">ประเภท</label>
-          <div class="type-toggle">
-            <button class="type-btn active" id="type-hw" onclick="setType('homework')">📚 การบ้าน</button>
-            <button class="type-btn" id="type-todo" onclick="setType('todo')">📋 สิ่งที่ต้องทำ</button>
-          </div>
-        </div>
-        <div class="form-row-2">
-          <div class="form-row" style="margin-bottom:0">
-            <label class="form-label">วิชา</label>
-            <select class="form-input" id="f-subject">
-              <option value="Other">เลือกวิชา...</option>
-              <option value="Math">คณิตศาสตร์</option>
-              <option value="Thai">ภาษาไทย</option>
-              <option value="English">ภาษาอังกฤษ</option>
-              <option value="Science">วิทยาศาสตร์</option>
-              <option value="Social">สังคมศึกษา</option>
-              <option value="Chinese">ภาษาจีน</option>
-              <option value="PE">พลศึกษา</option>
-            </select>
-          </div>
-          <div class="form-row" style="margin-bottom:0">
-            <label class="form-label">คะแนน (ถ้ามี)</label>
-            <input class="form-input" id="f-points" type="number" min="0" placeholder="เช่น 10">
+          <div class="type-toggle three">
+            <button class="type-btn active" id="type-hw" onclick="setType('homework')">📋 <span id="type-hw-lbl">Task</span></button>
+            <button class="type-btn" id="type-exam" onclick="setType('exam')">📅 <span id="type-exam-lbl">Exam</span></button>
+            <button class="type-btn" id="type-note" onclick="setType('note')">📝 <span id="type-note-lbl">Note</span></button>
           </div>
         </div>
         <div class="form-row mt-2">
@@ -862,8 +857,7 @@ input,textarea,select{font-family:inherit}
 
   <!-- BOTTOM NAV -->
   <div class="bottom-nav">
-    <button class="nav-btn active" id="nav-hw" onclick="showTab('hw')"><span class="icon">📚</span><span id="nav-hw-lbl">Homework</span></button>
-    <button class="nav-btn" id="nav-todo" onclick="showTab('todo')"><span class="icon">📋</span><span id="nav-todo-lbl">To-Do</span></button>
+    <button class="nav-btn active" id="nav-hw" onclick="showTab('hw')"><span class="icon">📋</span><span id="nav-hw-lbl">Tasks</span></button>
     <button class="nav-btn" id="nav-add" onclick="showTab('add')"><span class="icon">➕</span><span id="nav-add-lbl">Add</span></button>
     <button class="nav-btn" id="nav-notes" onclick="showTab('notes')"><span class="icon">📝</span><span id="nav-notes-lbl">Notes</span></button>
     <button class="nav-btn" id="nav-settings" onclick="showTab('settings')"><span class="icon">⚙️</span><span id="nav-settings-lbl">Settings</span></button>
@@ -877,30 +871,13 @@ input,textarea,select{font-family:inherit}
     <button class="edit-sheet-close" onclick="closeEditSheetDirect()">✕</button>
     <div class="edit-sheet-title" id="edit-sheet-title">✏️ แก้ไขงาน</div>
     <input class="form-input" id="edit-title" style="margin-bottom:10px" placeholder="ชื่องาน">
-    <div class="form-label" id="edit-subj-label" style="margin-bottom:6px">วิชา</div>
-    <div class="edit-subject-row" id="edit-subject-row">
-      <button class="subj-chip" data-subj="Math" onclick="setEditSubj('Math',this)">🔢 <span class="subj-lbl-math">คณิต</span></button>
-      <button class="subj-chip" data-subj="Thai" onclick="setEditSubj('Thai',this)">📖 <span class="subj-lbl-thai">ไทย</span></button>
-      <button class="subj-chip" data-subj="English" onclick="setEditSubj('English',this)">🔤 <span class="subj-lbl-eng">อังกฤษ</span></button>
-      <button class="subj-chip" data-subj="Science" onclick="setEditSubj('Science',this)">🔬 <span class="subj-lbl-sci">วิทย์</span></button>
-      <button class="subj-chip" data-subj="Social" onclick="setEditSubj('Social',this)">🌍 <span class="subj-lbl-soc">สังคม</span></button>
-      <button class="subj-chip" data-subj="Chinese" onclick="setEditSubj('Chinese',this)">🀄 <span class="subj-lbl-chi">จีน</span></button>
-      <button class="subj-chip" data-subj="PE" onclick="setEditSubj('PE',this)">⚽ <span class="subj-lbl-pe">พลศึกษา</span></button>
-      <button class="subj-chip" data-subj="Other" onclick="setEditSubj('Other',this)">📝 <span class="subj-lbl-other">อื่นๆ</span></button>
-    </div>
-    <div class="form-row-2" style="margin-bottom:10px">
-      <div>
-        <label class="form-label" id="edit-due-label">วันส่ง</label>
-        <input class="form-input" id="edit-due" type="date">
-      </div>
-      <div>
-        <label class="form-label" id="edit-points-label">คะแนน</label>
-        <input class="form-input" id="edit-points" type="number" min="0" placeholder="0">
-      </div>
-    </div>
-    <div class="type-toggle" style="margin-bottom:10px">
-      <button class="type-btn active" id="edit-type-hw"   onclick="setEditType('homework')">📚 <span id="edit-hw-lbl">การบ้าน</span></button>
-      <button class="type-btn"        id="edit-type-todo" onclick="setEditType('todo')">📋 <span id="edit-todo-lbl">ต้องทำ</span></button>
+    <div class="form-label" id="edit-due-label" style="margin-bottom:6px">วันส่ง</div>
+    <input class="form-input" id="edit-due" type="date" style="margin-bottom:10px">
+    <div class="form-label" id="edit-type-label" style="margin-bottom:6px">ประเภท</div>
+    <div class="type-toggle three" style="margin-bottom:14px">
+      <button class="type-btn active" id="edit-type-hw"   onclick="setEditType('homework')">📋 <span id="edit-hw-lbl">Task</span></button>
+      <button class="type-btn"        id="edit-type-exam" onclick="setEditType('exam')">📅 <span id="edit-exam-lbl">Exam</span></button>
+      <button class="type-btn"        id="edit-type-note" onclick="setEditType('note')">📝 <span id="edit-note-lbl">Note</span></button>
     </div>
     <button class="edit-save-btn" onclick="saveEdit()" id="edit-save-btn">💾 บันทึก</button>
   </div>
@@ -928,16 +905,6 @@ input,textarea,select{font-family:inherit}
     </div>
     <div class="fab-quick-form" id="fab-quick-form" style="display:none">
       <input class="fab-quick-input" id="fab-title-inp" placeholder="ชื่องาน..." />
-      <div class="fab-subject-row">
-        <button class="fab-subj active" data-s="Other"   onclick="setFabSubj('Other',this)">📝 <span class="fab-s-other">อื่นๆ</span></button>
-        <button class="fab-subj"        data-s="Math"    onclick="setFabSubj('Math',this)">🔢 <span class="fab-s-math">คณิต</span></button>
-        <button class="fab-subj"        data-s="Thai"    onclick="setFabSubj('Thai',this)">📖 <span class="fab-s-thai">ไทย</span></button>
-        <button class="fab-subj"        data-s="English" onclick="setFabSubj('English',this)">🔤 <span class="fab-s-eng">อังกฤษ</span></button>
-        <button class="fab-subj"        data-s="Science" onclick="setFabSubj('Science',this)">🔬 <span class="fab-s-sci">วิทย์</span></button>
-        <button class="fab-subj"        data-s="Social"  onclick="setFabSubj('Social',this)">🌍 <span class="fab-s-soc">สังคม</span></button>
-        <button class="fab-subj"        data-s="Chinese" onclick="setFabSubj('Chinese',this)">🀄 <span class="fab-s-chi">จีน</span></button>
-        <button class="fab-subj"        data-s="PE"      onclick="setFabSubj('PE',this)">⚽ <span class="fab-s-pe">PE</span></button>
-      </div>
       <div class="quick-date-row" id="quick-date-row">
         <button class="qdate active" id="qd-none"     onclick="setQDate('none',this)"><span id="qd-none-lbl">ไม่มีวันส่ง</span></button>
         <button class="qdate"        id="qd-today"    onclick="setQDate('today',this)"><span id="qd-today-lbl">วันนี้</span></button>
@@ -946,9 +913,10 @@ input,textarea,select{font-family:inherit}
         <button class="qdate"        id="qd-nextweek" onclick="setQDate('nextweek',this)"><span id="qd-nw-lbl">อาทิตย์หน้า</span></button>
       </div>
       <div class="fab-row">
-        <div class="fab-type-toggle">
-          <button class="fab-type-btn active" id="fab-type-hw" onclick="setFabType('homework')">📚 การบ้าน</button>
-          <button class="fab-type-btn" id="fab-type-todo" onclick="setFabType('todo')">📋 ต้องทำ</button>
+        <div class="fab-type-toggle three">
+          <button class="fab-type-btn active" id="fab-type-hw" onclick="setFabType('homework')">📋</button>
+          <button class="fab-type-btn" id="fab-type-exam" onclick="setFabType('exam')">📅</button>
+          <button class="fab-type-btn" id="fab-type-note" onclick="setFabType('note')">📝</button>
         </div>
         <button class="fab-add-btn" onclick="fabAddTask()">+ เพิ่ม</button>
       </div>
@@ -1231,7 +1199,7 @@ function saveKidPhoto(e, kidId) {
   reader.readAsDataURL(file);
 }
 let currentTab   = 'hw';
-let dateFilter   = 'today';
+let dateFilter   = 'all';
 let todoFilter   = 'pending';
 let searchQuery  = { hw: '', todo: '' };
 let manualType   = 'homework';
@@ -1391,7 +1359,6 @@ function inDateFilter(t) {
 }
 
 function calcPriority(due, points) {
-  if (points && points > 0) return 'high';
   if (!due) return 'low';
   const diff = diffD(parseD(due));
   if (diff <= 1) return 'high';
@@ -1450,29 +1417,36 @@ function subjectTag(s) {
 ═══════════════════════════════════════ */
 const SUBJ_ICONS = {Math:'🔢',Thai:'📖',English:'🔤',Science:'🔬',Social:'🌍',Chinese:'🀄',PE:'⚽',Other:'📝'};
 
+function cleanTitle(s) {
+  // strip leading list numbering like "1. ", "2) ", "๑. "
+  return (s||'').replace(/^\s*[0-9๐-๙]+\s*[.)\-]\s*/, '').trim();
+}
+
+function typeChip(type) {
+  const L = t_();
+  if (type === 'exam') return `<span class="type-chip chip-exam">📅 ${L.examType||'Exam'}</span>`;
+  if (type === 'note') return `<span class="type-chip chip-note">📝 ${L.noteType||'Note'}</span>`;
+  return '';
+}
+
 function taskCardHTML(t) {
   const dl = dueLabel(t.due_date);
   const overdue = isOverdue(t);
   const dueHTML   = dl ? `<span class="due-chip ${dl.cls}">${dl.text}</span>` : '';
-  const pointsTag = t.points ? `<span class="tag tag-points">⭐ ${t.points}คะแนน</span>` : '';
   const overdueTag = overdue ? `<span class="overdue-badge">เกินกำหนด!</span>` : '';
-  const origHTML  = t.original_text && t.original_text !== t.parsed_title
-    ? `<div class="task-original">${escHtml(t.original_text)}</div>` : '';
-  const icon = SUBJ_ICONS[t.subject] || '📝';
+  const title = cleanTitle(t.parsed_title || t.original_text);
+  const chip = typeChip(t.type);
   const cardClass = `task-card p-${t.priority||'low'} ${t.is_done?'is-done':''} ${overdue?'overdue':''}`;
+  const metaHTML = (chip || overdueTag || dueHTML)
+    ? `<div class="task-meta">${chip}${overdueTag}${dueHTML}</div>` : '';
   return `
   <div class="${cardClass}" id="tc-${t.id}" ondblclick="openEditSheet('${t.id}')">
     <div class="swipe-hint right">✓ เสร็จแล้ว</div>
     <div class="swipe-hint left">🗑 ลบ</div>
     <div class="check-wrap"><div class="check" onclick="toggleTask('${t.id}')">✓</div></div>
     <div class="task-body">
-      <div class="task-title">${icon} ${escHtml(t.parsed_title||t.original_text)}</div>
-      ${origHTML}
-      <div class="task-meta">
-        ${subjectTag(t.subject)}
-        <span class="tag ${t.type==='homework'?'tag-hw':'tag-todo'}">${t.type==='homework'?t_().hwType:t_().todoType}</span>
-        ${pointsTag}${overdueTag}${dueHTML}
-      </div>
+      <div class="task-title">${escHtml(title)}</div>
+      ${metaHTML}
     </div>
     <button class="task-edit-btn" onclick="event.stopPropagation();openEditSheet('${t.id}')" title="Edit">✏️</button>
     <button class="task-delete" onclick="softDeleteTask('${t.id}')">✕</button>
@@ -1492,13 +1466,12 @@ function renderHW() {
     tasks = STATE.tasks.filter(t => !t.is_done);
   } else if (q.trim()) {
     const ql = q.toLowerCase();
-    tasks = STATE.tasks.filter(t => t.type==='homework' && (
+    tasks = STATE.tasks.filter(t => (
       (t.parsed_title||'').toLowerCase().includes(ql) ||
-      (t.original_text||'').toLowerCase().includes(ql) ||
-      (t.subject||'').toLowerCase().includes(ql)
+      (t.original_text||'').toLowerCase().includes(ql)
     ));
   } else {
-    tasks = STATE.tasks.filter(t => t.type==='homework' && inDateFilter(t));
+    tasks = STATE.tasks.slice();
   }
 
   tasks.sort((a,b) => {
@@ -1688,13 +1661,11 @@ async function addManual() {
   const title = document.getElementById('f-title').value.trim();
   if (!title) { toast('⚠️ กรุณาใส่ชื่องาน'); return; }
   const due    = document.getElementById('f-due').value || null;
-  const points = parseInt(document.getElementById('f-points').value) || null;
-  const subj   = document.getElementById('f-subject').value;
   const task = {
     id: uid(), type: manualType,
     original_text: title, parsed_title: title,
-    subject: subj, due_date: due, points,
-    priority: calcPriority(due, points),
+    subject: 'Other', due_date: due, points: null,
+    priority: calcPriority(due, null),
     is_done: false, source: 'manual',
     kid_id: currentKid,
     created_at: new Date().toISOString()
@@ -1713,7 +1684,6 @@ async function addManual() {
   }
   document.getElementById('f-title').value  = '';
   document.getElementById('f-due').value    = '';
-  document.getElementById('f-points').value = '';
   toast('✅ เพิ่มงานแล้ว');
 }
 
@@ -1774,24 +1744,37 @@ async function toggleTopic(topicId, examId, newVal) {
 ═══════════════════════════════════════ */
 let pendingImages = []; // [{b64, name}]
 
+function renderPendingThumbs() {
+  const wrap = document.getElementById('img-thumbs');
+  if (!wrap) return;
+  wrap.innerHTML = pendingImages.map((im, i) => im && im.b64
+    ? `<div class="img-thumb"><img src="data:image/jpeg;base64,${im.b64}"><button class="img-thumb-x" onclick="removePendingImg(${i})">✕</button></div>`
+    : '').join('');
+  const addMore = document.getElementById('add-more-btn');
+  if (addMore) addMore.style.display = pendingImages.length ? 'block' : 'none';
+  const pb = document.getElementById('parse-btn');
+  const txt = document.getElementById('parse-btn-txt');
+  if (pb) { pb.style.display = pendingImages.length ? 'flex' : 'none'; pb.disabled = !pendingImages.length; }
+  if (txt && pendingImages.length) {
+    const L = t();
+    txt.textContent = pendingImages.length > 1
+      ? (currentLang==='en' ? `✨ Read ${pendingImages.length} photos with AI` : `✨ อ่าน ${pendingImages.length} รูปด้วย AI`)
+      : (L.parseBtn || '✨ อ่านการบ้านด้วย AI');
+  }
+}
+
+function removePendingImg(i) {
+  pendingImages.splice(i, 1);
+  renderPendingThumbs();
+}
+
 function handleImgs(input) {
   const files = Array.from(input.files);
   if (!files.length) return;
-  pendingImages = [];
   document.getElementById('parsed-preview').classList.remove('visible');
 
-  // Show first image as preview
-  const reader0 = new FileReader();
-  reader0.onload = e => {
-    const prev = document.getElementById('img-preview');
-    prev.src = e.target.result;
-    prev.style.display = 'block';
-  };
-  reader0.readAsDataURL(files[0]);
-
-  // Read all, resize to max 1200px / 0.80q to stay well under Vercel's 4MB body limit
-  let loaded = 0;
-  files.forEach((file, i) => {
+  // Resize to max 1200px / 0.80q to stay well under Vercel's 4MB body limit, APPEND to pending
+  files.forEach(file => {
     const r = new FileReader();
     r.onload = e => {
       const img = new Image();
@@ -1809,24 +1792,12 @@ function handleImgs(input) {
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(img, 0, 0, w, h);
-        pendingImages[i] = { b64: cv.toDataURL('image/jpeg', 0.80).split(',')[1], name: file.name };
-        loaded++;
-        if (loaded === files.length) {
-        const pb = document.getElementById('parse-btn');
-        pb.style.display = 'flex'; pb.disabled = false;
-        const txt = document.getElementById('parse-btn-txt');
-        txt.textContent = files.length > 1
-          ? `✨ อ่าน ${files.length} รูปด้วย AI`
-          : '✨ อ่านการบ้านด้วย AI';
-      }
+        pendingImages.push({ b64: cv.toDataURL('image/jpeg', 0.80).split(',')[1], name: file.name });
+        renderPendingThumbs();
       };
       img.onerror = () => {
-        pendingImages[i] = { b64: e.target.result.split(',')[1], name: file.name };
-        loaded++;
-        if (loaded === files.length) {
-          const pb = document.getElementById('parse-btn');
-          pb.style.display = 'flex'; pb.disabled = false;
-        }
+        pendingImages.push({ b64: e.target.result.split(',')[1], name: file.name });
+        renderPendingThumbs();
       };
       img.src = e.target.result;
     };
@@ -1943,9 +1914,7 @@ function showParsedPreview(items) {
         </div>
         ${task.original_text!==task.parsed_title?`<div class="parsed-item-orig">${escHtml(task.original_text)}</div>`:''}
         <div class="parsed-item-tags">
-          ${subjectTag(task.subject)}
           ${typeBadge}
-          ${task.points?`<span class="tag tag-points">⭐${task.points}%</span>`:''}
           ${dateVal?`<span class="tag" style="background:#fff3e0;color:#e65100">📅 ${dateVal}</span>`:''}
         </div>
         ${dateRow}
@@ -2031,6 +2000,7 @@ async function confirmParsed() {
   document.getElementById('parse-btn').style.display = 'none';
   parsedResults = [];
   pendingImages = [];
+  renderPendingThumbs();
   toast(`✅ บันทึก ${newTasks.length} งานแล้ว`);
   showTab('hw');
 }
@@ -2123,14 +2093,8 @@ function showTab(tab) {
 
 function statPillClick(type) {
   showTab('hw');
-  const allBtn   = document.getElementById('ftab-all');
-  const todayBtn = document.getElementById('ftab-today');
-  const weekBtn  = document.getElementById('ftab-week');
 
   if (type === 'done') {
-    // Show ALL tasks (not filtered by date) so all 20 done items appear
-    if (allBtn) setDateFilter('all', allBtn);
-    // Clear search, then scroll to done section
     clearSearch('hw');
     setTimeout(() => {
       const doneSec = document.querySelector('#hw-list .sec-label');
@@ -2141,23 +2105,16 @@ function statPillClick(type) {
     }, 150);
     toast(currentLang==='en' ? `Showing all done tasks` : `แสดงงานที่เสร็จทั้งหมด`);
   } else if (type === 'urgent') {
-    if (allBtn) setDateFilter('all', allBtn);
-    // Search for high priority
-    const inp = document.getElementById('hw-search');
-    if (inp) { inp.value = ''; }
     clearSearch('hw');
-    // Filter to show only high priority pending
     searchQuery.hw = '__urgent__';
     renderHW();
     toast(currentLang==='en' ? 'Showing urgent tasks' : 'แสดงงานด่วน');
   } else if (type === 'pending') {
-    if (allBtn) setDateFilter('all', allBtn);
     clearSearch('hw');
     searchQuery.hw = '__pending__';
     renderHW();
     toast(currentLang==='en' ? 'Showing pending tasks' : 'แสดงงานที่ค้างอยู่');
   } else {
-    if (allBtn) setDateFilter('all', allBtn);
     clearSearch('hw');
     toast(currentLang==='en' ? 'Showing all tasks' : 'แสดงงานทั้งหมด');
   }
@@ -2306,7 +2263,8 @@ function setTodoFilter(f, btn) {
 function setType(t) {
   manualType = t;
   document.getElementById('type-hw').classList.toggle('active',   t==='homework');
-  document.getElementById('type-todo').classList.toggle('active', t==='todo');
+  document.getElementById('type-exam').classList.toggle('active', t==='exam');
+  document.getElementById('type-note').classList.toggle('active', t==='note');
 }
 
 /* ═══════════════════════════════════════
@@ -2516,10 +2474,6 @@ function renderAll() {
   updateFilterCounts();
   updateOfflineChip();
   updateParentStatus();
-  // Show/hide mark-all btn
-  const hw = STATE.tasks.filter(t => t.type==='homework' && !t.is_done && inDateFilter(t));
-  const btn = document.getElementById('mark-all-btn');
-  if (btn) btn.style.display = hw.length > 1 ? 'flex' : 'none';
 }
 
 /* ═══════════════════════════════════════
@@ -2553,12 +2507,13 @@ const LANG = {
     today: 'วันนี้', week: 'สัปดาห์นี้', month: 'เดือนนี้', all: 'ทั้งหมด',
     pending: 'ค้างอยู่', done: 'เสร็จแล้ว',
     urgent: 'ด่วน', pendingStat: 'ค้างอยู่', doneStat: 'เสร็จ', total: 'ทั้งหมด',
-    hwTab: 'การบ้าน', todoTab: 'ต้องทำ', addTab: 'เพิ่มงาน', examTab: 'สอบ', settingsTab: 'ตั้งค่า',
+    hwTab: 'งาน', todoTab: 'ต้องทำ', addTab: 'เพิ่มงาน', examTab: 'สอบ', settingsTab: 'ตั้งค่า',
     noHwToday: 'ไม่มีการบ้านวันนี้', noHw: 'ไม่มีการบ้าน', addNew: 'เพิ่มงานใหม่ที่แท็บ "เพิ่มงาน"',
     noTodo: 'ไม่มีรายการ', addTodo: 'เพิ่มสิ่งที่ต้องทำที่แท็บ "เพิ่มงาน"',
     noExam: 'ยังไม่มีรายการสอบ', addExam: 'สร้างรายการสอบด้านบน',
     infoTab: 'โน้ต', noInfo: 'ไม่มีบันทึก', infoSection: '📝 บันทึก / ข้อมูลทั่วไป',
     infoType: 'บันทึก',
+    examType: 'สอบ', noteType: 'โน้ต',
     doneSection: 'เสร็จแล้ว',
     hwType: 'การบ้าน', todoType: 'ต้องทำ',
     takePhoto: '📷 ถ่ายรูป', selectPhoto: '🖼️ เลือกหลายรูป',
@@ -2618,12 +2573,13 @@ const LANG = {
     today: 'Today', week: 'This Week', month: 'This Month', all: 'All',
     pending: 'Pending', done: 'Done',
     urgent: 'Urgent', pendingStat: 'Pending', doneStat: 'Done', total: 'Total',
-    hwTab: 'Homework', todoTab: 'To-Do', addTab: 'Add', examTab: 'Exams', settingsTab: 'Settings',
+    hwTab: 'Tasks', todoTab: 'To-Do', addTab: 'Add', examTab: 'Exams', settingsTab: 'Settings',
     noHwToday: 'No homework today!', noHw: 'No homework', addNew: 'Add tasks in the "Add" tab',
     noTodo: 'No items', addTodo: 'Add to-dos in the "Add" tab',
     noExam: 'No exams yet', addExam: 'Create an exam above',
     infoTab: 'Notes', noInfo: 'No notes yet', infoSection: '📝 Notes & General Info',
     infoType: 'Note',
+    examType: 'Exam', noteType: 'Note',
     doneSection: 'Done',
     hwType: 'Homework', todoType: 'To-Do',
     takePhoto: '📷 Take Photo', selectPhoto: '🖼️ Select Photos',
@@ -2753,17 +2709,14 @@ function applyLang() {
   const formLabels = document.querySelectorAll('.manual-form .form-label');
   if (formLabels[0]) formLabels[0].textContent = L.taskName;
   if (formLabels[1]) formLabels[1].textContent = L.taskType;
-  if (formLabels[2]) formLabels[2].textContent = L.subject;
-  if (formLabels[3]) formLabels[3].textContent = L.points;
-  if (formLabels[4]) formLabels[4].textContent = L.dueDate;
+  if (formLabels[2]) formLabels[2].textContent = L.dueDate;
 
-  document.getElementById('type-hw').textContent   = L.hwTypeBtn;
-  document.getElementById('type-todo').textContent = L.todoTypeBtn;
+  const typeHwLbl = document.getElementById('type-hw-lbl');     if (typeHwLbl) typeHwLbl.textContent = currentLang==='en'?'Task':'งาน';
+  const typeExamLbl = document.getElementById('type-exam-lbl'); if (typeExamLbl) typeExamLbl.textContent = L.examType;
+  const typeNoteLbl = document.getElementById('type-note-lbl'); if (typeNoteLbl) typeNoteLbl.textContent = L.noteType;
 
   const titleInp = document.getElementById('f-title');
   if (titleInp) titleInp.placeholder = L.taskNamePh;
-  const pointsInp = document.getElementById('f-points');
-  if (pointsInp) pointsInp.placeholder = L.pointsPh;
 
   const addBtnTxt = document.getElementById('add-btn-txt');
   if (addBtnTxt) addBtnTxt.textContent = L.addBtn;
@@ -2811,18 +2764,18 @@ function applyLang() {
   // Edit sheet
   const editSheetTitle = document.getElementById('edit-sheet-title');
   if (editSheetTitle) editSheetTitle.textContent = L.editTitle;
-  const editSubjLbl = document.getElementById('edit-subj-label');
-  if (editSubjLbl) editSubjLbl.textContent = L.editSubjLabel;
   const editDueLbl = document.getElementById('edit-due-label');
   if (editDueLbl) editDueLbl.textContent = L.editDueLabel;
-  const editPtsLbl = document.getElementById('edit-points-label');
-  if (editPtsLbl) editPtsLbl.textContent = L.editPointsLabel;
+  const editTypeLbl = document.getElementById('edit-type-label');
+  if (editTypeLbl) editTypeLbl.textContent = L.taskType;
   const editSaveBtn = document.getElementById('edit-save-btn');
   if (editSaveBtn) editSaveBtn.textContent = L.editSaveBtn;
   const editHwLbl = document.getElementById('edit-hw-lbl');
-  if (editHwLbl) editHwLbl.textContent = L.editHwBtn.replace('📚 ','');
-  const editTodoLbl = document.getElementById('edit-todo-lbl');
-  if (editTodoLbl) editTodoLbl.textContent = L.editTodoBtn.replace('📋 ','');
+  if (editHwLbl) editHwLbl.textContent = currentLang==='en'?'Task':'งาน';
+  const editExamLbl = document.getElementById('edit-exam-lbl');
+  if (editExamLbl) editExamLbl.textContent = L.examType;
+  const editNoteLbl = document.getElementById('edit-note-lbl');
+  if (editNoteLbl) editNoteLbl.textContent = L.noteType;
   // Edit sheet subject chips
   document.querySelectorAll('.subj-lbl-math').forEach(e => e.textContent = L.subjMath);
   document.querySelectorAll('.subj-lbl-thai').forEach(e => e.textContent = L.subjThai);
@@ -3302,17 +3255,10 @@ function openEditSheet(id) {
   if (!task) return;
   editingTaskId = id;
   editSubj = task.subject || 'Other';
-  editType = task.type || 'homework';
+  editType = (task.type==='exam'||task.type==='note') ? task.type : 'homework';
   document.getElementById('edit-title').value  = task.parsed_title || task.original_text || '';
   document.getElementById('edit-due').value    = task.due_date || '';
-  document.getElementById('edit-points').value = task.points || '';
-  // Set subject chip
-  document.querySelectorAll('.subj-chip').forEach(b => {
-    b.classList.toggle('active', b.dataset.subj === editSubj);
-  });
-  // Set type
-  document.getElementById('edit-type-hw').classList.toggle('active',   editType==='homework');
-  document.getElementById('edit-type-todo').classList.toggle('active', editType==='todo');
+  setEditType(editType);
   document.getElementById('edit-overlay').classList.add('open');
 }
 
@@ -3333,7 +3279,8 @@ function setEditSubj(s, btn) {
 function setEditType(t) {
   editType = t;
   document.getElementById('edit-type-hw').classList.toggle('active',   t==='homework');
-  document.getElementById('edit-type-todo').classList.toggle('active', t==='todo');
+  document.getElementById('edit-type-exam').classList.toggle('active', t==='exam');
+  document.getElementById('edit-type-note').classList.toggle('active', t==='note');
 }
 
 async function saveEdit() {
@@ -3342,23 +3289,21 @@ async function saveEdit() {
   if (!task) return;
   const title  = document.getElementById('edit-title').value.trim();
   const due    = document.getElementById('edit-due').value || null;
-  const points = parseInt(document.getElementById('edit-points').value) || null;
   if (!title) { toast('⚠️ กรุณาใส่ชื่องาน'); return; }
 
   task.parsed_title  = title;
   task.original_text = task.original_text === task.parsed_title ? title : task.original_text;
   task.subject  = editSubj;
   task.due_date = due;
-  task.points   = points;
   task.type     = editType;
-  task.priority = calcPriority(due, points);
+  task.priority = calcPriority(due, task.points);
 
   renderAll(); attachSwipeListeners();
   if (USE_LOCAL) saveLocal();
   else {
     const { error } = await sb.from('tasks').update({
       parsed_title: task.parsed_title, subject: editSubj,
-      due_date: due, points, type: editType, priority: task.priority
+      due_date: due, type: editType, priority: task.priority
     }).eq('id', editingTaskId);
     if (error) { toast('❌ บันทึกไม่ได้: ' + error.message); return; }
   }
@@ -3435,7 +3380,7 @@ function updateFilterCounts() {
    MARK ALL DONE
 ═══════════════════════════════════════ */
 async function markAllDone() {
-  const hw = STATE.tasks.filter(t => t.type==='homework' && !t.is_done && inDateFilter(t));
+  const hw = STATE.tasks.filter(t => !t.is_done);
   if (!hw.length) { toast('✅ ไม่มีงานค้างอยู่'); return; }
   hw.forEach(t => { t.is_done = true; });
   renderAll(); attachSwipeListeners();
@@ -3560,7 +3505,8 @@ function fabManual() {
 function setFabType(type) {
   fabType = type;
   document.getElementById('fab-type-hw').classList.toggle('active',   type==='homework');
-  document.getElementById('fab-type-todo').classList.toggle('active', type==='todo');
+  document.getElementById('fab-type-exam').classList.toggle('active', type==='exam');
+  document.getElementById('fab-type-note').classList.toggle('active', type==='note');
 }
 function setQDate(key, btn) {
   fabQDate = key;
