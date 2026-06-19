@@ -1,8 +1,5 @@
 {
   "crons": [
-    {
-      "path": "/api/notify",
-      "schedule": "30 22,14 * * *"
-    }
+    { "path": "/api/notify", "schedule": "0 14 * * *" }
   ]
 }
