@@ -11,6 +11,40 @@ export default async function handler(req, res) {
   }
 
   try {
+    // ── Weekly recurring reset ──────────────────────────────────────────────
+    // On Monday morning (Bangkok), un-complete every repeat='weekly' task so it
+    // reappears for the new week, and advance its due_date to this week's weekday.
+    // Piggybacks on the existing morning cron (no extra workflow/cron needed).
+    try {
+      const bkkNow = new Date(Date.now() + 7 * 3600 * 1000);
+      const bkkDow = bkkNow.getUTCDay();                         // 0=Sun..6=Sat (Bangkok)
+      const mp0 = (req.query && req.query.mode) ? String(req.query.mode) : '';
+      const morning0 = mp0 === 'morning' ? true
+                     : mp0 === 'evening' ? false
+                     : (new Date().getUTCHours() === 22);
+      if (bkkDow === 1 && morning0) {                            // Monday morning
+        const wr = await fetch(
+          `${SUPABASE_URL}/rest/v1/tasks?repeat=eq.weekly&select=id,repeat_dow`,
+          { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+        );
+        if (wr.ok) {
+          const wk = await wr.json();
+          const t0 = Date.UTC(bkkNow.getUTCFullYear(), bkkNow.getUTCMonth(), bkkNow.getUTCDate());
+          for (const t of wk) {
+            const patch = { is_done: false };
+            if (Number.isInteger(t.repeat_dow)) {
+              const delta = ((t.repeat_dow - bkkDow) % 7 + 7) % 7;
+              patch.due_date = new Date(t0 + delta * 86400000).toISOString().slice(0, 10);
+            }
+            await fetch(
+              `${SUPABASE_URL}/rest/v1/tasks?id=eq.${encodeURIComponent(t.id)}`,
+              { method: 'PATCH', headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' }, body: JSON.stringify(patch) }
+            );
+          }
+        }
+      }
+    } catch (e) { /* reset is non-fatal; continue to the summary */ }
+
     // Fetch incomplete tasks from Supabase
     const r = await fetch(
       `${SUPABASE_URL}/rest/v1/tasks?is_done=eq.false&select=*&order=created_at.desc`,
