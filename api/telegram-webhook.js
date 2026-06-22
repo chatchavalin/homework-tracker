@@ -7,6 +7,8 @@
 //   they get repeat='weekly' (+ repeat_dow) and are auto-reset each week by /api/reset-weekly.
 // Set webhook once (see deploy notes). Returns 200 always so Telegram doesn't retry-storm.
 
+import { randomUUID } from 'node:crypto';
+
 export default async function handler(req, res) {
   // Telegram only ever POSTs updates here.
   if (req.method !== 'POST') {
@@ -146,6 +148,7 @@ Rules:
 
     // Defensive insert: full payload first, retry with core columns if a column is missing.
     const full = {
+      id: randomUUID(),
       kid_id,
       type: parsed.type === 'todo' ? 'todo' : 'homework',
       parsed_title: title,
@@ -168,7 +171,7 @@ Rules:
     }
     if (!ins.ok) {
       const core = {
-        kid_id, type: full.type, parsed_title: title,
+        id: full.id, kid_id, type: full.type, parsed_title: title,
         original_text: text, due_date: full.due_date, is_done: false,
       };
       ins = await insertTask(SUPABASE_URL, SUPABASE_KEY, core);
