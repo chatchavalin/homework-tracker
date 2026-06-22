@@ -59,7 +59,7 @@ export default async function handler(req, res) {
 
     const chatId = msg.chat.id;
     const idStr  = String(chatId);
-    const text = (msg.text || '').trim();
+    let text = (msg.text || '').trim();
 
     // Who is this chat?
     let forcedKid = null;     // kid locked by sender identity
@@ -99,6 +99,18 @@ export default async function handler(req, res) {
     }
 
     // Bangkok date context for relative due-dates.
+    // If the user replied with just a kid name, attach it to the pending item above.
+    if (/^(r|ryuji|m|miki)$/i.test(text)) {
+      const kidFromName = /^(r|ryuji)$/i.test(text) ? 'ryuji' : 'miki';
+      const pend = await popPending(SUPABASE_URL, SUPABASE_KEY, idStr);
+      if (!pend) {
+        await reply(chatId, 'Send the task or exam first, then reply R or M.');
+        return res.status(200).json({ ok: true, note: 'name only, no pending' });
+      }
+      forcedKid = kidFromName;
+      text = pend;
+    }
+
     const bkk = new Date(Date.now() + 7 * 3600 * 1000);
     const todayISO = bkk.toISOString().slice(0, 10);
     const dowName = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][bkk.getUTCDay()];
@@ -138,7 +150,8 @@ Rules:
           '🙋 ใครเอ่ย? ระบุ *Ryuji* หรือ *Miki* ในข้อความด้วย\n' +
           '_Whose task? Start the message with Ryuji or Miki._\n' +
           'e.g. `Ryuji math worksheet p.5 due Friday`');
-        return res.status(200).json({ ok: false, reason: 'kid not specified' });
+        await setPending(SUPABASE_URL, SUPABASE_KEY, idStr, text);
+        return res.status(200).json({ ok: false, reason: 'kid not specified, pending stored' });
       }
       kid_id = parsed.kid_id;
     }
@@ -259,6 +272,24 @@ async function parseMessage(prompt, { ANTHROPIC_KEY, GROQ_KEY }) {
     } catch (e) { /* give up */ }
   }
   return null;
+}
+
+async function setPending(url, key, chatId, message) {
+  try {
+    await fetch(url + '/rest/v1/pending_intake?chat_id=eq.' + encodeURIComponent(chatId), { method: 'DELETE', headers: { 'apikey': key, 'Authorization': 'Bearer ' + key } });
+    await fetch(url + '/rest/v1/pending_intake', { method: 'POST', headers: { 'apikey': key, 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, body: JSON.stringify({ chat_id: String(chatId), message: message, updated_at: new Date().toISOString() }) });
+  } catch (e) { /* ignore */ }
+}
+
+async function popPending(url, key, chatId) {
+  try {
+    const r = await fetch(url + '/rest/v1/pending_intake?chat_id=eq.' + encodeURIComponent(chatId) + '&select=message', { headers: { 'apikey': key, 'Authorization': 'Bearer ' + key } });
+    if (!r.ok) return null;
+    const rows = await r.json();
+    if (!rows.length) return null;
+    await fetch(url + '/rest/v1/pending_intake?chat_id=eq.' + encodeURIComponent(chatId), { method: 'DELETE', headers: { 'apikey': key, 'Authorization': 'Bearer ' + key } });
+    return rows[0].message;
+  } catch (e) { return null; }
 }
 
 async function insertExam(url, key, payload) {
