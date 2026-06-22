@@ -201,6 +201,10 @@ input,textarea,select{font-family:inherit}
 .parsed-item-tags{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap}
 .confirm-btn{width:100%;padding:13px;background:var(--primary);color:white;border-radius:var(--r-sm);font-size:0.88rem;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity 0.2s}
 .confirm-btn:disabled{opacity:0.6}
+.btn-clear-parsed{width:100%;padding:10px;background:transparent;color:var(--muted);border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:0.82rem;font-weight:700;margin-top:7px;transition:all 0.15s}
+.btn-clear-parsed:active{background:var(--border)}
+.repeat-pill{display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border:1.5px solid var(--border);border-radius:20px;font-size:0.8rem;font-weight:700;color:var(--muted);background:var(--surface);cursor:pointer;transition:all 0.2s;-webkit-tap-highlight-color:transparent;user-select:none}
+.repeat-pill.active{background:var(--primary-lt,#e0e7ff);border-color:var(--primary);color:var(--primary)}
 
 /* Manual form */
 .manual-form{background:var(--surface);border-radius:var(--r);padding:16px;box-shadow:var(--shadow);margin-bottom:14px}
@@ -704,6 +708,7 @@ input,textarea,select{font-family:inherit}
           <span id="confirm-txt">💾 บันทึกที่เลือก</span>
           <div class="spinner hidden" id="confirm-spinner"></div>
         </button>
+        <button class="btn-clear-parsed" onclick="clearParsedPreview()">✕ ล้างผล / Clear results</button>
       </div>
       <div class="sec-label">✏️ เพิ่มด้วยตนเอง</div>
       <div class="manual-form">
@@ -718,6 +723,10 @@ input,textarea,select{font-family:inherit}
             <button class="type-btn" id="type-exam" onclick="setType('exam')">📅 <span id="type-exam-lbl">Exam</span></button>
             <button class="type-btn" id="type-note" onclick="setType('note')">📝 <span id="type-note-lbl">Note</span></button>
           </div>
+        </div>
+        <div class="form-row mt-2">
+          <label class="form-label">ทำซ้ำ / Repeat</label>
+          <button class="repeat-pill" id="btn-repeat-weekly" onclick="toggleRepeatWeekly(this)">🔁 ทุกสัปดาห์ / Every week</button>
         </div>
         <div class="form-row mt-2">
           <label class="form-label">วันส่ง</label>
@@ -1212,6 +1221,7 @@ let dateFilter   = 'all';
 let todoFilter   = 'pending';
 let searchQuery  = { hw: '', todo: '' };
 let manualType   = 'homework';
+let manualRepeat = false;
 let parsedResults = [];
 let currentImgB64 = null;
 let isSyncing = false;
@@ -1257,6 +1267,7 @@ async function init() {
   scheduleLineCheck();
   document.getElementById('loading-screen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
+  autoResetRecurringTasks();
   renderAll();
   applyLang();
   updateParentStatus();
@@ -1484,13 +1495,14 @@ function taskCardHTML(t) {
   const cardClass = `task-card p-${t.priority||'low'} ${t.is_done?'is-done':''} ${overdue?'overdue':''}`;
   const metaHTML = (chip || overdueTag || dueHTML)
     ? `<div class="task-meta">${chip}${overdueTag}${dueHTML}</div>` : '';
+  const recurBadge = t.recurring_weekly ? ' <span title="Repeats every week" style="font-size:0.78rem;opacity:0.7">🔁</span>' : '';
   return `
   <div class="${cardClass}" id="tc-${t.id}" ondblclick="openEditSheet('${t.id}')">
     <div class="swipe-hint right">✓ เสร็จแล้ว</div>
     <div class="swipe-hint left">🗑 ลบ</div>
     <div class="check-wrap"><div class="check" onclick="toggleTask('${t.id}')">✓</div></div>
     <div class="task-body">
-      <div class="task-title">${escHtml(title)}</div>
+      <div class="task-title">${escHtml(title)}${recurBadge}</div>
       ${metaHTML}
       ${t.image_url ? `<img class="task-photo-thumb" src="${t.image_url}" loading="lazy" onclick="event.stopPropagation();openPhoto('${t.image_url}')" alt="photo">` : ''}
       ${createdStamp(t.created_at)}
@@ -1683,16 +1695,23 @@ async function toggleTask(id) {
   showUndoToast(undoLabel);
   undoTimer = setTimeout(() => { undoStack = null; hideUndoToast(); }, 5000);
 
+  // For recurring weekly tasks: when marking done, record done_at; when undoing, clear it
+  if (t.recurring_weekly) {
+    t.done_at = newVal ? new Date().toISOString() : null;
+  }
   t.is_done = newVal; renderAll();
   attachSwipeListeners();
   if (newVal) checkCelebration();
   if (USE_LOCAL) { saveLocal(); }
   else {
-    const { error } = await sb.from('tasks').update({ is_done: newVal }).eq('id', id);
+    const updatePayload = { is_done: newVal };
+    if (t.recurring_weekly) updatePayload.done_at = t.done_at || null;
+    const { error } = await sb.from('tasks').update(updatePayload).eq('id', id);
     if (error) { t.is_done = !newVal; renderAll(); toast('❌ ซิงค์ไม่ได้'); return; }
   }
   if (newVal) navigator.vibrate && navigator.vibrate(60);
-  toast(newVal ? '✅ เสร็จแล้ว!' : '↩ ยกเลิกเครื่องหมาย');
+  const recurMsg = (newVal && t.recurring_weekly) ? (currentLang==='en' ? ' (resets next week 🔁)' : ' (รีเซ็ตสัปดาห์หน้า 🔁)') : '';
+  toast(newVal ? '✅ เสร็จแล้ว!' + recurMsg : '↩ ยกเลิกเครื่องหมาย');
 }
 
 async function deleteTask(id) {
@@ -1702,6 +1721,45 @@ async function deleteTask(id) {
   const { error } = await sb.from('tasks').delete().eq('id', id);
   if (error) { STATE.tasks = prev; renderAll(); toast('❌ ลบไม่ได้'); return; }
   toast('🗑 ลบงานแล้ว');
+}
+
+function toggleRepeatWeekly(btn) {
+  manualRepeat = !manualRepeat;
+  btn.classList.toggle('active', manualRepeat);
+}
+
+function clearParsedPreview() {
+  parsedResults = [];
+  document.getElementById('parsed-preview').classList.remove('visible');
+  document.getElementById('parsed-list').innerHTML = '';
+  toast(currentLang==='en' ? '🗑 Results cleared' : '🗑 ล้างผลแล้ว');
+}
+
+function autoResetRecurringTasks() {
+  // Find the most recent Monday at midnight local time
+  const now = new Date();
+  const monday = new Date(now);
+  monday.setHours(0,0,0,0);
+  monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+  let changed = false;
+  STATE.tasks.forEach(t => {
+    if (!t.recurring_weekly || !t.is_done) return;
+    const doneAt = t.done_at ? new Date(t.done_at) : null;
+    // Reset if task was completed before the most recent Monday
+    if (doneAt && doneAt < monday) {
+      t.is_done = false;
+      t.done_at = null;
+      // Advance due_date to the upcoming occurrence
+      if (t.due_date) {
+        const d = new Date(t.due_date + 'T12:00:00');
+        while (d < now) d.setDate(d.getDate() + 7);
+        t.due_date = d.toISOString().split('T')[0];
+        t.priority = calcPriority(t.due_date, null);
+      }
+      changed = true;
+    }
+  });
+  if (changed && USE_LOCAL) saveLocal();
 }
 
 async function addManual() {
@@ -1714,6 +1772,7 @@ async function addManual() {
     subject: 'Other', due_date: due, points: null,
     priority: calcPriority(due, null),
     is_done: false, source: 'manual',
+    recurring_weekly: manualRepeat,
     kid_id: currentKid,
     created_at: new Date().toISOString()
   };
@@ -1731,7 +1790,10 @@ async function addManual() {
   }
   document.getElementById('f-title').value  = '';
   document.getElementById('f-due').value    = '';
-  toast('✅ เพิ่มงานแล้ว');
+  manualRepeat = false;
+  const rpBtn = document.getElementById('btn-repeat-weekly');
+  if (rpBtn) rpBtn.classList.remove('active');
+  toast(manualRepeat ? '✅ เพิ่มงาน (ทำซ้ำทุกสัปดาห์)' : '✅ เพิ่มงานแล้ว');
 }
 
 /* ═══════════════════════════════════════
