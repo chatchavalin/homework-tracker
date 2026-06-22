@@ -107,9 +107,11 @@ export default async function handler(req, res) {
 `Today is ${todayISO} (${dowName}) in Bangkok. Parse this homework message into JSON.
 Message: """${text}"""
 Return ONLY a JSON object, no markdown:
-{"kid_id":"ryuji"|"miki"|null,"parsed_title":string,"subject":string|null,"type":"homework"|"todo","due_date":"YYYY-MM-DD"|null,"priority":"high"|"med"|"low","repeat":"weekly"|null,"repeat_dow":0|1|2|3|4|5|6|null}
+{"kid_id":"ryuji"|"miki"|null,"record":"task"|"exam","parsed_title":string,"subject":string|null,"type":"homework"|"todo","due_date":"YYYY-MM-DD"|null,"priority":"high"|"med"|"low","repeat":"weekly"|null,"repeat_dow":0|1|2|3|4|5|6|null}
 Rules:
-- kid_id from the FIRST name in the message: "Ryuji"->ryuji, "Miki"->miki. If NO name is present, kid_id MUST be null (do not guess).
+- kid_id from the FIRST token (case-insensitive): "R" or "Ryuji" -> ryuji; "M" or "Miki" -> miki. If neither and no kid name appears, kid_id MUST be null (do not guess).
+- record: "exam" if the message refers to an exam/test (keywords: exam, pretest, midterm, final, quiz), otherwise "task".
+- Dates written as DD/MM or DD/MM/YYYY are day/month(/year). If the year is missing use the nearest future occurrence. For an exam, due_date is the exam date.
 - parsed_title: the assignment itself, without the name or the due-date/recurrence words. Keep Thai as Thai.
 - Resolve relative dates (today/tomorrow/Friday/พรุ่งนี้/ศุกร์ etc.) to absolute YYYY-MM-DD from today's date. If none, null.
 - repeat: "weekly" if it recurs every week (every week/weekly/ทุกสัปดาห์/ทุกอาทิตย์/every Monday/ทุกวันจันทร์ etc.), else null.
@@ -142,6 +144,16 @@ Rules:
     }
 
     const title  = parsed.parsed_title || text;
+    // Exam -> separate exams table.
+    if (parsed.record === 'exam') {
+      const whoE = kid_id === 'miki' ? 'Miki' : 'Ryuji';
+      const examRow = { id: randomUUID(), kid_id, name: title, exam_date: parsed.due_date || null, created_at: new Date().toISOString() };
+      const ei = await insertExam(SUPABASE_URL, SUPABASE_KEY, examRow);
+      if (!ei.ok) { await reply(chatId, 'Exam save failed. ' + (ei.error || '')); return res.status(200).json({ ok:false, reason:'exam insert failed', detail: ei.error }); }
+      await reply(chatId, 'Exam saved: ' + whoE + ' / ' + title + ' / ' + (examRow.exam_date || '-')); 
+      return res.status(200).json({ ok:true, exam: examRow });
+    }
+
     const repeat = parsed.repeat === 'weekly' ? 'weekly' : null;
     const repeat_dow = (repeat && Number.isInteger(parsed.repeat_dow) &&
                         parsed.repeat_dow >= 0 && parsed.repeat_dow <= 6) ? parsed.repeat_dow : null;
@@ -247,6 +259,15 @@ async function parseMessage(prompt, { ANTHROPIC_KEY, GROQ_KEY }) {
     } catch (e) { /* give up */ }
   }
   return null;
+}
+
+async function insertExam(url, key, payload) {
+  try {
+    const r = await fetch(url + '/rest/v1/exams', { method: 'POST', headers: { 'apikey': key, 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, body: JSON.stringify(payload) });
+    if (r.ok) return { ok: true };
+    const txt = await r.text().catch(() => '');
+    return { ok: false, error: txt.slice(0, 200) };
+  } catch (e) { return { ok: false, error: String(e && e.message || e) }; }
 }
 
 async function insertTask(url, key, payload) {
