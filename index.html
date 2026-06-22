@@ -3280,10 +3280,24 @@ DATE RULES — very important:
 - THAI MONTH ABBREVIATIONS — you MUST recognize these:
   ม.ค.=01 Jan, ก.พ.=02 Feb, มี.ค.=03 Mar, เม.ย.=04 Apr, พ.ค.=05 May, มิ.ย.=06 Jun,
   ก.ค.=07 Jul, ส.ค.=08 Aug, ก.ย.=09 Sep, ต.ค.=10 Oct, พ.ย.=11 Nov, ธ.ค.=12 Dec
+- ALSO recognize SHORT ABBREVIATIONS WITHOUT DOTS (used in printed school calendars/ปฏิทิน):
+  มค=01 Jan, กพ=02 Feb, มีค=03 Mar, เมย=04 Apr, พค=05 May, มิย=06 Jun,
+  กค=07 Jul, สค=08 Aug, กย=09 Sep, ตค=10 Oct, พย=11 Nov, ธค=12 Dec
+- DATE RANGES in calendars: "20-24 กค" = July 20-24 → start: ${yyyy}-07-20, end: ${yyyy}-07-24.
+  Pattern "DD1-DD2 MONTH" means same-month range. "29 กย - 6 ตค" = start: ${yyyy}-09-29, end: ${yyyy}-10-06.
 - Example: "พ. 17 มิ.ย. 69" = Wednesday 17 June 2569 BE = 2026-06-17. The leading จ./อ./พ./พฤ./ศ./ส./อา. is the weekday, ignore it for the date.
 - TIME: if a time or time range is written (e.g. "07.00-08.10 น."), include it in parsed_title, like "Rehearsal (07:00-08:10)".
 - Always output due_date/date as YYYY-MM-DD in CE year (not Buddhist).
 - NEVER leave due_date null when a Thai date like "17 มิ.ย. 69" appears in the text — parse it.
+
+ACADEMIC CALENDAR (ปฏิทิน) — if image is a school term calendar:
+- Scan EVERY row exhaustively. Do NOT stop after 3 items; there may be 5-10+ events.
+- Output one record per distinct calendar entry.
+- สอบมิดเทอม midterm exam period: record_type event, type exam
+- สอบปลายภาค final exam period: record_type event, type exam
+- ปิดเทอม semester break: record_type event, type break
+- เปิดเทอม semester start: record_type event, type event
+- National or school holidays: record_type event, type holiday
 
 For each TASK return JSON with:
 - record_type: "task"
@@ -3298,7 +3312,7 @@ For each TASK return JSON with:
 For each SCHOOL EVENT (holidays, ceremonies, breaks, special days, uniform changes, competitions) return:
 - record_type: "event"
 - name: event name (Thai/English as written)
-- type: "holiday" | "break" | "event" | "uniform" | "competition"
+- type: "holiday" | "break" | "exam" | "event" | "uniform" | "competition"
 - date: YYYY-MM-DD (apply date rules above, single day) or null
 - start: YYYY-MM-DD (if range) or null
 - end: YYYY-MM-DD (if range) or null
