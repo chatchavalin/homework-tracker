@@ -50,8 +50,8 @@ input,textarea,select{font-family:inherit}
 .header{background:#1b7a4e;color:white;padding:14px 18px 12px;flex-shrink:0}
 .header-top{display:flex;align-items:center;justify-content:space-between}
 .header h1{font-family:'Caveat',cursive;font-size:1.55rem;font-weight:700}
-.header-date{font-size:0.72rem;opacity:0.6;font-weight:500;margin-top:1px}
 .header-avatar{width:28px;height:28px;border-radius:50%;background:#145c38;display:flex;align-items:center;justify-content:center;font-size:10px;color:#7ae6b0;font-weight:500;flex-shrink:0}
+.header-date{font-size:0.72rem;opacity:0.6;font-weight:500;margin-top:1px}
 .hdr-btns{display:flex;gap:6px}
 .hdr-btn{background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;color:white;font-size:0.68rem;font-weight:700;padding:5px 9px;letter-spacing:0.02em;transition:background 0.15s}
 .hdr-btn:hover{background:rgba(255,255,255,0.2)}
@@ -61,7 +61,7 @@ input,textarea,select{font-family:inherit}
 
 /* Stats */
 .stats-strip{display:flex;gap:6px;margin-top:12px}
-.stat-pill{flex:1;background:rgba(255,255,255,0.12);border-radius:8px;padding:6px 0;text-align:center;cursor:pointer;transition:background 0.15s,transform 0.1s}
+.stat-pill{flex:1;background:rgba(255,255,255,0.12);border-radius:8px;padding:7px 6px;text-align:center;cursor:pointer;transition:background 0.15s,transform 0.1s}
 .stat-pill:hover{background:rgba(255,255,255,0.2)}
 .stat-pill:active{transform:scale(0.95)}
 .stat-pill .n{font-size:1.2rem;font-weight:800;line-height:1}
@@ -511,14 +511,6 @@ input,textarea,select{font-family:inherit}
 .exam-strip-label{opacity:0.7;font-size:0.68rem;white-space:nowrap}
 .exam-strip-none{background:#f0fdf4;color:var(--muted);padding:6px 16px;font-size:0.72rem;font-weight:600;text-align:center;cursor:pointer;flex-shrink:0}
 
-/* ── OPTION A EXAM BANNER ────────────── */
-.a-exam-banner{background:#145c38;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;flex-shrink:0}
-.a-exam-banner:active{opacity:0.85}
-.a-exam-banner-left .a-exam-name{font-size:12px;font-weight:500;color:#7ae6b0}
-.a-exam-banner-left .a-exam-sub{font-size:9px;color:rgba(255,255,255,0.5);margin-top:1px}
-.a-exam-banner-right{text-align:right}
-.a-exam-banner-right .a-exam-days{font-size:20px;font-weight:500;color:#7ae6b0}
-.a-exam-banner-right .a-exam-sub{font-size:9px;color:rgba(255,255,255,0.5);margin-top:1px}
 /* ── EXAM STRIP MULTI-CARD ────────────── */
 .exam-strip-scroll{background:linear-gradient(135deg,#14532d,#166534);display:flex;gap:10px;padding:10px 14px;overflow-x:auto;-webkit-overflow-scrolling:touch;flex-shrink:0}
 .exam-strip-scroll::-webkit-scrollbar{display:none}
@@ -617,16 +609,24 @@ input,textarea,select{font-family:inherit}
 .task-meta{margin-top:6px;gap:6px}
 .type-chip{font-size:0.62rem;font-weight:800;padding:2px 8px;border-radius:6px;letter-spacing:.02em;text-transform:uppercase}
 .chip-exam{background:#fff3e0;color:#e65100}
-.task-card.type-exam-card{border-left:2.5px solid #e07b30!important}
 .chip-note{background:#ede9fe;color:#5b21b6}
 .due-chip{font-size:0.68rem;font-weight:600}
-.sec-label{font-size:10px;font-weight:500;letter-spacing:.07em;color:#999;margin:16px 0 8px 2px}
+.sec-label{margin:16px 0 8px 2px}
 .type-toggle.three .type-btn,.fab-type-toggle.three .fab-type-btn{flex:1}
 .img-thumbs{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 0}
 .img-thumb{position:relative;width:72px;height:72px;border-radius:10px;overflow:hidden;border:1px solid var(--border)}
 .img-thumb img{width:100%;height:100%;object-fit:cover;display:block}
 .img-thumb-x{position:absolute;top:2px;right:2px;width:18px;height:18px;border:none;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font-size:.6rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .up-btn.add-more{width:100%;margin-top:10px;background:var(--surface);color:var(--primary-dk);border:1.5px dashed var(--primary);border-radius:12px;padding:10px;font-weight:700}
+
+.hdr-avatar{width:28px;height:28px;border-radius:50%;background:#145c38;display:flex;align-items:center;justify-content:center;font-size:10px;color:#7ae6b0;font-weight:500;flex-shrink:0;margin-left:4px}
+.a-exam-banner{background:#145c38;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;flex-shrink:0}
+.a-exam-banner:active{opacity:0.85}
+.a-exam-banner-left .a-exam-name{font-size:12px;font-weight:500;color:#7ae6b0}
+.a-exam-banner-left .a-exam-sub{font-size:9px;color:rgba(255,255,255,0.5);margin-top:1px}
+.a-exam-banner-right{text-align:right}
+.a-exam-banner-right .a-exam-days{font-size:20px;font-weight:500;color:#7ae6b0}
+.a-exam-banner-right .a-exam-sub{font-size:9px;color:rgba(255,255,255,0.5);margin-top:1px}
 </style>
 </head>
 <body>
@@ -644,7 +644,7 @@ input,textarea,select{font-family:inherit}
   <!-- HEADER -->
   <div class="header" onclick="document.querySelector('.content').scrollTop=0" style="cursor:pointer">
     <div class="header-top">
-      <div style="flex:1">
+      <div>
         <h1 id="app-title">📚 Homework</h1>
         <div class="header-date" id="hdr-date"></div>
       </div>
@@ -665,11 +665,11 @@ input,textarea,select{font-family:inherit}
       <div class="stat-pill done"    onclick="statPillClick('done')" title="Show done"><div class="n" id="s-done">0</div><div class="l" id="sl-done">เสร็จ</div></div>
       <div class="stat-pill"         onclick="statPillClick('all')" title="Show all" style="background:rgba(255,255,255,0.1)"><div class="n" id="s-total" style="color:white">0</div><div class="l" id="sl-total">ทั้งหมด</div></div>
     </div>
-  </div>
-  <div class="sync-bar" id="sync-bar"></div>
-  <!-- Option A exam banner + legacy strip -->
+    <div class="sync-bar" id="sync-bar"></div>
   <div id="exam-banner-wrap"></div>
   <div id="exam-strip-wrap" style="display:none"></div>
+  <!-- Exam countdown strip -->
+  <div id="exam-strip-wrap" onclick="showTab('exam')"></div>
 
   <!-- CONTENT -->
   <div class="content">
@@ -1519,7 +1519,7 @@ function taskCardHTML(t) {
   const overdueTag = overdue ? `<span class="overdue-badge">เกินกำหนด!</span>` : '';
   const title = cleanTitle(t.parsed_title || t.original_text);
   const chip = typeChip(t.type);
-  const cardClass = `task-card p-${t.priority||'low'} ${t.is_done?'is-done':''} ${overdue?'overdue':''} ${t.type==='exam'?'type-exam-card':''}`;
+  const cardClass = `task-card p-${t.priority||'low'} ${t.is_done?'is-done':''} ${overdue?'overdue':''}`;
   const metaHTML = (chip || overdueTag || dueHTML)
     ? `<div class="task-meta">${chip}${overdueTag}${dueHTML}</div>` : '';
   const recurBadge = t.recurring_weekly ? ' <span title="Repeats every week" style="font-size:0.78rem;opacity:0.7">🔁</span>' : '';
@@ -3520,11 +3520,13 @@ function cardAttachPhoto(taskId) {
 /* ═══════════════════════════════════════
    EXAM COUNTDOWN STRIP
 ═══════════════════════════════════════ */
+/* ═══════════════════════════════════════
+   EXAM COUNTDOWN BANNER (Option A)
+═══════════════════════════════════════ */
 function renderExamBanner() {
   const wrap = document.getElementById('exam-banner-wrap');
   if (!wrap) return;
 
-  // Collect all upcoming exams (same logic as renderExamStrip)
   const examItems = STATE.exams
     .filter(e => e.exam_date)
     .map(e => {
@@ -3945,4 +3947,204 @@ function renderRightNow() {
   </div>`;
 }
 
-/* ═════════════════�
+/* ═══════════════════════════════════════
+   OVERDUE DETECTION
+═══════════════════════════════════════ */
+function isOverdue(task) {
+  if (!task.due_date || task.is_done) return false;
+  return diffD(parseD(task.due_date)) < 0;
+}
+
+/* ═══════════════════════════════════════
+   SWIPE TO COMPLETE / DELETE
+═══════════════════════════════════════ */
+function addSwipeListeners(el, taskId) {
+  let startX = 0, startY = 0, dx = 0;
+  let swiping = false;
+
+  el.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    dx = 0; swiping = false;
+  }, { passive: true });
+
+  el.addEventListener('touchmove', e => {
+    dx = e.touches[0].clientX - startX;
+    const dy = Math.abs(e.touches[0].clientY - startY);
+    if (Math.abs(dx) < 8 && !swiping) return;
+    if (dy > Math.abs(dx) && !swiping) return; // vertical scroll
+    swiping = true;
+    const capped = Math.max(-100, Math.min(100, dx));
+    el.style.transform = `translateX(${capped}px)`;
+    el.style.transition = 'none';
+    // Show hints
+    const rHint = el.querySelector('.swipe-hint.right');
+    const lHint = el.querySelector('.swipe-hint.left');
+    if (rHint) rHint.style.opacity = dx > 20 ? Math.min(1, (dx-20)/60) : 0;
+    if (lHint) lHint.style.opacity = dx < -20 ? Math.min(1, (-dx-20)/60) : 0;
+  }, { passive: true });
+
+  el.addEventListener('touchend', () => {
+    el.style.transition = 'transform 0.3s ease';
+    el.style.transform = 'translateX(0)';
+    const rHint = el.querySelector('.swipe-hint.right');
+    const lHint = el.querySelector('.swipe-hint.left');
+    if (rHint) rHint.style.opacity = 0;
+    if (lHint) lHint.style.opacity = 0;
+    if (dx > 55) { toggleTask(taskId); navigator.vibrate && navigator.vibrate(50); }
+    if (dx < -55) { softDeleteTask(taskId); navigator.vibrate && navigator.vibrate([50,30,50]); }
+    swiping = false;
+  });
+}
+
+/* ═══════════════════════════════════════
+   UNDO DELETE
+═══════════════════════════════════════ */
+let undoStack = null;  // { action:'delete'|'complete'|'uncomplete', task, prevDone }
+let undoTimer = null;
+
+function softDeleteTask(id) {
+  const task = STATE.tasks.find(x => x.id === id);
+  if (!task) return;
+  undoStack = { action: 'delete', task: { ...task } };
+  STATE.tasks = STATE.tasks.filter(x => x.id !== id);
+  renderAll();
+  const label = currentLang === 'en' ? `Deleted "${task.parsed_title.slice(0,25)}"` : `ลบ "${task.parsed_title.slice(0,20)}" แล้ว`;
+  showUndoToast(label);
+  undoTimer = setTimeout(() => commitDelete(id), 5000);
+}
+
+async function commitDelete(id) {
+  undoStack = null;
+  if (USE_LOCAL) saveLocal();
+  else await sb.from('tasks').delete().eq('id', id);
+}
+
+async function undoDelete() {
+  if (!undoStack) return;
+  clearTimeout(undoTimer);
+  const { action, task, prevDone } = undoStack;
+
+  if (action === 'delete') {
+    STATE.tasks.unshift(task);
+    if (USE_LOCAL) saveLocal();
+    else await sb.from('tasks').insert(task);
+    toast(currentLang === 'en' ? '↩ Task restored' : '↩ คืนงานแล้ว');
+
+  } else if (action === 'complete' || action === 'uncomplete') {
+    const t = STATE.tasks.find(x => x.id === task.id);
+    if (t) {
+      t.is_done = prevDone;
+      if (USE_LOCAL) saveLocal();
+      else await sb.from('tasks').update({ is_done: prevDone }).eq('id', task.id);
+    }
+    toast(currentLang === 'en' ? '↩ Undone' : '↩ ยกเลิกแล้ว');
+  }
+
+  undoStack = null;
+  hideUndoToast();
+  renderAll();
+}
+
+let _undoTimer2 = null;
+function showUndoToast(msg) {
+  const el = document.getElementById('undo-toast');
+  document.getElementById('undo-msg').textContent = msg;
+  el.classList.add('show');
+  clearTimeout(_undoTimer2);
+  _undoTimer2 = setTimeout(hideUndoToast, 5200);
+}
+function hideUndoToast() {
+  document.getElementById('undo-toast').classList.remove('show');
+}
+
+/* ═══════════════════════════════════════
+   CELEBRATION
+═══════════════════════════════════════ */
+let lastTodayDone = 0;
+
+function checkCelebration() {
+  const todayTasks = STATE.tasks.filter(t =>
+    t.type === 'homework' &&
+    t.due_date && diffD(parseD(t.due_date)) === 0
+  );
+  if (!todayTasks.length) return;
+  const doneNow = todayTasks.filter(t => t.is_done).length;
+  const total   = todayTasks.length;
+  if (doneNow === total && doneNow > lastTodayDone) {
+    lastTodayDone = doneNow;
+    setTimeout(() => showCelebration(total), 400);
+  }
+  lastTodayDone = doneNow;
+}
+
+function showCelebration(count) {
+  const msgs = [
+    ['🌟','หนูเก่งมาก!','ทำการบ้านวันนี้ครบแล้ว!','⭐⭐⭐'],
+    ['🏆','ยอดเยี่ยม!','ทำสำเร็จทุกชิ้นเลย!','🏆🏆🏆'],
+    ['🎉','สุดยอด!','วันนี้ขยันมากเลย!','⭐⭐⭐⭐⭐'],
+  ];
+  const m = msgs[Math.floor(Math.random() * msgs.length)];
+  document.getElementById('cel-emoji').textContent  = m[0];
+  document.getElementById('cel-title').textContent  = m[1];
+  document.getElementById('cel-sub').textContent    = m[2];
+  document.getElementById('cel-stars').textContent  = m[3];
+  document.getElementById('celebration').classList.add('show');
+  spawnConfetti();
+  navigator.vibrate && navigator.vibrate([100, 50, 100, 50, 200]);
+}
+
+function closeCelebration() {
+  document.getElementById('celebration').classList.remove('show');
+}
+
+function spawnConfetti() {
+  const colors = ['#22c55e','#4ade80','#fbbf24','#f87171','#60a5fa','#e879f9','#34d399'];
+  for (let i = 0; i < 60; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.cssText = `
+      left:${Math.random()*100}vw;
+      top:-10px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      width:${6+Math.random()*8}px;
+      height:${6+Math.random()*8}px;
+      animation-delay:${Math.random()*1}s;
+      animation-duration:${2+Math.random()*1.5}s;
+      border-radius:${Math.random()>0.5?'50%':'2px'};
+    `;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 4000);
+  }
+}
+
+/* ═══════════════════════════════════════
+   INSTALL BANNER
+═══════════════════════════════════════ */
+function renderInstallBanner() {
+  const wrap = document.getElementById('install-wrap');
+  if (!wrap) return;
+  if (localStorage.getItem('ht_install_dismissed')) { wrap.innerHTML = ''; return; }
+  const isStandalone = window.matchMedia('(display-mode:standalone)').matches || window.navigator.standalone;
+  if (isStandalone) { wrap.innerHTML = ''; return; }
+  wrap.innerHTML = `
+  <div class="install-banner">
+    <span class="install-icon">📲</span>
+    <span>${t().installMsg}</span>
+    <button class="install-close" onclick="dismissInstall()">✕</button>
+  </div>`;
+}
+function dismissInstall() {
+  localStorage.setItem('ht_install_dismissed','1');
+  const wrap = document.getElementById('install-wrap');
+  if (wrap) wrap.innerHTML = '';
+}
+
+/* ═══════════════════════════════════════
+   START
+═══════════════════════════════════════ */
+init();
+</script>
+</body>
+</html>
+
