@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Homework Tracker - 5 UI Mockups</title>
+<title>Homework Tracker — 5 UI Mockups</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -15,6 +15,10 @@
   .phone-label { font-size: 12px; color: #555; margin-bottom: 6px; font-weight: 500; letter-spacing: .03em; }
   .opt-tag { font-size: 11px; background: #e8e8e8; border-radius: 6px; padding: 2px 8px; color: #666; display: inline-block; margin-bottom: 8px; }
   .phone { width: 340px; border-radius: 24px; border: 1px solid #ccc; overflow: hidden; background: #fff; box-shadow: 0 2px 16px rgba(0,0,0,0.10); }
+  .pick-btn { display: inline-block; margin-top: 10px; font-size: 12px; padding: 6px 16px; border-radius: 8px; border: 1px solid #ccc; background: #fff; color: #222; cursor: pointer; text-decoration: none; }
+  .pick-btn:hover { background: #f5f5f5; }
+
+  /* A */
   .a-header { background: #1b7a4e; padding: 14px 16px 10px; color: #fff; }
   .a-name { font-size: 15px; font-weight: 500; }
   .a-date { font-size: 11px; opacity: .7; margin-top: 1px; }
@@ -33,6 +37,8 @@
   .a-task-name { font-size: 13px; color: #222; flex: 1; }
   .a-due { font-size: 10px; color: #e07b30; }
   .a-task-exam { border-left: 2.5px solid #e07b30; }
+
+  /* B */
   .b-top { padding: 14px 16px 12px; border-bottom: 0.5px solid #eee; }
   .b-greeting { font-size: 13px; color: #666; }
   .b-name { font-size: 17px; font-weight: 500; color: #111; }
@@ -48,6 +54,8 @@
   .b-exam-pill { background: #fff3e0; color: #a05c00; font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 500; white-space: nowrap; }
   .b-days { font-size: 10px; color: #888; }
   .b-add { margin: 10px 0 14px; padding: 8px; border-radius: 10px; border: 0.5px dashed #ccc; text-align: center; font-size: 12px; color: #999; }
+
+  /* C */
   .c-top { background: #1b7a4e; padding: 12px 16px 0; }
   .c-title { font-size: 15px; font-weight: 500; color: #fff; margin-bottom: 2px; }
   .c-date { font-size: 10px; color: rgba(255,255,255,.6); }
@@ -60,6 +68,8 @@
   .c-exam-name { font-size: 13px; font-weight: 500; color: #111; }
   .c-exam-meta { font-size: 10px; color: #888; margin-top: 2px; }
   .c-days-badge { background: #e8f5e9; color: #1b7a4e; font-size: 12px; font-weight: 500; padding: 4px 8px; border-radius: 8px; }
+
+  /* D */
   .d-top { padding: 14px 16px; background: #f8f8f8; border-bottom: 0.5px solid #eee; }
   .d-row1 { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
   .d-avatar { width: 30px; height: 30px; border-radius: 50%; background: #1b7a4e; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #fff; font-weight: 500; flex-shrink: 0; }
@@ -79,6 +89,8 @@
   .d-cb2 { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid #ccc; flex-shrink: 0; margin-top: 1px; }
   .d-task-name { font-size: 13px; color: #111; margin-bottom: 2px; }
   .d-in { font-size: 10px; color: #e07b30; }
+
+  /* E */
   .e-top { padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 0.5px solid #eee; }
   .e-name { font-size: 15px; font-weight: 500; color: #111; }
   .e-badge { background: #e8f5e9; color: #1b5e3a; font-size: 10px; padding: 3px 8px; border-radius: 6px; font-weight: 500; }
@@ -97,11 +109,14 @@
 </style>
 </head>
 <body>
-<h1>Homework Tracker - 5 UI Mockups</h1>
+<h1>Homework Tracker — 5 UI Mockups</h1>
 <p class="subtitle">Pick a design direction and reply which one you want built.</p>
+
 <div class="grid">
+
+<!-- OPTION A -->
 <div class="col">
-  <div class="phone-label">Option A - Focused</div>
+  <div class="phone-label">Option A — Focused</div>
   <div class="opt-tag">keeps green brand / simplified header</div>
   <div class="phone">
     <div class="a-header">
@@ -116,20 +131,34 @@
       </div>
     </div>
     <div class="a-exam">
-      <div><div class="a-exam-name">Math Quiz 1 (p.1-115)</div><div class="a-exam-sub">next up - PDS Pretest in 159d</div></div>
+      <div><div class="a-exam-name">Math Quiz 1 (p.1–115)</div><div class="a-exam-sub">next up · PDS Pretest in 159d</div></div>
       <div style="text-align:right"><div class="a-exam-days">6</div><div class="a-exam-sub">days</div></div>
     </div>
     <div class="a-body">
       <div class="a-section">This week</div>
-      <div class="a-task a-task-exam"><div class="a-circle" style="border-color:#e07b30"></div><div class="a-task-name">สอบย่อยอ่านจับใจความ</div><div class="a-due">7d</div></div>
-      <div class="a-task"><div class="a-circle"></div><div class="a-task-name">สอบย่อยหลักภาษา</div><div class="a-due">1 Jul</div></div>
-      <div class="a-task"><div class="a-circle"></div><div class="a-task-name">Meal box</div><div style="font-size:10px;color:#aaa">weekly</div></div>
+      <div class="a-task a-task-exam">
+        <div class="a-circle" style="border-color:#e07b30"></div>
+        <div class="a-task-name">สอบย่อยอ่านจับใจความ</div>
+        <div class="a-due">7d</div>
+      </div>
+      <div class="a-task">
+        <div class="a-circle"></div>
+        <div class="a-task-name">สอบย่อยหลักภาษา</div>
+        <div class="a-due">1 Jul</div>
+      </div>
+      <div class="a-task">
+        <div class="a-circle"></div>
+        <div class="a-task-name">Meal box</div>
+        <div style="font-size:10px;color:#aaa">weekly</div>
+      </div>
       <div style="margin-top:10px;text-align:center"><div style="font-size:11px;color:#aaa">+ 6 more tasks</div></div>
     </div>
   </div>
 </div>
+
+<!-- OPTION B -->
 <div class="col">
-  <div class="phone-label">Option B - Feed</div>
+  <div class="phone-label">Option B — Feed</div>
   <div class="opt-tag">no header complexity / one stream</div>
   <div class="phone">
     <div class="b-top">
@@ -137,11 +166,14 @@
         <div><div class="b-greeting">Good morning</div><div class="b-name">Ryuji</div></div>
         <div style="width:32px;height:32px;border-radius:50%;background:#e8f5e9;display:flex;align-items:center;justify-content:center;font-size:12px;color:#1b5e3a;font-weight:500">R</div>
       </div>
-      <div class="b-prog"><div class="b-bar-wrap"><div class="b-bar" style="width:86%"></div></div><span class="b-pct">86%</span></div>
+      <div class="b-prog">
+        <div class="b-bar-wrap"><div class="b-bar" style="width:86%"></div></div>
+        <span class="b-pct">86%</span>
+      </div>
     </div>
     <div class="b-feed">
       <div class="b-sep">EXAMS</div>
-      <div class="b-item"><div class="b-dot" style="background:#e07b30"></div><div class="b-item-name">Math Quiz 1 (p.1-115)</div><span class="b-exam-pill">in 6d</span></div>
+      <div class="b-item"><div class="b-dot" style="background:#e07b30"></div><div class="b-item-name">Math Quiz 1 (p.1–115)</div><span class="b-exam-pill">in 6d</span></div>
       <div class="b-item"><div class="b-dot" style="background:#e07b30"></div><div class="b-item-name">สอบย่อยอ่านจับใจความ</div><span class="b-exam-pill">in 7d</span></div>
       <div class="b-sep">UPCOMING</div>
       <div class="b-item"><div class="b-dot" style="background:#1b7a4e"></div><div class="b-item-name">สอบย่อยหลักภาษา</div><span class="b-days">1 Jul</span></div>
@@ -152,8 +184,10 @@
     </div>
   </div>
 </div>
+
+<!-- OPTION C -->
 <div class="col">
-  <div class="phone-label">Option C - Tabs</div>
+  <div class="phone-label">Option C — Tabs</div>
   <div class="opt-tag">tasks / exams / events fully separated</div>
   <div class="phone">
     <div class="c-top">
@@ -168,18 +202,23 @@
       </div>
     </div>
     <div class="c-body">
-      <div class="c-exam-card"><div><div class="c-exam-name">Math Quiz 1</div><div class="c-exam-meta">Pages 1-115</div></div><div class="c-days-badge">6d</div></div>
+      <div class="c-exam-card"><div><div class="c-exam-name">Math Quiz 1</div><div class="c-exam-meta">Pages 1–115</div></div><div class="c-days-badge">6d</div></div>
       <div class="c-exam-card"><div><div class="c-exam-name">สอบย่อยอ่านจับใจความ</div><div class="c-exam-meta">Thai reading</div></div><div class="c-days-badge">7d</div></div>
       <div class="c-exam-card"><div><div class="c-exam-name">PDS Pretest</div><div class="c-exam-meta">0/0 topics studied</div></div><div class="c-days-badge" style="background:#e8f5e9;color:#1b5e3a">159d</div></div>
     </div>
   </div>
 </div>
+
+<!-- OPTION D -->
 <div class="col">
-  <div class="phone-label">Option D - Dashboard</div>
+  <div class="phone-label">Option D — Dashboard</div>
   <div class="opt-tag">metric chips + horizontal exam row</div>
   <div class="phone">
     <div class="d-top">
-      <div class="d-row1"><div class="d-avatar">R</div><div><div class="d-who">Ryuji's Homework</div><div class="d-date2">Tuesday 23 Jun - 86% done</div></div></div>
+      <div class="d-row1">
+        <div class="d-avatar">R</div>
+        <div><div class="d-who">Ryuji's Homework</div><div class="d-date2">Tuesday 23 Jun · 86% done</div></div>
+      </div>
       <div class="d-grid">
         <div class="d-metric"><div class="d-mn" style="color:#e07b30">0</div><div class="d-ml">URGENT</div></div>
         <div class="d-metric"><div class="d-mn" style="color:#f0b429">9</div><div class="d-ml">PENDING</div></div>
@@ -198,18 +237,20 @@
     </div>
   </div>
 </div>
+
+<!-- OPTION E -->
 <div class="col">
-  <div class="phone-label">Option E - Bare list</div>
+  <div class="phone-label">Option E — Bare list</div>
   <div class="opt-tag">maximum simplicity / smart grouped list</div>
   <div class="phone">
     <div style="height:3px;background:#eee"><div style="height:3px;background:#1b7a4e;width:86%"></div></div>
     <div class="e-top">
-      <div><div class="e-name">Ryuji</div><div style="font-size:10px;color:#888">Tue 23 Jun - 57/66 done</div></div>
+      <div><div class="e-name">Ryuji</div><div style="font-size:10px;color:#888">Tue 23 Jun · 57/66 done</div></div>
       <div class="e-badge">9 pending</div>
     </div>
     <div>
       <div class="e-group">THIS WEEK</div>
-      <div class="e-item"><div class="e-dot2" style="background:#e07b30"></div><div class="e-item-name">Math Quiz 1 (p.1-115)</div><div class="e-right"><div class="e-urgency">6 days</div><div class="e-exam-badge">EXAM</div></div></div>
+      <div class="e-item"><div class="e-dot2" style="background:#e07b30"></div><div class="e-item-name">Math Quiz 1 (p.1–115)</div><div class="e-right"><div class="e-urgency">6 days</div><div class="e-exam-badge">EXAM</div></div></div>
       <div class="e-item"><div class="e-dot2" style="background:#e07b30"></div><div class="e-item-name">สอบย่อยอ่านจับใจความ</div><div class="e-right"><div class="e-urgency">7 days</div><div class="e-exam-badge">EXAM</div></div></div>
       <div class="e-item"><div class="e-dot2" style="background:#1b7a4e"></div><div class="e-item-name">สอบย่อยหลักภาษา</div><div class="e-right"><div class="e-days">1 Jul</div></div></div>
       <div class="e-item"><div class="e-dot2" style="background:#bbb"></div><div class="e-item-name">Meal box</div><div class="e-right"><div class="e-days">weekly</div></div></div>
@@ -217,13 +258,14 @@
       <div class="e-item"><div class="e-dot2" style="background:#bbb"></div><div class="e-item-name">PDS Pretest</div><div class="e-right"><div class="e-days">159 days</div><div class="e-exam-badge">EXAM</div></div></div>
     </div>
     <div class="e-bottom-nav">
-      <div class="e-nav-item active"><span class="e-nav-icon">&#9776;</span>tasks</div>
+      <div class="e-nav-item active"><span class="e-nav-icon">☰</span>tasks</div>
       <div class="e-nav-item"><span class="e-nav-icon">+</span>add</div>
-      <div class="e-nav-item"><span class="e-nav-icon">&#9998;</span>notes</div>
-      <div class="e-nav-item"><span class="e-nav-icon">&#9881;</span>settings</div>
+      <div class="e-nav-item"><span class="e-nav-icon">✎</span>notes</div>
+      <div class="e-nav-item"><span class="e-nav-icon">⚙</span>settings</div>
     </div>
   </div>
 </div>
+
 </div>
 </body>
-  </html>
+</html>
