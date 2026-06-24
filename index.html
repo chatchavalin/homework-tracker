@@ -888,6 +888,13 @@ input,textarea,select{font-family:inherit}
         <button class="settings-btn success" onclick="retrySupabase()" id="settings-retry-btn">🔄 ลองเชื่อมต่อใหม่</button>
       </div>
 
+      <!-- App update -->
+      <div class="settings-card">
+        <div class="settings-title" id="settings-update-title">🔄 อัปเดตแอป</div>
+        <div class="info-box" style="margin-bottom:10px" id="settings-update-info">กดเพื่อโหลดโค้ดล่าสุดจาก server — ใช้เมื่อมีการอัปเดตใหม่</div>
+        <button class="settings-btn success" onclick="forceUpdateApp()" id="settings-update-btn">⬆️ โหลดเวอร์ชันล่าสุด</button>
+      </div>
+
       <!-- Danger zone -->
       <div class="settings-card">
         <div class="settings-title" id="settings-danger-title">⚠️ จัดการข้อมูล</div>
@@ -3737,6 +3744,17 @@ function updateOfflineChip() {
 /* ═══════════════════════════════════════
    RETRY SUPABASE
 ═══════════════════════════════════════ */
+function forceUpdateApp() {
+  const btn = document.getElementById('settings-update-btn');
+  if (btn) { btn.textContent = '⏳ กำลังโหลด...'; btn.disabled = true; }
+  // Clear caches if available, then hard reload
+  if ('caches' in window) {
+    caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).finally(() => location.reload(true));
+  } else {
+    location.reload(true);
+  }
+}
+
 async function retrySupabase() {
   toast('🔄 กำลังเชื่อมต่อ Supabase...');
   try {
