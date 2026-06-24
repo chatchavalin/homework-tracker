@@ -654,9 +654,7 @@ input,textarea,select{font-family:inherit}
         <div id="kid-switcher" style="position:relative;display:flex;align-items:center;background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;padding:4px 8px;color:white"></div>
         <span class="offline-chip" id="offline-chip">📴 Offline</span>
         <button class="hdr-btn" id="sync-btn" onclick="showTab('settings')" style="display:none">⚡ Live</button>
-        <button class="hdr-btn" id="hdr-cam-btn" onclick="headerCamera()" style="font-size:0.95rem">📷</button>
         <button class="hdr-btn" id="music-btn" onclick="toggleMusic()">🎵</button>
-        <button class="hdr-btn" id="lang-btn" onclick="toggleLang()">🇬🇧 EN</button>
         <button class="hdr-btn" id="api-btn" onclick="showTab('settings')" style="display:none">🔑 AI</button>
       </div>
     </div>
@@ -2805,7 +2803,8 @@ const LANG = {
   }
 };
 
-let currentLang = localStorage.getItem('ht_lang') || 'en';
+let currentLang = 'th';  // Thai only (language toggle removed)
+localStorage.setItem('ht_lang', 'th');
 const t = () => LANG[currentLang];
 const t_ = () => LANG[currentLang]; // alias for use inside loops where t is a variable
 
