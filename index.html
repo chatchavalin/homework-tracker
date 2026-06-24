@@ -502,6 +502,7 @@ input,textarea,select{font-family:inherit}
 .subj-chip{padding:5px 10px;border-radius:20px;font-size:0.72rem;font-weight:800;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;transition:all 0.15s}
 .subj-chip.active{background:var(--primary);border-color:var(--primary);color:white}
 .edit-save-btn{width:100%;padding:12px;background:var(--primary);color:white;border-radius:12px;font-size:0.9rem;font-weight:800;margin-top:8px}
+.edit-attach-btn{width:100%;padding:10px;background:var(--surface2);color:var(--muted);border:1.5px dashed var(--border);border-radius:12px;font-size:0.85rem;font-weight:700;margin-top:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
 
 /* ── EXAM COUNTDOWN STRIP ────────────── */
 .exam-strip{background:linear-gradient(90deg,#14532d,#166534);color:white;padding:8px 16px;display:flex;align-items:center;gap:10px;font-size:0.78rem;cursor:pointer;transition:opacity 0.2s;flex-shrink:0}
@@ -922,6 +923,7 @@ input,textarea,select{font-family:inherit}
       <button class="type-btn"        id="edit-type-note" onclick="setEditType('note')">📝 <span id="edit-note-lbl">Note</span></button>
     </div>
     <button class="edit-save-btn" onclick="saveEdit()" id="edit-save-btn">💾 บันทึก</button>
+    <button class="edit-attach-btn" id="edit-attach-btn" onclick="cardAttachPhoto(editingTaskId)">📎 <span id="edit-attach-lbl">Attach photo</span></button>
   </div>
 </div>
 
@@ -1531,7 +1533,7 @@ function taskCardHTML(t) {
     <div class="task-body">
       <div class="task-title">${escHtml(title)}${recurBadge}</div>
       ${metaHTML}
-      ${t.image_url ? `<img class="task-photo-thumb" src="${t.image_url}" loading="lazy" onclick="event.stopPropagation();openPhoto('${t.image_url}')" alt="photo" style="width:52px;height:52px;max-width:52px;max-height:52px">` : `<button class="card-attach-btn" onclick="event.stopPropagation();cardAttachPhoto('${t.id}')" title="Attach photo">📎</button>`}
+      ${t.image_url ? `<img class="task-photo-thumb" src="${t.image_url}" loading="lazy" onclick="event.stopPropagation();openPhoto('${t.image_url}')" alt="photo" style="width:52px;height:52px;max-width:52px;max-height:52px">` : ''}
     </div>
     <button class="task-edit-btn" onclick="event.stopPropagation();openEditSheet('${t.id}')" title="Edit">✏️</button>
     <button class="task-delete" onclick="softDeleteTask('${t.id}')">✕</button>
@@ -1587,7 +1589,7 @@ function renderHW() {
   }
 
   const pending = tasks.filter(t=>!t.is_done);
-  const done    = tasks.filter(t=>t.is_done);
+  const done    = tasks.filter(t=>t.is_done).sort((a,b)=>(b.done_at||b.created_at||'').localeCompare(a.done_at||a.created_at||''));
   let html = header + pending.map(taskCardHTML).join('');
   if (done.length) html += `<div class="sec-label">✅ ${t().doneSection} (${done.length})</div>` + done.map(taskCardHTML).join('');
   el.innerHTML = html;
@@ -1724,17 +1726,14 @@ async function toggleTask(id) {
   showUndoToast(undoLabel);
   undoTimer = setTimeout(() => { undoStack = null; hideUndoToast(); }, 5000);
 
-  // For recurring weekly tasks: when marking done, record done_at; when undoing, clear it
-  if (t.recurring_weekly) {
-    t.done_at = newVal ? new Date().toISOString() : null;
-  }
+  // Track done_at for ALL tasks — used to sort done section by most recently completed
+  t.done_at = newVal ? new Date().toISOString() : null;
   t.is_done = newVal; renderAll();
   attachSwipeListeners();
   if (newVal) checkCelebration();
   if (USE_LOCAL) { saveLocal(); }
   else {
-    const updatePayload = { is_done: newVal };
-    if (t.recurring_weekly) updatePayload.done_at = t.done_at || null;
+    const updatePayload = { is_done: newVal, done_at: t.done_at || null };
     const { error } = await sb.from('tasks').update(updatePayload).eq('id', id);
     if (error) { t.is_done = !newVal; renderAll(); toast('❌ ซิงค์ไม่ได้'); return; }
   }
@@ -1951,7 +1950,7 @@ async function parseImage() {
   const spin = document.getElementById('parse-spinner');
   btn.disabled = true; spin.classList.remove('hidden');
 
-  const PROMPT = PARSE_SYSTEM_PROMPT;
+  const PROMPT = getParseSystemPrompt();
 
   parsedResults = [];
   const total = pendingImages.length;
@@ -1967,7 +1966,7 @@ async function parseImage() {
         body: JSON.stringify({
           imageBase64: img.b64,
           mimeType: 'image/jpeg',
-          prompt: PARSE_SYSTEM_PROMPT
+          prompt: getParseSystemPrompt()
         })
       });
       if (!res.ok) {
@@ -2406,7 +2405,7 @@ document.addEventListener('click', e => {
     }
     if (ind) ind.classList.remove('pulling','refreshing');
   }, { passive: true });
-})();
+}
 
 function setDateFilter(f, btn) {
   dateFilter = f;
@@ -3331,7 +3330,7 @@ function renderHolidayBanner() {
 }
 
 /* ── Update AI parse prompt to detect holidays/events ── */
-const PARSE_SYSTEM_PROMPT = (() => {
+function getParseSystemPrompt() {
   const now = new Date();
   const yyyy = now.getFullYear();
   const mm = String(now.getMonth()+1).padStart(2,'0');
@@ -3394,7 +3393,7 @@ ACADEMIC CALENDAR (ปฏิทิน) — if image is a school term calendar:
 For each TASK return JSON with:
 - record_type: "task"
 - original_text: exact text as written (preserve Thai and English exactly)
-- parsed_title: clean concise English summary (max 80 chars)
+- parsed_title: ${currentLang === 'th' ? 'สรุปชื่องานสั้นๆ เป็นภาษาไทย (ห้ามแปลเป็นภาษาอังกฤษ) ไม่เกิน 80 ตัวอักษร' : 'clean concise English summary (max 80 chars)'}
 - type: "homework" or "todo"
 - subject: Math | Thai | English | Science | Social | Chinese | PE | Other
 - due_date: YYYY-MM-DD (apply date rules above), else null
@@ -3575,6 +3574,7 @@ function renderExamBanner() {
 function renderExamStrip() {
   const wrap = document.getElementById('exam-strip-wrap');
   if (!wrap) return;
+  wrap.style.display = 'none'; // replaced by compact exam-banner-wrap
 
   // --- 1. Upcoming dedicated exams (STATE.exams) ---
   const examItems = STATE.exams
