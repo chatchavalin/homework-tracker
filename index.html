@@ -1441,8 +1441,8 @@ function renderHeader() {
   document.getElementById('s-total').textContent   = total;
 
   const pct = total ? Math.round((done/total)*100) : 0;
-  document.getElementById('prog-fill').style.width = pct + '%';
-  document.getElementById('prog-pct').textContent  = pct + '%';
+  const pf = document.getElementById('prog-fill'); if (pf) pf.style.width = pct + '%';
+  const pp = document.getElementById('prog-pct'); if (pp) pp.textContent = pct + '%';
 
   // AI is server-side — hide button, only show if missing key
   const apiBtn = document.getElementById('api-btn');
