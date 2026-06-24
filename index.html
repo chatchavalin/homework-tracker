@@ -2412,7 +2412,7 @@ document.addEventListener('click', e => {
     }
     if (ind) ind.classList.remove('pulling','refreshing');
   }, { passive: true });
-}
+})();
 
 function setDateFilter(f, btn) {
   dateFilter = f;
@@ -3423,7 +3423,7 @@ For GENERAL INFORMATION that is NOT a task or event (score rubrics, grading crit
 - category: "grading" | "schedule" | "rules" | "announcement" | "credentials" | "fees" | "competition" | "other"
 
 Return ONLY a valid JSON array. No markdown, no backticks, no explanation.`;
-})();
+}
 
 /* ═══════════════════════════════════════
    EDIT TASK
