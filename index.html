@@ -723,7 +723,6 @@ input,textarea,select{font-family:inherit}
       <div class="upload-btns">
         <button class="up-btn primary" onclick="document.getElementById('cam-input').click()">📷 ถ่ายรูป</button>
         <button class="up-btn secondary" onclick="document.getElementById('file-input').click()">🖼️ เลือกหลายรูป</button>
-        <button class="up-btn secondary" onclick="document.getElementById('attach-input').click()">📎 แนบไฟล์/PDF</button>
       </div>
       <input type="file" id="cam-input" accept="image/*" capture="environment" class="hidden" onchange="handleImgs(this)">
       <input type="file" id="attach-input" accept="image/*,application/pdf" multiple class="hidden" onchange="handleAttach(this)">
@@ -863,6 +862,10 @@ input,textarea,select{font-family:inherit}
         <button onclick="saveQuickNote()"
           style="margin-top:8px;width:100%;background:#7c3aed;color:#fff;border:none;border-radius:10px;padding:10px;font-size:1rem;font-family:inherit;cursor:pointer">
           💾 บันทึก / Save
+        </button>
+        <button type="button" onclick="document.getElementById('attach-input').click()" aria-label="แนบไฟล์หรือ PDF / Attach file or PDF"
+          style="margin-top:8px;width:100%;background:#faf5ff;color:#5b21b6;border:1.5px solid #c4b5fd;border-radius:10px;padding:10px;font-size:0.95rem;font-family:inherit;cursor:pointer">
+          📎 แนบไฟล์/PDF · Attach
         </button>
       </div>
 
@@ -2595,7 +2598,7 @@ function renderNotes() {
   }
   const CAT_ICONS = { grading:'📊', schedule:'📅', rules:'📋', announcement:'📢', credentials:'🔐', fees:'💰', other:'📝' };
   el.innerHTML = notes.map(n => `
-    <div class="task-card p-low" style="border-left-color:#8b5cf6">
+    <div class="task-card p-low" data-note-id="${n.id}" style="border-left-color:#8b5cf6">
       <div style="font-size:1.2rem;flex-shrink:0;margin-top:2px">${CAT_ICONS[n.category]||'📝'}</div>
       <div class="task-body">
         <div class="task-title">${escHtml(n.parsed_title)}</div>
@@ -2608,6 +2611,7 @@ function renderNotes() {
         ${n.file_url ? `<a class="task-file-chip" href="${n.file_url}" download="${n.file_name||'file'}" target="_blank" rel="noopener" onclick="event.stopPropagation()">📄 ${escHtml(n.file_name||'ไฟล์')}</a>` : ''}
         ${createdStamp(n.created_at)}
       </div>
+      <button class="task-edit" onclick="editNote('${n.id}')" aria-label="แก้ไขโน้ต / Edit note" style="background:none;border:none;color:#7c3aed;font-size:1rem;cursor:pointer;padding:4px;margin-right:2px">✎</button>
       <button class="task-delete" onclick="deleteNote('${n.id}')">✕</button>
     </div>`).join('');
 }
@@ -2640,6 +2644,38 @@ function deleteNote(id) {
   localStorage.setItem('ht_notes', JSON.stringify(all));
   renderNotes();
   toast(currentLang==='en'?'🗑 Note deleted':'🗑 ลบโน้ตแล้ว');
+}
+
+function editNote(id) {
+  const card = document.querySelector('[data-note-id="' + id + '"]');
+  const note = (STATE.notes || []).find(n => n.id === id);
+  if (!card || !note) return;
+  const cur = note.original_text || note.parsed_title || '';
+  card.innerHTML = `
+    <div class="task-body" style="width:100%">
+      <textarea id="edit-note-${id}" rows="3" aria-label="แก้ไขโน้ต / Edit note"
+        style="width:100%;border:1.5px solid #c4b5fd;border-radius:10px;padding:10px;font-family:inherit;font-size:0.95rem;resize:vertical;outline:none;color:#1e1b4b;background:#faf5ff"></textarea>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button onclick="saveNoteEdit('${id}')" style="flex:1;background:#7c3aed;color:#fff;border:none;border-radius:10px;padding:8px;font-size:0.9rem;font-family:inherit;cursor:pointer">💾 ${currentLang === 'en' ? 'Save' : 'บันทึก'}</button>
+        <button onclick="renderNotes()" style="flex:1;background:#f3f4f6;color:#374151;border:none;border-radius:10px;padding:8px;font-size:0.9rem;font-family:inherit;cursor:pointer">✕ ${currentLang === 'en' ? 'Cancel' : 'ยกเลิก'}</button>
+      </div>
+    </div>`;
+  const ta = document.getElementById('edit-note-' + id);
+  if (ta) { ta.value = cur; ta.focus(); }
+}
+
+function saveNoteEdit(id) {
+  const ta = document.getElementById('edit-note-' + id);
+  if (!ta) return;
+  const text = (ta.value || '').trim();
+  if (!text) return toast(currentLang === 'en' ? '✏️ Note cannot be empty' : '✏️ กรุณาพิมพ์โน้ตก่อน');
+  STATE.notes = (STATE.notes || []).map(n => n.id === id ? { ...n, parsed_title: text, original_text: text } : n);
+  const all = JSON.parse(localStorage.getItem('ht_notes') || '[]');
+  let found = false;
+  const upd = all.map(n => { if (n.id === id) { found = true; return { ...n, parsed_title: text, original_text: text }; } return n; });
+  if (found) localStorage.setItem('ht_notes', JSON.stringify(upd));
+  renderNotes();
+  toast(currentLang === 'en' ? '✏️ Note updated' : '✏️ แก้ไขโน้ตแล้ว');
 }
 
 function renderAll() {
