@@ -614,6 +614,16 @@ input,textarea,select{font-family:inherit}
 .due-chip{font-size:0.68rem;font-weight:600}
 .sec-label{margin:16px 0 8px 2px}
 .type-toggle.three .type-btn,.fab-type-toggle.three .fab-type-btn{flex:1}
+.confirm-overlay{position:fixed;inset:0;background:rgba(13,46,26,0.5);z-index:300;display:none;align-items:center;justify-content:center;padding:24px}
+.confirm-overlay.open{display:flex}
+.confirm-box{background:var(--surface);border-radius:18px;padding:22px 20px 18px;width:100%;max-width:340px;box-shadow:0 12px 40px rgba(0,0,0,0.25);text-align:center}
+.confirm-title{font-size:1.05rem;font-weight:800;color:#0d2e1a;margin-bottom:6px}
+.confirm-msg{font-size:0.85rem;color:var(--muted);margin-bottom:18px;word-break:break-word}
+.confirm-actions{display:flex;gap:10px}
+.confirm-actions button{flex:1;padding:11px;border-radius:12px;font-weight:700;font-size:0.85rem;border:none;cursor:pointer}
+.confirm-cancel{background:#e5e7eb;color:#0d2e1a}
+.confirm-ok{background:#dc2626;color:#fff}
+.task-file-chip{display:inline-flex;align-items:center;gap:5px;margin-top:6px;padding:6px 10px;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;font-size:0.78rem;font-weight:600;color:#374151;text-decoration:none;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .img-thumbs{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 0}
 .img-thumb{position:relative;width:72px;height:72px;border-radius:10px;overflow:hidden;border:1px solid var(--border)}
 .img-thumb img{width:100%;height:100%;object-fit:cover;display:block}
@@ -713,8 +723,10 @@ input,textarea,select{font-family:inherit}
       <div class="upload-btns">
         <button class="up-btn primary" onclick="document.getElementById('cam-input').click()">📷 ถ่ายรูป</button>
         <button class="up-btn secondary" onclick="document.getElementById('file-input').click()">🖼️ เลือกหลายรูป</button>
+        <button class="up-btn secondary" onclick="document.getElementById('attach-input').click()">📎 แนบไฟล์/PDF</button>
       </div>
       <input type="file" id="cam-input" accept="image/*" capture="environment" class="hidden" onchange="handleImgs(this)">
+      <input type="file" id="attach-input" accept="image/*,application/pdf" multiple class="hidden" onchange="handleAttach(this)">
       <input type="file" id="file-input" accept="image/*" multiple class="hidden" onchange="handleImgs(this)">
       <div id="img-thumbs" class="img-thumbs"></div>
       <button class="up-btn add-more" id="add-more-btn" style="display:none" onclick="document.getElementById('cam-input').click()">➕ ถ่ายรูปเพิ่ม</button>
@@ -743,7 +755,6 @@ input,textarea,select{font-family:inherit}
           <div class="type-toggle three">
             <button class="type-btn active" id="type-hw" onclick="setType('homework')">📋 <span id="type-hw-lbl">Task</span></button>
             <button class="type-btn" id="type-exam" onclick="setType('exam')">📅 <span id="type-exam-lbl">Exam</span></button>
-            <button class="type-btn" id="type-note" onclick="setType('note')">📝 <span id="type-note-lbl">Note</span></button>
           </div>
         </div>
         <div class="form-row mt-2">
@@ -913,7 +924,17 @@ input,textarea,select{font-family:inherit}
 </div><!-- /app -->
 
 <!-- Edit Sheet -->
-<div class="edit-sheet-overlay" id="edit-overlay" onclick="closeEditSheet(event)">
+<div id="confirm-overlay" class="confirm-overlay" onclick="if(event.target===this)closeConfirm()">
+    <div class="confirm-box">
+      <div class="confirm-title" id="confirm-title">ลบรายการนี้?</div>
+      <div class="confirm-msg" id="confirm-msg"></div>
+      <div class="confirm-actions">
+        <button class="confirm-cancel" onclick="closeConfirm()">ยกเลิก / Cancel</button>
+        <button class="confirm-ok" id="confirm-ok-btn" onclick="runConfirm()">ลบ / Delete</button>
+      </div>
+    </div>
+  </div>
+  <div class="edit-sheet-overlay" id="edit-overlay" onclick="closeEditSheet(event)">
   <div class="edit-sheet">
     <button class="edit-sheet-close" onclick="closeEditSheetDirect()">✕</button>
     <div class="edit-sheet-title" id="edit-sheet-title">✏️ แก้ไขงาน</div>
@@ -925,7 +946,6 @@ input,textarea,select{font-family:inherit}
     <div class="type-toggle three" style="margin-bottom:14px">
       <button class="type-btn active" id="edit-type-hw"   onclick="setEditType('homework')">📋 <span id="edit-hw-lbl">Task</span></button>
       <button class="type-btn"        id="edit-type-exam" onclick="setEditType('exam')">📅 <span id="edit-exam-lbl">Exam</span></button>
-      <button class="type-btn"        id="edit-type-note" onclick="setEditType('note')">📝 <span id="edit-note-lbl">Note</span></button>
     </div>
     <button class="edit-save-btn" onclick="saveEdit()" id="edit-save-btn">💾 บันทึก</button>
     <button class="edit-attach-btn" id="edit-attach-btn" onclick="cardAttachPhoto(editingTaskId)">📎 <span id="edit-attach-lbl">Attach photo</span></button>
@@ -965,7 +985,6 @@ input,textarea,select{font-family:inherit}
         <div class="fab-type-toggle three">
           <button class="fab-type-btn active" id="fab-type-hw" onclick="setFabType('homework')">📋</button>
           <button class="fab-type-btn" id="fab-type-exam" onclick="setFabType('exam')">📅</button>
-          <button class="fab-type-btn" id="fab-type-note" onclick="setFabType('note')">📝</button>
         </div>
         <button class="fab-add-btn" onclick="fabAddTask()">+ เพิ่ม</button>
       </div>
@@ -1541,7 +1560,7 @@ function taskCardHTML(t) {
       ${t.image_url ? `<img class="task-photo-thumb" src="${t.image_url}" loading="lazy" onclick="event.stopPropagation();openPhoto('${t.image_url}')" alt="photo" style="width:52px;height:52px;max-width:52px;max-height:52px">` : ''}
     </div>
     <button class="task-edit-btn" onclick="event.stopPropagation();openEditSheet('${t.id}')" title="Edit">✏️</button>
-    <button class="task-delete" onclick="softDeleteTask('${t.id}')">✕</button>
+    <button class="task-delete" onclick="confirmDeleteTask('${t.id}')">✕</button>
   </div>`;}
 
 /* ═══════════════════════════════════════
@@ -2428,7 +2447,6 @@ function setType(t) {
   manualType = t;
   document.getElementById('type-hw').classList.toggle('active',   t==='homework');
   document.getElementById('type-exam').classList.toggle('active', t==='exam');
-  document.getElementById('type-note').classList.toggle('active', t==='note');
 }
 
 /* ═══════════════════════════════════════
@@ -2587,6 +2605,7 @@ function renderNotes() {
           <span class="tag" style="background:#ede9fe;color:#5b21b6">${n.category||'note'}</span>
         </div>
         ${n.image_url ? `<img class="task-photo-thumb" src="${n.image_url}" loading="lazy" onclick="event.stopPropagation();openPhoto('${n.image_url}')" alt="photo">` : ''}
+        ${n.file_url ? `<a class="task-file-chip" href="${n.file_url}" download="${n.file_name||'file'}" target="_blank" rel="noopener" onclick="event.stopPropagation()">📄 ${escHtml(n.file_name||'ไฟล์')}</a>` : ''}
         ${createdStamp(n.created_at)}
       </div>
       <button class="task-delete" onclick="deleteNote('${n.id}')">✕</button>
@@ -3463,7 +3482,6 @@ function setEditType(t) {
   editType = t;
   document.getElementById('edit-type-hw').classList.toggle('active',   t==='homework');
   document.getElementById('edit-type-exam').classList.toggle('active', t==='exam');
-  document.getElementById('edit-type-note').classList.toggle('active', t==='note');
 }
 
 async function saveEdit() {
@@ -3816,7 +3834,6 @@ function setFabType(type) {
   fabType = type;
   document.getElementById('fab-type-hw').classList.toggle('active',   type==='homework');
   document.getElementById('fab-type-exam').classList.toggle('active', type==='exam');
-  document.getElementById('fab-type-note').classList.toggle('active', type==='note');
 }
 function setQDate(key, btn) {
   fabQDate = key;
@@ -4009,7 +4026,7 @@ function addSwipeListeners(el, taskId) {
     if (rHint) rHint.style.opacity = 0;
     if (lHint) lHint.style.opacity = 0;
     if (dx > 55) { toggleTask(taskId); navigator.vibrate && navigator.vibrate(50); }
-    if (dx < -55) { softDeleteTask(taskId); navigator.vibrate && navigator.vibrate([50,30,50]); }
+    if (dx < -55) { confirmDeleteTask(taskId); navigator.vibrate && navigator.vibrate([50,30,50]); }
     swiping = false;
   });
 }
@@ -4160,6 +4177,19 @@ function dismissInstall() {
 /* ═══════════════════════════════════════
    START
 ═══════════════════════════════════════ */
+
+/* ── delete confirm + attachments ── */
+let _confirmCb=null;
+function askConfirm(message,onYes,opts){opts=opts||{};var ov=document.getElementById('confirm-overlay');if(!ov){if(window.confirm(message||'')){onYes&&onYes();}return;}document.getElementById('confirm-title').textContent=opts.title||(currentLang==='en'?'Delete this item?':'ลบรายการนี้?');document.getElementById('confirm-msg').textContent=message||'';var ok=document.getElementById('confirm-ok-btn');ok.textContent=opts.okLabel||(currentLang==='en'?'Delete':'ลบ');_confirmCb=onYes;ov.classList.add('open');}
+function closeConfirm(){var ov=document.getElementById('confirm-overlay');if(ov)ov.classList.remove('open');_confirmCb=null;}
+function runConfirm(){var cb=_confirmCb;closeConfirm();if(cb)cb();}
+function confirmDeleteTask(id){var task=(STATE.tasks||[]).find(function(x){return x.id===id;});var name=task?(task.parsed_title||''):'';askConfirm(name,function(){softDeleteTask(id);},{title:currentLang==='en'?'Delete this task?':'ลบงานนี้?'});}
+function handleAttach(input){var files=Array.from(input.files||[]);if(!files.length)return;var pending=files.length,added=0;
+function finish(){if(--pending===0){renderNotes();if(added)toast(currentLang==='en'?('📎 Attached '+added+' file(s)'):('📎 แนบ '+added+' ไฟล์แล้ว'));}}
+function mkNote(name){return {id:'att_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),kid_id:currentKid,parsed_title:name,original_text:name,category:'other',subject:'',created_at:new Date().toISOString()};}
+function store(note){var prev=STATE.notes||[];STATE.notes=[note].concat(prev);try{var all=JSON.parse(localStorage.getItem('ht_notes')||'[]');all.unshift(note);localStorage.setItem('ht_notes',JSON.stringify(all));added++;}catch(err){STATE.notes=prev;toast(currentLang==='en'?'❌ File too large to store on device':'❌ ไฟล์ใหญ่เกินไป เก็บไม่ได้');}finish();}
+files.forEach(function(file){var isImg=(file.type||'').indexOf('image/')===0;var reader=new FileReader();reader.onerror=function(){toast(currentLang==='en'?'❌ Could not read file':'❌ อ่านไฟล์ไม่ได้');finish();};reader.onload=function(e){var data=e.target.result;if(isImg){var img=new Image();img.onload=function(){var MAX=1200,w=img.width,h2=img.height;if(Math.max(w,h2)>MAX){var sc=MAX/Math.max(w,h2);w=Math.round(w*sc);h2=Math.round(h2*sc);}var cv=document.createElement('canvas');cv.width=w;cv.height=h2;var cx=cv.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,w,h2);cx.drawImage(img,0,0,w,h2);var note=mkNote(file.name||'รูปภาพ');note.image_url=cv.toDataURL('image/jpeg',0.8);store(note);};img.onerror=function(){var note=mkNote(file.name||'รูปภาพ');note.image_url=data;store(note);};img.src=data;}else{var note=mkNote(file.name||'ไฟล์แนบ');note.file_url=data;note.file_name=file.name||'attachment';note.file_type=file.type||'';store(note);}};reader.readAsDataURL(file);});input.value='';}
+
 init();
 </script>
 </body>
