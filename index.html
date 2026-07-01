@@ -162,6 +162,8 @@ input,textarea,select{font-family:inherit}
 .created-stamp{font-size:0.58rem;color:var(--muted);opacity:0.65;margin-top:5px;font-weight:600}
 .task-photo-thumb{display:block;width:52px;height:52px;min-width:52px;min-height:52px;max-width:52px;max-height:52px;object-fit:cover;border-radius:9px;margin-top:7px;border:1.5px solid var(--border);cursor:pointer;transition:transform 0.12s;flex-shrink:0}
 .task-photo-thumb:active{transform:scale(0.94)}
+.task-clip{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;margin-top:7px;border-radius:8px;background:#eef2f7;border:1.5px solid var(--border);font-size:0.95rem;line-height:1;cursor:pointer;transition:transform 0.12s}
+.task-clip:active{transform:scale(0.9)}
 .card-attach-btn{background:transparent;border:1px dashed var(--border);border-radius:6px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;margin-top:4px;cursor:pointer;font-size:0.6rem;color:var(--muted);transition:all 0.15s;flex-shrink:0;padding:0;opacity:0.5}
 .card-attach-btn:active{background:var(--primary-lt);border-color:var(--primary)}
 #photo-lightbox{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.88);display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;padding:18px;animation:plFade 0.18s ease}
@@ -1505,6 +1507,35 @@ function typeChip(type) {
   return '';
 }
 
+/* AUTO-RULES: exam keyword + weekly-recurring detection from task text */
+function looksLikeExam(s){
+  const x = String(s||'');
+  return (/สอบ/.test(x) && !/ตรวจสอบ/.test(x)) || /\bexams?\b/i.test(x);
+}
+const _DOW_TH = {'อาทิตย์':0,'จันทร์':1,'อังคาร':2,'พุธ':3,'พฤหัสบดี':4,'พฤหัส':4,'ศุกร์':5,'เสาร์':6};
+const _DOW_EN = {sunday:0,monday:1,tuesday:2,wednesday:3,thursday:4,friday:5,saturday:6};
+function detectWeeklyDow(s){
+  const raw = String(s||'');
+  const m = raw.toLowerCase().match(/every\s+(sunday|monday|tuesday|wednesday|thursday|friday|saturday)/);
+  if (m) return _DOW_EN[m[1]];
+  const th = raw.match(/ทุก\s*(?:วัน)?\s*(อาทิตย์|จันทร์|อังคาร|พุธ|พฤหัสบดี|พฤหัส|ศุกร์|เสาร์)/);
+  if (th) return _DOW_TH[th[1]];
+  return null;
+}
+function looksWeekly(s){
+  const x = String(s||'');
+  return detectWeeklyDow(x)!=null || /every\s+week|ทุกสัปดาห์|ทุกอาทิตย์/i.test(x);
+}
+function nextDowDate(dow){
+  const d = new Date(); d.setHours(0,0,0,0);
+  let add = (dow - d.getDay() + 7) % 7; if (add===0) add = 7;
+  d.setDate(d.getDate()+add);
+  const p = n => String(n).padStart(2,'0');
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());
+}
+function effType(t){ return (t && t.type!=='exam' && t.type!=='note' && looksLikeExam((t.original_text||'')+' '+(t.parsed_title||''))) ? 'exam' : (t?t.type:undefined); }
+function isRecurring(t){ return !!(t && (t.recurring_weekly || looksWeekly((t.original_text||'')+' '+(t.parsed_title||'')))); }
+
 async function uploadTaskPhoto(b64) {
   try {
     if (!b64) return null;
@@ -1547,11 +1578,11 @@ function taskCardHTML(t) {
   const dueHTML   = dl ? `<span class="due-chip ${dl.cls}">${dl.text}</span>` : '';
   const overdueTag = overdue ? `<span class="overdue-badge">เกินกำหนด!</span>` : '';
   const title = cleanTitle(t.parsed_title || t.original_text);
-  const chip = typeChip(t.type);
+  const chip = typeChip(effType(t));
   const cardClass = `task-card p-${t.priority||'low'} ${t.is_done?'is-done':''} ${overdue?'overdue':''}`;
   const metaHTML = (chip || overdueTag || dueHTML)
     ? `<div class="task-meta">${chip}${overdueTag}${dueHTML}</div>` : '';
-  const recurBadge = t.recurring_weekly ? ' <span title="Repeats every week" style="font-size:0.78rem;opacity:0.7">🔁</span>' : '';
+  const recurBadge = isRecurring(t) ? ' <span title="Repeats every week" style="font-size:0.78rem;opacity:0.7">🔁</span>' : '';
   return `
   <div class="${cardClass}" id="tc-${t.id}" ondblclick="openEditSheet('${t.id}')">
     <div class="swipe-hint right">✓ เสร็จแล้ว</div>
@@ -1560,7 +1591,7 @@ function taskCardHTML(t) {
     <div class="task-body">
       <div class="task-title">${escHtml(title)}${recurBadge}</div>
       ${metaHTML}
-      ${t.image_url ? `<img class="task-photo-thumb" src="${t.image_url}" loading="lazy" onclick="event.stopPropagation();openPhoto('${t.image_url}')" alt="photo" style="width:52px;height:52px;max-width:52px;max-height:52px">` : ''}
+      ${t.image_url ? `<span class="task-clip" onclick="event.stopPropagation();openPhoto('${t.image_url}')" title="Attachment" role="button" aria-label="Attachment">📎</span>` : ''}
     </div>
     <button class="task-edit-btn" onclick="event.stopPropagation();openEditSheet('${t.id}')" title="Edit">✏️</button>
     <button class="task-delete" onclick="confirmDeleteTask('${t.id}')">✕</button>
@@ -1765,7 +1796,7 @@ async function toggleTask(id) {
     if (error) { t.is_done = !newVal; renderAll(); toast('❌ ซิงค์ไม่ได้'); return; }
   }
   if (newVal) navigator.vibrate && navigator.vibrate(60);
-  const recurMsg = (newVal && t.recurring_weekly) ? (currentLang==='en' ? ' (resets next week 🔁)' : ' (รีเซ็ตสัปดาห์หน้า 🔁)') : '';
+  const recurMsg = (newVal && isRecurring(t)) ? (currentLang==='en' ? ' (resets next week 🔁)' : ' (รีเซ็ตสัปดาห์หน้า 🔁)') : '';
   toast(newVal ? '✅ เสร็จแล้ว!' + recurMsg : '↩ ยกเลิกเครื่องหมาย');
 }
 
@@ -1798,7 +1829,7 @@ function autoResetRecurringTasks() {
   monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
   let changed = false;
   STATE.tasks.forEach(t => {
-    if (!t.recurring_weekly || !t.is_done) return;
+    if (!isRecurring(t) || !t.is_done) return;
     const doneAt = t.done_at ? new Date(t.done_at) : null;
     // Reset if task was completed before the most recent Monday
     if (doneAt && doneAt < monday) {
@@ -1821,13 +1852,16 @@ async function addManual() {
   const title = document.getElementById('f-title').value.trim();
   if (!title) { toast('⚠️ กรุณาใส่ชื่องาน'); return; }
   const due    = document.getElementById('f-due').value || null;
+  const _txt = title;
+  const _dow = detectWeeklyDow(_txt);
+  const _due = due || (_dow!=null ? nextDowDate(_dow) : null);
   const task = {
-    id: uid(), type: manualType,
+    id: uid(), type: (looksLikeExam(_txt) ? 'exam' : manualType),
     original_text: title, parsed_title: title,
-    subject: 'Other', due_date: due, points: null,
-    priority: calcPriority(due, null),
+    subject: 'Other', due_date: _due, points: null,
+    priority: calcPriority(_due, null),
     is_done: false, source: 'manual',
-    recurring_weekly: manualRepeat,
+    recurring_weekly: (manualRepeat || looksWeekly(_txt)),
     kid_id: currentKid,
     created_at: new Date().toISOString()
   };
@@ -2150,6 +2184,11 @@ async function confirmParsed() {
   const txt = document.getElementById('confirm-txt');
   const spin = document.getElementById('confirm-spinner');
   btn.disabled = true; txt.textContent = 'กำลังบันทึก...'; spin.classList.remove('hidden');
+  taskItems.forEach(t => {
+    const _txt = (t.original_text||'')+' '+(t.parsed_title||'');
+    if (looksLikeExam(_txt) && t.type!=='note') t.type = 'exam';
+    if (looksWeekly(_txt)) { t.recurring_weekly = true; const _d = detectWeeklyDow(_txt); if (!t.due_date && _d!=null) t.due_date = nextDowDate(_d); }
+  });
   const newTasks = taskItems.map(t => ({
     id: uid(), type: t.type||'homework',
     original_text: t.original_text||'',
@@ -2159,6 +2198,7 @@ async function confirmParsed() {
     points: t.points||null,
     priority: t.priority||calcPriority(t.due_date,t.points),
     is_done: false, source: 'photo',
+    recurring_weekly: t.recurring_weekly||false,
     kid_id: currentKid,
     image_url: photoUrlFor(t),
     created_at: new Date().toISOString()
@@ -2607,7 +2647,7 @@ function renderNotes() {
           ${subjectTag(n.subject)}
           <span class="tag" style="background:#ede9fe;color:#5b21b6">${n.category||'note'}</span>
         </div>
-        ${n.image_url ? `<img class="task-photo-thumb" src="${n.image_url}" loading="lazy" onclick="event.stopPropagation();openPhoto('${n.image_url}')" alt="photo">` : ''}
+        ${n.image_url ? `<span class="task-clip" onclick="event.stopPropagation();openPhoto('${n.image_url}')" title="Attachment" role="button" aria-label="Attachment">📎</span>` : ''}
         ${n.file_url ? `<a class="task-file-chip" href="${n.file_url}" download="${n.file_name||'file'}" target="_blank" rel="noopener" onclick="event.stopPropagation()">📄 ${escHtml(n.file_name||'ไฟล์')}</a>` : ''}
         ${createdStamp(n.created_at)}
       </div>
@@ -3455,11 +3495,12 @@ For each TASK return JSON with:
 - record_type: "task"
 - original_text: exact text as written (preserve Thai and English exactly)
 - parsed_title: ${currentLang === 'th' ? 'สรุปชื่องานสั้นๆ เป็นภาษาไทย (ห้ามแปลเป็นภาษาอังกฤษ) ไม่เกิน 80 ตัวอักษร' : 'clean concise English summary (max 80 chars)'}
-- type: "homework" or "todo"
+- type: "homework", "todo", or "exam" (use "exam" when the text mentions a test/exam/quiz/midterm/final, or Thai "สอบ")
 - subject: Math | Thai | English | Science | Social | Chinese | PE | Other
 - due_date: YYYY-MM-DD (apply date rules above), else null
 - points: integer if points/marks/% mentioned, else null
 - priority: "high" if has points OR due within 2 days, "med" if due this week, "low" otherwise
+- recurring_weekly: true if the task repeats weekly (text says "every week", "ทุกสัปดาห์", or "every <weekday>" / "ทุกวัน<...>"), else false. If a weekday is named (e.g. "every Friday" / "ทุกวันศุกร์"), also set due_date to the NEXT calendar date of that weekday.
 
 For each SCHOOL EVENT (holidays, ceremonies, breaks, special days, uniform changes, competitions) return:
 - record_type: "event"
@@ -3889,12 +3930,16 @@ function fmtDate(d) { return d.toISOString().slice(0,10); }
 async function fabAddTask() {
   const title = document.getElementById('fab-title-inp').value.trim();
   if (!title) { document.getElementById('fab-title-inp').focus(); return; }
+  const _txt = title;
+  const _dow = detectWeeklyDow(_txt);
+  const _due = fabQDateVal || (_dow!=null ? nextDowDate(_dow) : null);
   const task = {
-    id: uid(), type: fabType,
+    id: uid(), type: (looksLikeExam(_txt) ? 'exam' : fabType),
     original_text: title, parsed_title: title,
-    subject: fabSubject, due_date: fabQDateVal, points: null,
-    priority: calcPriority(fabQDateVal, null),
+    subject: fabSubject, due_date: _due, points: null,
+    priority: calcPriority(_due, null),
     is_done: false, source: 'manual',
+    recurring_weekly: looksWeekly(_txt),
     kid_id: currentKid,
     created_at: new Date().toISOString()
   };
