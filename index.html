@@ -3494,7 +3494,7 @@ ACADEMIC CALENDAR (ปฏิทิน) — if image is a school term calendar:
 For each TASK return JSON with:
 - record_type: "task"
 - original_text: exact text as written (preserve Thai and English exactly)
-- parsed_title: ${currentLang === 'th' ? 'สรุปชื่องานสั้นๆ เป็นภาษาไทย (ห้ามแปลเป็นภาษาอังกฤษ) ไม่เกิน 80 ตัวอักษร' : 'clean concise English summary (max 80 chars)'}
+- parsed_title: exact text copied verbatim as written on the paper, in its original language — do NOT translate between Thai and English, do NOT summarize or rephrase or clean up. Copy the characters as-is (truncate to 80 chars only if the line is longer)
 - type: "homework", "todo", or "exam" (use "exam" when the text mentions a test/exam/quiz/midterm/final, or Thai "สอบ")
 - subject: Math | Thai | English | Science | Social | Chinese | PE | Other
 - due_date: YYYY-MM-DD (apply date rules above), else null
@@ -3513,7 +3513,7 @@ For each SCHOOL EVENT (holidays, ceremonies, breaks, special days, uniform chang
 For GENERAL INFORMATION that is NOT a task or event (score rubrics, grading criteria, school rules, announcements, login credentials, fees, fund details, schedules, selection/tryout criteria) return:
 - record_type: "info"
 - original_text: exact text as written
-- parsed_title: clean concise English summary (max 80 chars)
+- parsed_title: exact text copied verbatim as written on the paper, in its original language — do NOT translate between Thai and English, do NOT summarize or rephrase or clean up. Copy the characters as-is (truncate to 80 chars only if the line is longer)
 - subject: Math | Thai | English | Science | Social | Chinese | PE | Other | General
 - category: "grading" | "schedule" | "rules" | "announcement" | "credentials" | "fees" | "competition" | "other"
 
