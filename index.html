@@ -703,6 +703,11 @@ input,textarea,select{font-family:inherit}
       <div id="hw-list"></div>
     </div>
 
+    <!-- TAB: NO DATE -->
+    <div class="tab-panel" id="tab-nodate">
+      <div id="nodate-list"></div>
+    </div>
+
     <!-- TAB: TODO (merged into Tasks; kept hidden for compatibility) -->
     <div class="tab-panel" id="tab-todo">
       <div class="search-wrap" id="todo-search-wrap">
@@ -921,6 +926,7 @@ input,textarea,select{font-family:inherit}
   <!-- BOTTOM NAV -->
   <div class="bottom-nav">
     <button class="nav-btn active" id="nav-hw" onclick="showTab('hw')"><span class="icon">📋</span><span id="nav-hw-lbl">Tasks</span></button>
+    <button class="nav-btn" id="nav-nodate" onclick="showTab('nodate')"><span class="icon">📆</span><span id="nav-nodate-lbl">No Date</span></button>
     <button class="nav-btn" id="nav-add" onclick="showTab('add')"><span class="icon">➕</span><span id="nav-add-lbl">Add</span></button>
     <button class="nav-btn" id="nav-notes" onclick="showTab('notes')"><span class="icon">📝</span><span id="nav-notes-lbl">Notes</span></button>
     <button class="nav-btn" id="nav-settings" onclick="showTab('settings')"><span class="icon">⚙️</span><span id="nav-settings-lbl">Settings</span></button>
@@ -1661,6 +1667,27 @@ function renderHW() {
   initMerge();
 }
 
+function renderNodate() {
+  const el = document.getElementById('nodate-list');
+  if (!el) return;
+  const L = t();
+  let tasks = STATE.tasks.filter(t => t.type !== 'exam' && !t.due_date);
+  tasks.sort((a,b) => (b.created_at||'').localeCompare(a.created_at||''));
+  const pending = tasks.filter(t => !t.is_done);
+  const done = tasks.filter(t => t.is_done);
+
+  if (!tasks.length) {
+    el.innerHTML = `<div class="empty"><div class="emoji">📆</div>
+      <div class="msg">${L.noNodate}</div></div>`;
+    return;
+  }
+
+  let html = pending.map(taskCardHTML).join('');
+  if (done.length) html += `<div class="sec-label">✅ ${L.doneSection} (${done.length})</div>` + done.map(taskCardHTML).join('');
+  el.innerHTML = html;
+  attachSwipeListeners();
+}
+
 function renderTodo() {
   const el = document.getElementById('todo-list');
   const q = searchQuery.todo || '';
@@ -2163,23 +2190,35 @@ async function confirmParsed() {
   });
   if (autoEvents.length) { saveEvents(); toast(`📅 บันทึก ${autoEvents.length} กิจกรรมอัตโนมัติ`); }
 
-  // Save info notes to localStorage
+  // Save info notes to localStorage (merge multiple text fragments from the SAME photo into ONE note)
   const infoItems = selected.filter(r => r.record_type === 'info');
   if (infoItems.length) {
     const existing = JSON.parse(localStorage.getItem('ht_notes') || '[]');
-    infoItems.forEach(n => existing.unshift({
-      id: uid(),
-      original_text: n.original_text || '',
-      parsed_title: n.parsed_title || n.original_text,
-      subject: n.subject || 'General',
-      category: n.category || 'other',
-      image_url: photoUrlFor(n),
-      created_at: new Date().toISOString(),
-      kid_id: currentKid
-    }));
+    const infoGroups = new Map();
+    infoItems.forEach(n => {
+      const key = n._srcB64 || n.id || Math.random();
+      if (!infoGroups.has(key)) infoGroups.set(key, []);
+      infoGroups.get(key).push(n);
+    });
+    let noteCount = 0;
+    infoGroups.forEach(group => {
+      const combinedOriginal = group.map(n => n.original_text || '').filter(Boolean).join('\n');
+      const combinedTitle = group.map(n => n.parsed_title || n.original_text || '').filter(Boolean).join('\n');
+      existing.unshift({
+        id: uid(),
+        original_text: combinedOriginal,
+        parsed_title: combinedTitle || combinedOriginal,
+        subject: group[0].subject || 'General',
+        category: group[0].category || 'other',
+        image_url: photoUrlFor(group[0]),
+        created_at: new Date().toISOString(),
+        kid_id: currentKid
+      });
+      noteCount++;
+    });
     localStorage.setItem('ht_notes', JSON.stringify(existing));
     STATE.notes = existing;
-    toast(`📝 บันทึก ${infoItems.length} โน้ตแล้ว`);
+    toast(`📝 บันทึก ${noteCount} โน้ตแล้ว`);
   }
 
   const taskItems = selected.filter(r => r.record_type !== 'event' && r.record_type !== 'info');
@@ -2312,7 +2351,7 @@ async function clearAllData() {
 ═══════════════════════════════════════ */
 function showTab(tab) {
   currentTab = tab;
-  ['hw','todo','add','exam','cal','notes','settings'].forEach(t => {
+  ['hw','todo','add','exam','cal','notes','settings','nodate'].forEach(t => {
     document.getElementById('tab-'+t)?.classList.toggle('active', t===tab);
     document.getElementById('nav-'+t)?.classList.toggle('active', t===tab);
   });
@@ -2321,6 +2360,7 @@ function showTab(tab) {
   if (content) content.scrollTop = 0;
   if (tab === 'cal') { renderCalendar(); renderEventList(); renderUniformBanner(); renderHolidayBanner(); }
   if (tab === 'notes') renderNotes();
+  if (tab === 'nodate') renderNodate();
 }
 
 function statPillClick(type) {
@@ -2727,6 +2767,7 @@ function saveNoteEdit(id) {
 function renderAll() {
   renderHeader();
   renderHW();
+  renderNodate();
   renderTodo();
   renderExams();
   renderNotes();
@@ -2774,7 +2815,7 @@ const LANG = {
     today: 'วันนี้', week: 'สัปดาห์นี้', month: 'เดือนนี้', all: 'ทั้งหมด',
     pending: 'ค้างอยู่', done: 'เสร็จแล้ว',
     urgent: 'ด่วน', pendingStat: 'ค้างอยู่', doneStat: 'เสร็จ', total: 'ทั้งหมด',
-    hwTab: 'งาน', todoTab: 'ต้องทำ', addTab: 'เพิ่มงาน', examTab: 'สอบ', settingsTab: 'ตั้งค่า',
+    hwTab: 'งาน', nodateTab: 'ไม่มีวันที่', noNodate: 'ไม่มีงานที่ไม่มีวันส่ง 🎉', todoTab: 'ต้องทำ', addTab: 'เพิ่มงาน', examTab: 'สอบ', settingsTab: 'ตั้งค่า',
     noHwToday: 'ไม่มีการบ้านวันนี้', noHw: 'ไม่มีการบ้าน', addNew: 'เพิ่มงานใหม่ที่แท็บ "เพิ่มงาน"',
     noTodo: 'ไม่มีรายการ', addTodo: 'เพิ่มสิ่งที่ต้องทำที่แท็บ "เพิ่มงาน"',
     noExam: 'ยังไม่มีรายการสอบ', addExam: 'สร้างรายการสอบด้านบน',
@@ -2840,7 +2881,7 @@ const LANG = {
     today: 'Today', week: 'This Week', month: 'This Month', all: 'All',
     pending: 'Pending', done: 'Done',
     urgent: 'Urgent', pendingStat: 'Pending', doneStat: 'Done', total: 'Total',
-    hwTab: 'Tasks', todoTab: 'To-Do', addTab: 'Add', examTab: 'Exams', settingsTab: 'Settings',
+    hwTab: 'Tasks', nodateTab: 'No Date', noNodate: 'No tasks without a due date 🎉', todoTab: 'To-Do', addTab: 'Add', examTab: 'Exams', settingsTab: 'Settings',
     noHwToday: 'No homework today!', noHw: 'No homework', addNew: 'Add tasks in the "Add" tab',
     noTodo: 'No items', addTodo: 'Add to-dos in the "Add" tab',
     noExam: 'No exams yet', addExam: 'Create an exam above',
@@ -2952,6 +2993,7 @@ function applyLang() {
   // Bottom nav
   const navHwLbl = document.getElementById('nav-hw-lbl');       if (navHwLbl) navHwLbl.textContent = L.hwTab;
   const navTodoLbl = document.getElementById('nav-todo-lbl');   if (navTodoLbl) navTodoLbl.textContent = L.todoTab;
+  const navNodateLbl = document.getElementById('nav-nodate-lbl'); if (navNodateLbl) navNodateLbl.textContent = L.nodateTab;
   const navAddLbl = document.getElementById('nav-add-lbl');     if (navAddLbl) navAddLbl.textContent = L.addTab;
   const navNotesLbl = document.getElementById('nav-notes-lbl'); if (navNotesLbl) navNotesLbl.textContent = L.infoTab;
   const navSetLbl = document.getElementById('nav-settings-lbl');if (navSetLbl) navSetLbl.textContent = L.settingsTab;
@@ -4095,14 +4137,14 @@ function addSwipeListeners(el, taskId) {
     if (Math.abs(dx) < 8 && !swiping) return;
     if (dy > Math.abs(dx) && !swiping) return; // vertical scroll
     swiping = true;
-    const capped = Math.max(-100, Math.min(100, dx));
+    const capped = Math.max(0, Math.min(100, dx)); // swipe-to-delete disabled: no leftward pull
     el.style.transform = `translateX(${capped}px)`;
     el.style.transition = 'none';
-    // Show hints
+    // Show hints (only right-swipe-to-complete remains)
     const rHint = el.querySelector('.swipe-hint.right');
     const lHint = el.querySelector('.swipe-hint.left');
     if (rHint) rHint.style.opacity = dx > 20 ? Math.min(1, (dx-20)/60) : 0;
-    if (lHint) lHint.style.opacity = dx < -20 ? Math.min(1, (-dx-20)/60) : 0;
+    if (lHint) lHint.style.opacity = 0;
   }, { passive: true });
 
   el.addEventListener('touchend', () => {
@@ -4113,7 +4155,7 @@ function addSwipeListeners(el, taskId) {
     if (rHint) rHint.style.opacity = 0;
     if (lHint) lHint.style.opacity = 0;
     if (dx > 55) { toggleTask(taskId); navigator.vibrate && navigator.vibrate(50); }
-    if (dx < -55) { confirmDeleteTask(taskId); navigator.vibrate && navigator.vibrate([50,30,50]); }
+    // swipe-to-delete disabled per user request; use the ✕ button instead
     swiping = false;
   });
 }
