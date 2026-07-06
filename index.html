@@ -2698,8 +2698,9 @@ function renderNotes() {
         ${createdStamp(n.created_at)}
       </div>
       <button class="task-edit" onclick="editNote('${n.id}')" aria-label="แก้ไขโน้ต / Edit note" style="background:none;border:none;color:#7c3aed;font-size:1rem;cursor:pointer;padding:4px;margin-right:2px">✎</button>
-      <button class="task-delete" onclick="deleteNote('${n.id}')">✕</button>
+      <button class="task-delete" onclick="confirmDeleteNote('${n.id}')">✕</button>
     </div>`).join('');
+  attachNoteHoldListeners();
 }
 
 function saveQuickNote() {
@@ -2724,12 +2725,46 @@ function saveQuickNote() {
   toast(currentLang === 'en' ? '📝 Note saved!' : '📝 บันทึกแล้ว!');
 }
 
-function deleteNote(id) {
+function confirmDeleteNote(id) {
+  const note = (STATE.notes||[]).find(n => n.id === id);
+  const name = note ? (note.parsed_title || note.original_text || '') : '';
+  askConfirm(name, function(){ softDeleteNote(id); }, {title: currentLang==='en' ? 'Delete this note?' : 'ลบโน้ตนี้?'});
+}
+
+function softDeleteNote(id) {
+  const note = (STATE.notes||[]).find(n => n.id === id);
+  if (!note) return;
+  undoStack = { action: 'deleteNote', task: { ...note } };
   STATE.notes = (STATE.notes||[]).filter(n => n.id !== id);
   const all = JSON.parse(localStorage.getItem('ht_notes')||'[]').filter(n => n.id !== id);
   localStorage.setItem('ht_notes', JSON.stringify(all));
   renderNotes();
-  toast(currentLang==='en'?'🗑 Note deleted':'🗑 ลบโน้ตแล้ว');
+  const label = currentLang === 'en' ? '🗑 Note deleted' : '🗑 ลบโน้ตแล้ว';
+  showUndoToast(label);
+  undoTimer = setTimeout(() => { undoStack = null; }, 5000);
+}
+
+function attachNoteHoldListeners() {
+  document.querySelectorAll('[data-note-id]').forEach(el => {
+    if (el.dataset.holdBound) return;
+    el.dataset.holdBound = '1';
+    const id = el.dataset.noteId;
+    let pressTimer = null;
+    const start = () => {
+      pressTimer = setTimeout(() => {
+        navigator.vibrate && navigator.vibrate([50,30,50]);
+        confirmDeleteNote(id);
+      }, 550);
+    };
+    const cancel = () => { clearTimeout(pressTimer); };
+    el.addEventListener('touchstart', start, { passive: true });
+    el.addEventListener('touchend', cancel);
+    el.addEventListener('touchmove', cancel);
+    el.addEventListener('touchcancel', cancel);
+    el.addEventListener('mousedown', start);
+    el.addEventListener('mouseup', cancel);
+    el.addEventListener('mouseleave', cancel);
+  });
 }
 
 function editNote(id) {
@@ -2815,7 +2850,7 @@ const LANG = {
     today: 'วันนี้', week: 'สัปดาห์นี้', month: 'เดือนนี้', all: 'ทั้งหมด',
     pending: 'ค้างอยู่', done: 'เสร็จแล้ว',
     urgent: 'ด่วน', pendingStat: 'ค้างอยู่', doneStat: 'เสร็จ', total: 'ทั้งหมด',
-    hwTab: 'งาน', nodateTab: 'ไม่มีวันที่', noNodate: 'ไม่มีงานที่ไม่มีวันส่ง 🎉', todoTab: 'ต้องทำ', addTab: 'เพิ่มงาน', examTab: 'สอบ', settingsTab: 'ตั้งค่า',
+    hwTab: 'งาน', nodateTab: 'งาน', noNodate: 'ไม่มีงานที่ไม่มีวันส่ง 🎉', todoTab: 'ต้องทำ', addTab: 'เพิ่มงาน', examTab: 'สอบ', settingsTab: 'ตั้งค่า',
     noHwToday: 'ไม่มีการบ้านวันนี้', noHw: 'ไม่มีการบ้าน', addNew: 'เพิ่มงานใหม่ที่แท็บ "เพิ่มงาน"',
     noTodo: 'ไม่มีรายการ', addTodo: 'เพิ่มสิ่งที่ต้องทำที่แท็บ "เพิ่มงาน"',
     noExam: 'ยังไม่มีรายการสอบ', addExam: 'สร้างรายการสอบด้านบน',
@@ -2881,7 +2916,7 @@ const LANG = {
     today: 'Today', week: 'This Week', month: 'This Month', all: 'All',
     pending: 'Pending', done: 'Done',
     urgent: 'Urgent', pendingStat: 'Pending', doneStat: 'Done', total: 'Total',
-    hwTab: 'Tasks', nodateTab: 'No Date', noNodate: 'No tasks without a due date 🎉', todoTab: 'To-Do', addTab: 'Add', examTab: 'Exams', settingsTab: 'Settings',
+    hwTab: 'Tasks', nodateTab: 'Task', noNodate: 'No tasks without a due date 🎉', todoTab: 'To-Do', addTab: 'Add', examTab: 'Exams', settingsTab: 'Settings',
     noHwToday: 'No homework today!', noHw: 'No homework', addNew: 'Add tasks in the "Add" tab',
     noTodo: 'No items', addTodo: 'Add to-dos in the "Add" tab',
     noExam: 'No exams yet', addExam: 'Create an exam above',
@@ -4193,6 +4228,14 @@ async function undoDelete() {
     if (USE_LOCAL) saveLocal();
     else await sb.from('tasks').insert(task);
     toast(currentLang === 'en' ? '↩ Task restored' : '↩ คืนงานแล้ว');
+
+  } else if (action === 'deleteNote') {
+    STATE.notes = STATE.notes || [];
+    STATE.notes.unshift(task);
+    const all = JSON.parse(localStorage.getItem('ht_notes')||'[]');
+    all.unshift(task);
+    localStorage.setItem('ht_notes', JSON.stringify(all));
+    toast(currentLang === 'en' ? '↩ Note restored' : '↩ คืนโน้ตแล้ว');
 
   } else if (action === 'complete' || action === 'uncomplete') {
     const t = STATE.tasks.find(x => x.id === task.id);
