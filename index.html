@@ -1373,6 +1373,44 @@ function filterByKid(tasks) {
   return (tasks||[]).filter(t => t.kid_id === currentKid || (!t.kid_id && currentKid === 'ryuji'));
 }
 
+function processRecurringTasks() {
+  const d0 = new Date(); d0.setHours(0,0,0,0);
+  const pad = n => String(n).padStart(2,'0');
+  const todayStr = d0.getFullYear()+'-'+pad(d0.getMonth()+1)+'-'+pad(d0.getDate());
+  const changed = [];
+  STATE.tasks.forEach(t => {
+    if (t.type === 'exam') return;
+    const txt = (t.original_text||'') + ' ' + (t.parsed_title||'');
+    const detectedDow = detectWeeklyDow(txt);
+    const wasRecurring = !!t.recurring_weekly;
+    if (!wasRecurring && detectedDow !== null) t.recurring_weekly = true; // backfill flag from text
+    if (!isRecurring(t)) return;
+    const dow = t.due_date ? new Date(t.due_date + 'T00:00:00').getDay() : detectedDow;
+    if (dow === null || dow === undefined) return;
+    let needsSave = (!wasRecurring && t.recurring_weekly);
+    if (!t.due_date) {
+      t.due_date = nextDowDate(dow);
+      needsSave = true;
+    } else if (t.due_date < todayStr) {
+      t.due_date = nextDowDate(dow);
+      t.is_done = false;
+      t.done_at = null;
+      needsSave = true;
+    }
+    if (needsSave) changed.push(t);
+  });
+  if (changed.length) {
+    if (USE_LOCAL) { saveLocal(); }
+    else {
+      changed.forEach(t => {
+        sb.from('tasks').update({ recurring_weekly: true, due_date: t.due_date, is_done: t.is_done, done_at: t.done_at||null }).eq('id', t.id)
+          .then(({error}) => { if (error) console.warn('recurring rollover failed', t.id, error.message); });
+      });
+    }
+  }
+  return changed.length;
+}
+
 async function loadAll() {
   setSyncing(true);
   const [tasksRes, examsRes, topicsRes] = await Promise.all([
@@ -1387,6 +1425,7 @@ async function loadAll() {
   STATE.tasks  = filterByKid(tasksRes.data);
   STATE.exams  = (examsRes.data || []).filter(e => e.kid_id === currentKid || (!e.kid_id && currentKid === 'miki'));
   STATE.topics = topicsRes.data || [];
+  processRecurringTasks();
   saveLocal();
   setSyncing(false);
   renderAll();
