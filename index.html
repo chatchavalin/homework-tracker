@@ -661,6 +661,11 @@ input,textarea,select{font-family:inherit}
     margin-bottom:0;
   }
 
+  #hw-list .sec-label,#nodate-list .sec-label,#todo-list .sec-label,#notes-list .sec-label,
+  #hw-list .search-results-label,#nodate-list .search-results-label,#todo-list .search-results-label,#notes-list .search-results-label{
+    grid-column:1/-1;
+  }
+
   #exam-list{
     display:grid;
     grid-template-columns:repeat(auto-fill,minmax(340px,1fr));
