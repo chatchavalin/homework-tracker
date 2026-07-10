@@ -640,6 +640,43 @@ input,textarea,select{font-family:inherit}
 .a-exam-banner-right{text-align:right}
 .a-exam-banner-right .a-exam-days{font-size:20px;font-weight:500;color:#7ae6b0}
 .a-exam-banner-right .a-exam-sub{font-size:9px;color:rgba(255,255,255,0.5);margin-top:1px}
+
+/* ============================================
+   Wide landscape layout (car head-unit / large tablet)
+   Only activates for landscape screens >=1024px wide,
+   so phones and portrait tablets are completely unaffected.
+   ============================================ */
+@media (orientation: landscape) and (min-width: 1024px) {
+  #app{max-width:1040px}
+  .bottom-nav{max-width:1040px}
+  .fab{right:calc(50% - 508px)}
+
+  #hw-list,#nodate-list,#todo-list,#notes-list{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+    gap:10px;
+    align-items:start;
+  }
+  #hw-list .task-card,#nodate-list .task-card,#todo-list .task-card,#notes-list .task-card{
+    margin-bottom:0;
+  }
+
+  #exam-list{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(340px,1fr));
+    gap:12px;
+    align-items:start;
+  }
+  #exam-list .exam-card{margin-bottom:0}
+
+  #event-list{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+    gap:8px;
+  }
+
+  #parsed-list .task-card{margin-bottom:7px}
+}
 </style>
 </head>
 <body>
