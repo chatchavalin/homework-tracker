@@ -260,6 +260,14 @@ input,textarea,select{font-family:inherit}
 .settings-btn.primary{background:var(--primary);color:white}
 .settings-btn.danger{background:#fdeaea;color:var(--high);border:1.5px solid #fca5a5}
 .settings-btn.success{background:#e8faf2;color:#065f46;border:1.5px solid #6ee7b7}
+.theme-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.theme-opt{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:10px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface2);cursor:pointer;text-align:left;transition:border-color .15s,transform .1s}
+.theme-opt:active{transform:scale(0.98)}
+.theme-opt.active{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-lt)}
+.theme-opt .swatches{display:flex;gap:4px}
+.theme-opt .sw{width:14px;height:14px;border-radius:4px;border:1px solid rgba(0,0,0,.08)}
+.theme-opt .t-name{font-size:0.78rem;font-weight:800;color:var(--text)}
+.theme-opt .t-sub{font-size:0.62rem;font-weight:600;color:var(--muted);line-height:1.3}
 .status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px}
 .status-dot.ok{background:var(--low)}
 .status-dot.err{background:var(--high)}
@@ -937,6 +945,15 @@ input,textarea,select{font-family:inherit}
     <div class="tab-panel" id="tab-settings">
       <div class="sec-label" id="settings-sec-label">⚙️ การตั้งค่า</div>
 
+      <!-- Theme -->
+      <div class="settings-card">
+        <div class="settings-title" id="settings-theme-title">🎨 ธีม / Theme</div>
+        <div class="info-box" style="margin-bottom:10px" id="settings-theme-info">
+          เลือกธีมหน้าจอ — ค่าเริ่มต้นคือธีมปัจจุบันของแอป
+        </div>
+        <div class="theme-grid" id="theme-grid"></div>
+      </div>
+
       <!-- Notifications -->
       <div class="settings-card">
         <div class="settings-title" id="settings-notify-title">✈️ แจ้งเตือนทุกคืน (Telegram)
@@ -1142,12 +1159,156 @@ function updateAppTitle() {
   if (av) av.textContent = name ? name[0].toUpperCase() : 'R';
 }
 
-function applyKidTheme(kidId) {
-  const kid = KIDS[kidId];
-  if (!kid) return;
-  const root = document.documentElement;
-  Object.entries(kid.theme).forEach(([k,v]) => root.style.setProperty(k, v));
+const APP_THEMES = {
+  default: {
+    id: 'default', label: 'Current', labelTh: 'ปัจจุบัน', emoji: '📗',
+    blurb: 'School green (default)', blurbTh: 'เขียวโรงเรียน (ค่าเริ่มต้น)',
+    vars: {
+      '--bg':'#f0faf4','--surface':'#ffffff','--surface2':'#f0faf4','--border':'#c6e8d4',
+      '--text':'#0d2e1a','--muted':'#6b9e80','--high':'#e05252','--med':'#f5a623','--low':'#22c55e',
+      '--blue':'#3b82f6','--navy':'#166534','--primary':'#16a34a','--primary-dk':'#15803d',
+      '--primary-lt':'#dcfce7','--accent':'#4ade80'
+    }
+  },
+  calm: {
+    id: 'calm', label: 'Calm Editorial', labelTh: 'สงบ อ่านง่าย', emoji: '📰',
+    blurb: 'Paper / quiet', blurbTh: 'โทนกระดาษ อ่านสบาย',
+    vars: {
+      '--bg':'#f6f3ee','--surface':'#ffffff','--surface2':'#ebe4d8','--border':'#e7e0d6',
+      '--text':'#1c1917','--muted':'#78716c','--high':'#b45309','--med':'#d97706','--low':'#4d7c0f',
+      '--blue':'#57534e','--navy':'#1c1917','--primary':'#1c1917','--primary-dk':'#0c0a09',
+      '--primary-lt':'#e7e5e4','--accent':'#a8a29e'
+    }
+  },
+  dense: {
+    id: 'dense', label: 'Utilitarian', labelTh: 'แน่น เร็ว', emoji: '⚡',
+    blurb: 'Power dashboard', blurbTh: 'แดชบอร์ดผู้ปกครอง',
+    vars: {
+      '--bg':'#eef2f7','--surface':'#ffffff','--surface2':'#f1f5f9','--border':'#cbd5e1',
+      '--text':'#0f172a','--muted':'#64748b','--high':'#ef4444','--med':'#f59e0b','--low':'#16a34a',
+      '--blue':'#2563eb','--navy':'#0f172a','--primary':'#0f172a','--primary-dk':'#020617',
+      '--primary-lt':'#e2e8f0','--accent':'#4ade80'
+    }
+  },
+  playful: {
+    id: 'playful', label: 'Playful Family', labelTh: 'สนุก ครอบครัว', emoji: '🎈',
+    blurb: 'Kid energy', blurbTh: 'สีสัน เด็กๆ ชอบ',
+    vars: {
+      '--bg':'#fff7ed','--surface':'#ffffff','--surface2':'#fdf2f8','--border':'#fdba74',
+      '--text':'#1e1b4b','--muted':'#7c3aed','--high':'#e11d48','--med':'#f59e0b','--low':'#22c55e',
+      '--blue':'#6366f1','--navy':'#4f46e5','--primary':'#7c3aed','--primary-dk':'#6d28d9',
+      '--primary-lt':'#f3e8ff','--accent':'#fb923c'
+    }
+  },
+  dark: {
+    id: 'dark', label: 'Dark Focus', labelTh: 'มืด โฟกัส', emoji: '🌙',
+    blurb: 'Night mode', blurbTh: 'โหมดกลางคืน',
+    vars: {
+      '--bg':'#09090b','--surface':'#18181b','--surface2':'#27272a','--border':'#3f3f46',
+      '--text':'#fafafa','--muted':'#a1a1aa','--high':'#f87171','--med':'#fbbf24','--low':'#4ade80',
+      '--blue':'#60a5fa','--navy':'#052e16','--primary':'#16a34a','--primary-dk':'#14532d',
+      '--primary-lt':'#14532d','--accent':'#4ade80'
+    }
+  },
+  hero: {
+    id: 'hero', label: 'Hero Dashboard', labelTh: 'ฮีโร่ การ์ด', emoji: '🏆',
+    blurb: 'Modern green cards', blurbTh: 'เขียวทันสมัย การ์ดเด่น',
+    vars: {
+      '--bg':'#ecfdf5','--surface':'#ffffff','--surface2':'#d1fae5','--border':'#a7f3d0',
+      '--text':'#064e3b','--muted':'#059669','--high':'#dc2626','--med':'#d97706','--low':'#10b981',
+      '--blue':'#0891b2','--navy':'#065f46','--primary':'#059669','--primary-dk':'#047857',
+      '--primary-lt':'#d1fae5','--accent':'#34d399'
+    }
+  },
+  hermes: {
+    id: 'hermes', label: 'Hermes Agent', labelTh: 'Hermes Agent', emoji: '🛰️',
+    blurb: 'AI agent teal/dark', blurbTh: 'ธีมเอเจนต์ AI เขียวฟ้า',
+    vars: {
+      '--bg':'#07111f','--surface':'#0f1c2e','--surface2':'#15253b','--border':'#243b55',
+      '--text':'#e8f1ff','--muted':'#8ba3c7','--high':'#ff6b6b','--med':'#f0b429','--low':'#2dd4bf',
+      '--blue':'#38bdf8','--navy':'#0b3d4a','--primary':'#14b8a6','--primary-dk':'#0f766e',
+      '--primary-lt':'#134e4a','--accent':'#22d3ee'
+    }
+  },
+  dbz: {
+    id: 'dbz', label: 'Dragon Ball Z', labelTh: 'ดราก้อนบอล Z', emoji: '🟠',
+    blurb: 'Orange / ki energy', blurbTh: 'ส้ม พลังคิ',
+    vars: {
+      '--bg':'#fff7ed','--surface':'#ffffff','--surface2':'#ffedd5','--border':'#fdba74',
+      '--text':'#1e3a8a','--muted':'#c2410c','--high':'#dc2626','--med':'#ea580c','--low':'#16a34a',
+      '--blue':'#2563eb','--navy':'#1e3a8a','--primary':'#ea580c','--primary-dk':'#c2410c',
+      '--primary-lt':'#ffedd5','--accent':'#fbbf24'
+    }
+  }
+};
+
+function listThemeIds() { return Object.keys(APP_THEMES); }
+
+function normalizeThemeId(id) {
+  const key = String(id || '').trim().toLowerCase();
+  return APP_THEMES[key] ? key : 'default';
 }
+
+function getThemeVars(id) {
+  const theme = APP_THEMES[normalizeThemeId(id)] || APP_THEMES.default;
+  return { ...theme.vars };
+}
+
+function getCurrentThemeId() {
+  return normalizeThemeId(localStorage.getItem('ht_theme') || 'default');
+}
+
+function applyAppTheme(themeId, kidId) {
+  const id = normalizeThemeId(themeId != null ? themeId : getCurrentThemeId());
+  const kid = KIDS[kidId || currentKid] || KIDS.ryuji;
+  const vars = getThemeVars(id);
+  // Default theme keeps per-kid accent colors (Ryuji green / Miki purple).
+  if (id === 'default' && kid && kid.theme) Object.assign(vars, kid.theme);
+  const root = document.documentElement;
+  Object.entries(vars).forEach(([k, v]) => root.style.setProperty(k, v));
+  root.setAttribute('data-theme', id);
+  document.body && document.body.setAttribute('data-theme', id);
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', vars['--primary'] || '#16a34a');
+  renderThemePicker();
+}
+
+function applyKidTheme(kidId) {
+  applyAppTheme(getCurrentThemeId(), kidId || currentKid);
+}
+
+function setAppTheme(id) {
+  const next = normalizeThemeId(id);
+  localStorage.setItem('ht_theme', next);
+  applyAppTheme(next, currentKid);
+  const theme = APP_THEMES[next];
+  const label = currentLang === 'en' ? theme.label : (theme.labelTh || theme.label);
+  toast((currentLang === 'en' ? '🎨 Theme: ' : '🎨 ธีม: ') + label);
+}
+
+function renderThemePicker() {
+  const grid = document.getElementById('theme-grid');
+  if (!grid) return;
+  const active = getCurrentThemeId();
+  const en = currentLang === 'en';
+  grid.innerHTML = listThemeIds().map(id => {
+    const t = APP_THEMES[id];
+    const name = en ? t.label : (t.labelTh || t.label);
+    const sub = en ? t.blurb : (t.blurbTh || t.blurb);
+    const v = t.vars;
+    return `<button type="button" class="theme-opt${id===active?' active':''}" onclick="setAppTheme('${id}')">
+      <div class="swatches">
+        <span class="sw" style="background:${v['--navy']}"></span>
+        <span class="sw" style="background:${v['--primary']}"></span>
+        <span class="sw" style="background:${v['--accent']}"></span>
+        <span class="sw" style="background:${v['--bg']}"></span>
+      </div>
+      <div class="t-name">${t.emoji} ${name}</div>
+      <div class="t-sub">${sub}</div>
+    </button>`;
+  }).join('');
+}
+
 let currentKid = localStorage.getItem('ht_current_kid') || 'ryuji';
 
 /* ═══════════════════════════════════════
@@ -1366,10 +1527,11 @@ let USE_LOCAL = false;
 
 async function init() {
   try {
-  // Apply kid theme immediately on load
-  applyKidTheme(currentKid);
+  // Apply kid + app theme immediately on load
+  applyAppTheme(getCurrentThemeId(), currentKid);
   updateAppTitle();
   updateMusicBtn();
+  renderThemePicker();
   // Load music player (won't auto-play until user taps 🎵 due to browser autoplay rules)
   setTimeout(() => { try { loadMusic(currentKid); } catch(e) { console.warn('music:', e); } }, 1500);
 
@@ -3049,6 +3211,8 @@ const LANG = {
     studiedStrip: 'เรียนแล้ว', topicsStrip: 'หัวข้อ', daysStrip: 'วัน',
     undated: 'ไม่มีวันส่ง',
     markAll: '✅ ทำเครื่องหมายเสร็จทั้งหมด',
+    themeTitle: '🎨 ธีม / Theme',
+    themeInfo: 'เลือกธีมหน้าจอ — ค่าเริ่มต้นคือธีมปัจจุบันของแอป',
     notifyTitle: '✈️ แจ้งเตือนทุกคืน (Telegram)',
     notifyInfo: '📨 Dad และ Mum ได้รับสรุปการบ้านทุกคืน 21:00 น. อัตโนมัติ<br>ทำงานแม้ปิดแอป — ส่งจาก server',
     testBtn: '📨 ทดสอบส่งข้อความตอนนี้',
@@ -3116,6 +3280,8 @@ const LANG = {
     undated: 'No due date',
     markAll: '✅ Mark all done',
     // Settings
+    themeTitle: '🎨 Theme',
+    themeInfo: 'Pick a look — Current is the default school green theme',
     notifyTitle: '✈️ Evening Reminder (Telegram)',
     notifyInfo: '📨 Dad & Mum receive a homework summary every evening at 9:00 PM automatically<br>Works even when the app is closed — sent from server',
     testBtn: '📨 Send test message now',
@@ -3246,6 +3412,11 @@ function applyLang() {
   // Settings tab
   const settingsSecLabel = document.querySelector('#tab-settings .sec-label');
   if (settingsSecLabel) settingsSecLabel.childNodes[0].textContent = L.settingsTitle + ' ';
+  const sThemeTitle = document.getElementById('settings-theme-title');
+  if (sThemeTitle) sThemeTitle.textContent = L.themeTitle || '🎨 Theme';
+  const sThemeInfo = document.getElementById('settings-theme-info');
+  if (sThemeInfo) sThemeInfo.textContent = L.themeInfo || '';
+  renderThemePicker();
   const sNotifyTitle = document.getElementById('settings-notify-title');
   if (sNotifyTitle) sNotifyTitle.innerHTML = L.notifyTitle + ' <span class="status-dot ok"></span>';
   const sNotifyInfo = document.getElementById('settings-notify-info');
