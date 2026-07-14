@@ -204,6 +204,7 @@ input,textarea,select{font-family:inherit}
 .parsed-item-title{font-size:0.83rem;font-weight:700}
 .parsed-item-orig{font-size:0.72rem;color:var(--muted);font-style:italic;margin-top:2px}
 .parsed-item-tags{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap}
+.parsed-tag-select{padding:3px 6px;border:1.5px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font:800 0.68rem inherit;cursor:pointer}
 .confirm-btn{width:100%;padding:13px;background:var(--primary);color:white;border-radius:var(--r-sm);font-size:0.88rem;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity 0.2s}
 .confirm-btn:disabled{opacity:0.6}
 .btn-clear-parsed{width:100%;padding:10px;background:transparent;color:var(--muted);border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:0.82rem;font-weight:700;margin-top:7px;transition:all 0.15s}
@@ -276,6 +277,17 @@ input,textarea,select{font-family:inherit}
 .modal-input:focus{border-color:var(--blue)}
 .modal-save{width:100%;padding:12px;background:var(--primary);color:white;border-radius:var(--r-sm);font-size:0.9rem;font-weight:800}
 .modal-close{position:absolute;top:14px;right:16px;font-size:1.2rem;color:var(--muted);padding:4px}
+.assessment-modal{max-height:82vh;display:flex;flex-direction:column}
+.assessment-list{overflow-y:auto;margin:6px -2px 14px;padding:2px;display:flex;flex-direction:column;gap:8px}
+.assessment-item{display:flex;align-items:center;gap:10px;padding:11px 12px;border:1.5px solid var(--border);border-radius:12px;background:var(--surface2);cursor:pointer;text-align:left;width:100%}
+.assessment-item:active{transform:scale(0.98);border-color:var(--primary)}
+.assessment-edit-form{display:flex;flex-direction:column;gap:10px;padding:4px 2px}
+.assessment-item-icon{font-size:1.15rem}
+.assessment-item-main{min-width:0;flex:1}
+.assessment-item-name{font-size:0.85rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.assessment-item-meta{font-size:0.68rem;font-weight:600;color:var(--muted);margin-top:3px}
+.assessment-item-days{font-size:0.74rem;font-weight:800;color:var(--primary-dk);white-space:nowrap;text-align:right}
+.assessment-empty{padding:20px 8px;color:var(--muted);font-size:0.85rem;text-align:center}
 
 /* Toast */
 .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(30px);background:var(--primary-dk);color:white;padding:10px 18px;border-radius:20px;font-size:0.82rem;font-weight:700;box-shadow:var(--shadow-md);opacity:0;transition:all 0.25s;z-index:99;white-space:nowrap;pointer-events:none}
@@ -722,7 +734,7 @@ input,textarea,select{font-family:inherit}
   <div class="sync-bar" id="sync-bar"></div>
   <div id="exam-banner-wrap"></div>
     <!-- Exam countdown strip -->
-  <div id="exam-strip-wrap" onclick="showTab('exam')"></div>
+  <div id="exam-strip-wrap" onclick="openAssessmentPopup()"></div>
 
   <!-- CONTENT -->
   <div class="content">
@@ -975,6 +987,17 @@ input,textarea,select{font-family:inherit}
   </div>
 
 </div><!-- /app -->
+
+<!-- Upcoming exams and quizzes -->
+<div id="assessment-overlay" class="modal-overlay" onclick="if(event.target===this)closeAssessmentPopup()">
+  <div class="modal assessment-modal" role="dialog" aria-modal="true" aria-labelledby="assessment-popup-title">
+    <button class="modal-close" aria-label="Close" onclick="closeAssessmentPopup()">✕</button>
+    <div class="modal-title" id="assessment-popup-title">🎯 Exams &amp; quizzes</div>
+    <div class="modal-sub" id="assessment-popup-sub">รายการสอบและควิซที่กำลังจะมาถึง · แตะรายการเพื่อแก้ไข</div>
+    <div id="assessment-popup-list" class="assessment-list"></div>
+    <button class="modal-save" id="assessment-popup-action" onclick="closeAssessmentPopup();showTab('exam')">เปิดหน้ารายการสอบ</button>
+  </div>
+</div>
 
 <!-- Edit Sheet -->
 <div id="confirm-overlay" class="confirm-overlay" onclick="if(event.target===this)closeConfirm()">
@@ -1599,6 +1622,32 @@ function looksLikeExam(s){
   const x = String(s||'');
   return (/สอบ/.test(x) && !/ตรวจสอบ/.test(x)) || /\bexams?\b/i.test(x);
 }
+
+function normalizeParsedTag(tag) {
+  const value = String(tag || '').trim().toLowerCase();
+  if (value === 'ต้องทำ' || value === 'todo' || value === 'to-do') return 'todo';
+  if (value === 'การบ้าน' || value === 'homework' || value === 'hw') return 'homework';
+  if (value === 'exam' || value === 'test' || value === 'สอบ') return 'exam';
+  if (value === 'quiz' || value === 'ควิซ') return 'quiz';
+  return 'homework';
+}
+
+function splitParsedItemsForSave(items) {
+  const taskItems = [];
+  const examItems = [];
+  items.forEach(item => {
+    if (item.record_type === 'event' || item.record_type === 'info') return;
+    item.parsed_tag = normalizeParsedTag(item.parsed_tag || item.tag || item.type);
+    if (item.parsed_tag === 'exam' || item.parsed_tag === 'quiz') examItems.push(item);
+    else taskItems.push(item);
+  });
+  return { taskItems, examItems };
+}
+
+function setParsedTag(index, tag) {
+  if (!parsedResults[index]) return;
+  parsedResults[index].parsed_tag = normalizeParsedTag(tag);
+}
 const _DOW_TH = {'อาทิตย์':0,'จันทร์':1,'อังคาร':2,'พุธ':3,'พฤหัสบดี':4,'พฤหัส':4,'ศุกร์':5,'เสาร์':6};
 const _DOW_EN = {sunday:0,monday:1,tuesday:2,wednesday:3,thursday:4,friday:5,saturday:6};
 function detectWeeklyDow(s){
@@ -2200,12 +2249,19 @@ function showParsedPreview(items) {
     const isTask = task.record_type !== 'event' && task.record_type !== 'info';
     const isEvent = task.record_type === 'event';
     const isInfo = task.record_type === 'info';
+    const parsedTag = normalizeParsedTag(task.parsed_tag || task.tag || task.type);
+    if (isTask) task.parsed_tag = parsedTag;
 
     // Type badge
     let typeBadge = '';
     if (isInfo) typeBadge = `<span class="tag" style="background:#ede9fe;color:#5b21b6">📝 ${L.infoType}</span>`;
     else if (isEvent) typeBadge = `<span class="tag tag-today">📅 Event</span>`;
-    else typeBadge = `<span class="tag ${task.type==='homework'?'tag-hw':'tag-todo'}">${task.type==='homework'?L.hwType:L.todoType}</span>`;
+    else typeBadge = `<select class="parsed-tag-select" id="pi-tag-${i}" aria-label="Tag" onchange="setParsedTag(${i},this.value)">
+      <option value="todo" ${parsedTag==='todo'?'selected':''}>ต้องทำ</option>
+      <option value="homework" ${parsedTag==='homework'?'selected':''}>การบ้าน</option>
+      <option value="exam" ${parsedTag==='exam'?'selected':''}>Exam</option>
+      <option value="quiz" ${parsedTag==='quiz'?'selected':''}>Quiz</option>
+    </select>`;
 
     // Editable date row — shown for tasks and events
     const showDate = isTask || isEvent;
@@ -2307,8 +2363,8 @@ async function confirmParsed() {
     toast(`📝 บันทึก ${noteCount} โน้ตแล้ว`);
   }
 
-  const taskItems = selected.filter(r => r.record_type !== 'event' && r.record_type !== 'info');
-  if (!taskItems.length && (autoEvents.length || infoItems.length)) {
+  const { taskItems, examItems } = splitParsedItemsForSave(selected);
+  if (!taskItems.length && !examItems.length && (autoEvents.length || infoItems.length)) {
     closeFab(); if (infoItems.length) showTab('notes'); else { showTab('cal'); renderCalendar(); renderEventList(); } return;
   }
   const btn = document.getElementById('confirm-btn');
@@ -2317,11 +2373,10 @@ async function confirmParsed() {
   btn.disabled = true; txt.textContent = 'กำลังบันทึก...'; spin.classList.remove('hidden');
   taskItems.forEach(t => {
     const _txt = (t.original_text||'')+' '+(t.parsed_title||'');
-    if (looksLikeExam(_txt) && t.type!=='note') t.type = 'exam';
     if (looksWeekly(_txt)) { t.recurring_weekly = true; const _d = detectWeeklyDow(_txt); if (!t.due_date && _d!=null) t.due_date = nextDowDate(_d); }
   });
   const newTasks = taskItems.map(t => ({
-    id: uid(), type: t.type||'homework',
+    id: uid(), type: t.parsed_tag === 'todo' ? 'todo' : 'homework',
     original_text: t.original_text||'',
     parsed_title: t.parsed_title||t.original_text,
     subject: t.subject||'Other',
@@ -2334,19 +2389,35 @@ async function confirmParsed() {
     image_url: photoUrlFor(t),
     created_at: new Date().toISOString()
   }));
+  const newExams = examItems.map(t => ({
+    id: uid(), kid_id: currentKid,
+    name: t.parsed_title || t.original_text || (t.parsed_tag === 'quiz' ? 'Quiz' : 'Exam'),
+    exam_date: t.due_date || t.date || null,
+    created_at: new Date().toISOString()
+  }));
   // Optimistic
-  STATE.tasks.unshift(...newTasks); renderAll();
+  STATE.tasks.unshift(...newTasks);
+  STATE.exams.push(...newExams);
+  renderAll();
   if (!USE_LOCAL) {
-    let { error } = await sb.from('tasks').insert(newTasks);
-    if (error && /image_url/i.test(error.message || '')) {
+    let taskError = null;
+    if (newTasks.length) {
+      ({ error: taskError } = await sb.from('tasks').insert(newTasks));
+    }
+    if (taskError && /image_url/i.test(taskError.message || '')) {
       // image_url column not added yet — strip it so saving still works
       const stripped = newTasks.map(({ image_url, ...rest }) => rest);
-      ({ error } = await sb.from('tasks').insert(stripped));
+      ({ error: taskError } = await sb.from('tasks').insert(stripped));
     }
-    if (error) {
-      newTasks.forEach(t => { STATE.tasks = STATE.tasks.filter(x=>x.id!==t.id); });
+    let examError = null;
+    if (newExams.length) {
+      ({ error: examError } = await sb.from('exams').insert(newExams));
+    }
+    if (taskError || examError) {
+      if (taskError) newTasks.forEach(t => { STATE.tasks = STATE.tasks.filter(x=>x.id!==t.id); });
+      if (examError) newExams.forEach(ex => { STATE.exams = STATE.exams.filter(x=>x.id!==ex.id); });
       btn.disabled = false; txt.textContent = '💾 บันทึกที่เลือก'; spin.classList.add('hidden');
-      renderAll(); toast('❌ บันทึกไม่ได้: ' + error.message); return;
+      renderAll(); toast('❌ บันทึกไม่ได้: ' + (taskError || examError).message); return;
     }
   } else {
     saveLocal();
@@ -2358,8 +2429,8 @@ async function confirmParsed() {
   parsedResults = [];
   pendingImages = [];
   renderPendingThumbs();
-  toast(`✅ บันทึก ${newTasks.length} งานแล้ว`);
-  showTab('hw');
+  toast(`✅ บันทึก ${newTasks.length} งาน${newExams.length ? ` และ ${newExams.length} รายการสอบ` : ''}แล้ว`);
+  showTab(newExams.length ? 'exam' : 'hw');
 }
 
 /* ═══════════════════════════════════════
@@ -3665,6 +3736,7 @@ For each TASK return JSON with:
 - original_text: exact text as written (preserve Thai and English exactly)
 - parsed_title: exact text copied verbatim as written on the paper, in its original language — do NOT translate between Thai and English, do NOT summarize or rephrase or clean up. Copy the characters as-is (truncate to 80 chars only if the line is longer)
 - type: "homework", "todo", or "exam" (use "exam" when the text mentions a test/exam/quiz/midterm/final, or Thai "สอบ")
+- tag: "ต้องทำ", "การบ้าน", "exam", or "quiz". Use "exam" for formal tests/exams and "quiz" for quizzes; the parent can edit this before saving.
 - subject: Math | Thai | English | Science | Social | Chinese | PE | Other
 - due_date: YYYY-MM-DD (apply date rules above), else null
 - points: integer if points/marks/% mentioned, else null
@@ -3827,9 +3899,7 @@ function renderExamBanner() {
   const subText = second
     ? `next up · ${escHtml(second.name)} in ${second.diff}d`
     : 'next up';
-  const tab = nearest.source === 'exam' ? 'exam' : 'hw';
-
-  wrap.innerHTML = `<div class="a-exam-banner" onclick="showTab('${tab}')">
+  wrap.innerHTML = `<div class="a-exam-banner" onclick="openAssessmentPopup()">
     <div class="a-exam-banner-left">
       <div class="a-exam-name">${escHtml(nearest.name)}</div>
       <div class="a-exam-sub">${subText}</div>
@@ -3839,6 +3909,120 @@ function renderExamBanner() {
       <div class="a-exam-sub">days</div>
     </div>
   </div>`;
+}
+
+function getAssessmentPopupItems(exams, tasks, todayIso) {
+  const reference = new Date(`${todayIso || new Date().toISOString().slice(0, 10)}T12:00:00`);
+  const dayDiff = date => date ? Math.round((new Date(`${date}T12:00:00`) - reference) / 86400000) : null;
+  const dedicated = exams.map(exam => ({
+    id: exam.id, name: exam.name || 'Exam', date: exam.exam_date || null,
+    days: dayDiff(exam.exam_date), source: 'exam'
+  }));
+  const legacy = tasks
+    .filter(task => task.type === 'exam' && !task.is_done)
+    .map(task => ({
+      id: task.id, name: task.parsed_title || task.original_text || 'Exam', date: task.due_date || null,
+      days: dayDiff(task.due_date), source: 'task'
+    }));
+  return [...dedicated, ...legacy]
+    .filter(item => item.days === null || item.days >= 0)
+    .sort((a, b) => (a.days === null ? Infinity : a.days) - (b.days === null ? Infinity : b.days));
+}
+
+function getAssessmentEditTarget(item) {
+  return { record: item.source === 'exam' ? 'exam' : 'task', id: item.id };
+}
+
+let editingAssessmentExamId = null;
+
+function openAssessmentPopup() {
+  const overlay = document.getElementById('assessment-overlay');
+  const list = document.getElementById('assessment-popup-list');
+  const title = document.getElementById('assessment-popup-title');
+  const sub = document.getElementById('assessment-popup-sub');
+  const action = document.getElementById('assessment-popup-action');
+  if (!overlay || !list || !title || !sub || !action) return;
+  editingAssessmentExamId = null;
+  title.textContent = '🎯 Exams & quizzes';
+  sub.textContent = 'รายการสอบและควิซที่กำลังจะมาถึง · แตะรายการเพื่อแก้ไข';
+  action.textContent = 'เปิดหน้ารายการสอบ';
+  action.onclick = () => { closeAssessmentPopup(); showTab('exam'); };
+  const items = getAssessmentPopupItems(STATE.exams, STATE.tasks);
+  if (!items.length) {
+    list.innerHTML = '<div class="assessment-empty">ยังไม่มีรายการสอบหรือควิซที่กำลังจะมาถึง</div>';
+  } else {
+    list.innerHTML = items.map(item => {
+      const isQuiz = /\bquiz\b|ควิซ/i.test(item.name);
+      const icon = isQuiz ? '❓' : '🎯';
+      const kind = isQuiz ? 'Quiz' : 'Exam';
+      const when = item.days === null ? 'No date' : item.days === 0 ? 'Today' : `${item.days} days`;
+      const date = item.date ? `📅 ${item.date}` : '📅 No date';
+      return `<button class="assessment-item" onclick="openAssessmentItem('${item.id}','${item.source}')">
+        <span class="assessment-item-icon">${icon}</span>
+        <span class="assessment-item-main">
+          <span class="assessment-item-name">${escHtml(item.name)}</span>
+          <span class="assessment-item-meta">${kind} · ${date}</span>
+        </span>
+        <span class="assessment-item-days">${when} · ✏️</span>
+      </button>`;
+    }).join('');
+  }
+  overlay.classList.add('open');
+}
+
+function openAssessmentItem(id, source) {
+  const target = getAssessmentEditTarget({ id, source });
+  if (target.record === 'task') {
+    closeAssessmentPopup();
+    showTab('hw');
+    setTimeout(() => openEditSheet(target.id), 0);
+    return;
+  }
+  const exam = STATE.exams.find(item => item.id === target.id);
+  if (!exam) return;
+  editingAssessmentExamId = exam.id;
+  document.getElementById('assessment-popup-title').textContent = '✏️ Edit exam / quiz';
+  document.getElementById('assessment-popup-sub').textContent = 'แก้ไขชื่อหรือวันสอบ แล้วกดบันทึก';
+  document.getElementById('assessment-popup-list').innerHTML = `<div class="assessment-edit-form">
+    <label class="form-label">ชื่อการสอบ / Quiz</label>
+    <input class="form-input" id="assessment-edit-name" value="${escHtml(exam.name)}">
+    <label class="form-label">วันสอบ</label>
+    <input class="form-input" id="assessment-edit-date" type="date" value="${exam.exam_date || ''}">
+  </div>`;
+  const action = document.getElementById('assessment-popup-action');
+  action.textContent = '💾 บันทึก';
+  action.onclick = saveAssessmentExam;
+}
+
+async function saveAssessmentExam() {
+  const exam = STATE.exams.find(item => item.id === editingAssessmentExamId);
+  if (!exam) return;
+  const name = document.getElementById('assessment-edit-name').value.trim();
+  const examDate = document.getElementById('assessment-edit-date').value || null;
+  if (!name) { toast('⚠️ กรุณาใส่ชื่อการสอบ'); return; }
+  const previous = { name: exam.name, exam_date: exam.exam_date };
+  exam.name = name;
+  exam.exam_date = examDate;
+  renderAll();
+  if (USE_LOCAL) {
+    saveLocal();
+  } else {
+    const { error } = await sb.from('exams').update({ name, exam_date: examDate }).eq('id', exam.id);
+    if (error) {
+      exam.name = previous.name;
+      exam.exam_date = previous.exam_date;
+      renderAll();
+      toast('❌ บันทึกไม่ได้: ' + error.message);
+      return;
+    }
+  }
+  toast('✅ แก้ไขรายการสอบแล้ว');
+  openAssessmentPopup();
+}
+
+function closeAssessmentPopup() {
+  editingAssessmentExamId = null;
+  document.getElementById('assessment-overlay')?.classList.remove('open');
 }
 
 function renderExamStrip() {
@@ -3895,9 +4079,8 @@ function renderExamStrip() {
       ? `<div class="esc-prog-track"><div class="esc-prog-fill" style="width:${item.pct}%"></div></div>
          <div class="esc-prog-label">${L.studiedStrip||'studied'} ${item.doneT}/${item.total} (${item.pct}%)</div>`
       : '';
-    const tab = item.source === 'exam' ? 'exam' : 'hw';
     return `
-    <div class="exam-strip-card" onclick="showTab('${tab}')">
+    <div class="exam-strip-card" onclick="openAssessmentPopup()">
       <div class="esc-row">
         <div class="exam-strip-name">🎯 ${escHtml(item.name)}${todayBadge}</div>
         <div class="esc-right">

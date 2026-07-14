@@ -2,8 +2,8 @@ name: Telegram homework notifications
 
 on:
   schedule:
-    - cron: '30 22 * * *'   # 22:30 UTC = 05:30 Bangkok — morning summary
-    - cron: '0 14 * * *'    # 14:00 UTC = 21:00 Bangkok — tomorrow planning
+    - cron: '0 22 * * *'    # 22:00 UTC = 05:00 Bangkok — morning summary
+    - cron: '30 13 * * *'   # 13:30 UTC = 20:30 Bangkok — tomorrow planning
   workflow_dispatch:        # allow manual run from the Actions tab
 
 jobs:
@@ -13,7 +13,7 @@ jobs:
       - name: Pick mode from schedule
         id: mode
         run: |
-          if [ "${{ github.event.schedule }}" = "30 22 * * *" ]; then
+          if [ "${{ github.event.schedule }}" = "0 22 * * *" ]; then
             echo "mode=morning" >> "$GITHUB_OUTPUT"
           else
             echo "mode=evening" >> "$GITHUB_OUTPUT"

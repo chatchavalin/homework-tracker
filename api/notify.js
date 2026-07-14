@@ -1,3 +1,13 @@
+function getBangkokCalendar(now = new Date()) {
+  const bangkok = new Date(now.getTime() + 7 * 3600 * 1000);
+  return {
+    year: bangkok.getUTCFullYear(),
+    month: bangkok.getUTCMonth(),
+    day: bangkok.getUTCDate(),
+    dow: bangkok.getUTCDay(),
+  };
+}
+
 export default async function handler(req, res) {
   const SUPABASE_URL  = process.env.SUPABASE_URL;
   const SUPABASE_KEY  = process.env.SUPABASE_ANON_KEY;
@@ -16,8 +26,8 @@ export default async function handler(req, res) {
     // reappears for the new week, and advance its due_date to this week's weekday.
     // Piggybacks on the existing morning cron (no extra workflow/cron needed).
     try {
-      const bkkNow = new Date(Date.now() + 7 * 3600 * 1000);
-      const bkkDow = bkkNow.getUTCDay();                         // 0=Sun..6=Sat (Bangkok)
+      const bkkNow = getBangkokCalendar();
+      const bkkDow = bkkNow.dow;                                 // 0=Sun..6=Sat (Bangkok)
       const mp0 = (req.query && req.query.mode) ? String(req.query.mode) : '';
       const morning0 = mp0 === 'morning' ? true
                      : mp0 === 'evening' ? false
@@ -29,7 +39,7 @@ export default async function handler(req, res) {
         );
         if (wr.ok) {
           const wk = await wr.json();
-          const t0 = Date.UTC(bkkNow.getUTCFullYear(), bkkNow.getUTCMonth(), bkkNow.getUTCDate());
+          const t0 = Date.UTC(bkkNow.year, bkkNow.month, bkkNow.day);
           for (const t of wk) {
             const patch = { is_done: false };
             if (Number.isInteger(t.repeat_dow)) {
@@ -61,7 +71,8 @@ export default async function handler(req, res) {
 
     const now      = new Date();
     const utcHour   = now.getUTCHours();
-    const today    = new Date(now); today.setHours(0,0,0,0); // midnight today, for exam countdown
+    const bkkNow    = getBangkokCalendar(now);
+    const today     = new Date(Date.UTC(bkkNow.year, bkkNow.month, bkkNow.day)); // Bangkok midnight for task/exam dates
     // 22:30 UTC = 05:30 Bangkok (morning), 14:00 UTC = 21:00 Bangkok (evening)
     // Explicit override via ?mode=morning|evening (used by GitHub Actions cron, immune to scheduling delay)
   const modeParam = (req.query && req.query.mode) ? String(req.query.mode) : '';
@@ -70,11 +81,11 @@ export default async function handler(req, res) {
                   : utcHour === 22;
 
     // Morning shows TODAY, evening shows TOMORROW
-    const target   = new Date(now);
-    if (!isMorning) target.setDate(target.getDate() + 1);
-    const buddYear = target.getFullYear() + 543;
-    const dateStr  = `${target.getDate()}/${target.getMonth()+1}/${buddYear}`;
-    const tDow     = target.getDay();
+    const target   = new Date(today);
+    if (!isMorning) target.setUTCDate(target.getUTCDate() + 1);
+    const buddYear = target.getUTCFullYear() + 543;
+    const dateStr  = `${target.getUTCDate()}/${target.getUTCMonth()+1}/${buddYear}`;
+    const tDow     = target.getUTCDay();
     const DOW_TH   = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์'];
 
     // Uniform reminders
@@ -95,7 +106,7 @@ export default async function handler(req, res) {
       const kt = byKid[kidId];
       if (!kt.length) return `\n\n${kidName[kidId]}: ✅ ไม่มีงานค้าง`;
       // due tomorrow (this runs at 9PM, so warn about tomorrow)
-      const t0 = new Date(now); t0.setHours(0,0,0,0);
+      const t0 = today;
       const tmrHw = kt.filter(t => {
         if (!t.due_date || t.type !== 'homework') return false;
         const d = new Date(t.due_date + 'T00:00:00');
