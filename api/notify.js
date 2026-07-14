@@ -8,6 +8,87 @@ function getBangkokCalendar(now = new Date()) {
   };
 }
 
+function taskDayDiff(task, today) {
+  if (!task || !task.due_date) return null;
+  const d = new Date(String(task.due_date) + 'T00:00:00');
+  if (Number.isNaN(d.getTime())) return null;
+  const diff = Math.round((d - today) / 86400000);
+  return Object.is(diff, -0) ? 0 : diff;
+}
+
+// งานด่วน: high priority, overdue, due today, or (evening) due tomorrow
+function isUrgentNotifyTask(task, today, isMorning) {
+  if (!task || task.is_done) return false;
+  if (task.priority === 'high') return true;
+  const diff = taskDayDiff(task, today);
+  if (diff === null) return false;
+  if (diff < 0) return true;                 // overdue
+  if (diff === 0) return true;               // due today
+  if (!isMorning && diff === 1) return true; // evening plan includes tomorrow
+  return false;
+}
+
+// งานค้าง within two weeks ahead (and overdue still counts as pending window)
+function isPendingWithinTwoWeeks(task, today) {
+  if (!task || task.is_done) return false;
+  if (task.type !== 'homework' && task.type !== 'todo') return false;
+  const diff = taskDayDiff(task, today);
+  if (diff === null) return false; // undated listed separately as ต้องทำ
+  return diff <= 14;
+}
+
+function buildKidNotifySection({ kidLabel, tasks, today, isMorning }) {
+  const kt = Array.isArray(tasks) ? tasks.filter(t => !t.is_done) : [];
+  if (!kt.length) return `\n\n${kidLabel}: ✅ ไม่มีงานค้าง`;
+
+  const urgent = kt.filter(t => isUrgentNotifyTask(t, today, isMorning));
+  const dueSoonHw = kt.filter(t => {
+    if (t.type !== 'homework' || !t.due_date) return false;
+    const diff = taskDayDiff(t, today);
+    if (diff === null) return false;
+    return isMorning ? diff === 0 : diff <= 1;
+  });
+  const pendingWindow = kt.filter(t => isPendingWithinTwoWeeks(t, today));
+  // งานค้าง list: homework in 2-week window that is not already in ด่วน (avoid dup noise)
+  const pendingHw = pendingWindow
+    .filter(t => t.type === 'homework')
+    .filter(t => !urgent.some(u => u === t || (u.id && t.id && u.id === t.id)));
+  const todos = kt.filter(t => t.type === 'todo').slice(0, 5);
+
+  const countLabel = pendingWindow.length;
+  let s = `\n\n*${kidLabel}* — ค้าง ${countLabel} ชิ้น (ใน 2 สัปดาห์)`;
+
+  // Always show งานด่วน when present (not else-if)
+  if (urgent.length) {
+    s += `\n⚡ งานด่วน:`;
+    urgent.slice(0, 6).forEach(t => { s += `\n  • ${t.parsed_title || t.original_text}`; });
+  }
+
+  if (dueSoonHw.length) {
+    s += isMorning ? `\n🔴 ต้องส่งวันนี้:` : `\n🔴 ต้องส่งพรุ่งนี้:`;
+    dueSoonHw.slice(0, 5).forEach(t => { s += `\n  • ${t.parsed_title || t.original_text}`; });
+  }
+
+  if (pendingHw.length) {
+    s += `\n📌 งานค้าง (≤14 วัน):`;
+    pendingHw.slice(0, 8).forEach(t => {
+      const diff = taskDayDiff(t, today);
+      const when = diff === null ? '' : diff < 0 ? ` (เกิน ${Math.abs(diff)} วัน)` : diff === 0 ? ' (วันนี้)' : ` (อีก ${diff} วัน)`;
+      s += `\n  • ${t.parsed_title || t.original_text}${when}`;
+    });
+  }
+
+  if (todos.length) {
+    s += `\n📋 ต้องทำ:`;
+    todos.forEach(t => { s += `\n  • ${t.parsed_title || t.original_text}`; });
+  }
+
+  if (!urgent.length && !dueSoonHw.length && !pendingHw.length && !todos.length) {
+    s += `\n✅ ไม่มีงานใน 2 สัปดาห์นี้`;
+  }
+  return s;
+}
+
 export default async function handler(req, res) {
   const SUPABASE_URL  = process.env.SUPABASE_URL;
   const SUPABASE_KEY  = process.env.SUPABASE_ANON_KEY;
@@ -103,31 +184,12 @@ export default async function handler(req, res) {
     };
 
     function kidSection(kidId) {
-      const kt = byKid[kidId];
-      if (!kt.length) return `\n\n${kidName[kidId]}: ✅ ไม่มีงานค้าง`;
-      // due tomorrow (this runs at 9PM, so warn about tomorrow)
-      const t0 = today;
-      const tmrHw = kt.filter(t => {
-        if (!t.due_date || t.type !== 'homework') return false;
-        const d = new Date(t.due_date + 'T00:00:00');
-        const diff = Math.round((d - t0) / 86400000);
-        return isMorning ? diff === 0 : diff <= 1; // morning=today, evening=tomorrow+overdue
+      return buildKidNotifySection({
+        kidLabel: kidName[kidId],
+        tasks: byKid[kidId],
+        today,
+        isMorning,
       });
-      const urgent = kt.filter(t => t.type === 'homework' && t.priority === 'high');
-      const todos  = kt.filter(t => t.type === 'todo').slice(0, 3);
-      let s = `\n\n*${kidName[kidId]}* — ค้าง ${kt.length} ชิ้น`;
-      if (tmrHw.length) {
-        s += `\n🔴 ต้องส่งพรุ่งนี้:`;
-        tmrHw.slice(0,5).forEach(t => { s += `\n  • ${t.parsed_title || t.original_text}`; });
-      } else if (urgent.length) {
-        s += `\n⚡ งานด่วน:`;
-        urgent.slice(0,4).forEach(t => { s += `\n  • ${t.parsed_title || t.original_text}`; });
-      }
-      if (todos.length) {
-        s += `\n📋 ต้องทำ:`;
-        todos.forEach(t => { s += `\n  • ${t.parsed_title || t.original_text}`; });
-      }
-      return s;
     }
 
     // Exam countdown
@@ -176,3 +238,11 @@ export default async function handler(req, res) {
     return res.status(200).json({ ok: false, error: String(err && err.message || err) });
   }
 }
+
+export {
+  getBangkokCalendar,
+  taskDayDiff,
+  isUrgentNotifyTask,
+  isPendingWithinTwoWeeks,
+  buildKidNotifySection,
+};
