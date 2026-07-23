@@ -20,6 +20,7 @@ export default async function handler(req, res) {
   const BOT_TOKEN    = process.env.TELEGRAM_BOT_TOKEN;
   const SECRET       = process.env.TELEGRAM_WEBHOOK_SECRET || '';      // optional
   const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
+  const OPENCODE_GO_KEY = process.env.OPENCODE_GO_API_KEY;
   const GROQ_KEY      = process.env.GROQ_API_KEY;
 
   // Sender -> kid mapping (set these in Vercel once each kid /starts the bot).
@@ -132,7 +133,7 @@ Rules:
 - type "homework" if it's schoolwork with/needing a due date, else "todo".
 - priority "high" only if it says urgent/ด่วน/พรุ่งนี้, else "med".`;
 
-    const parsed = await parseMessage(PROMPT, { ANTHROPIC_KEY, GROQ_KEY });
+    const parsed = await parseMessage(PROMPT, { ANTHROPIC_KEY, OPENCODE_GO_KEY, GROQ_KEY });
     if (!parsed) {
       await reply(chatId, '❓ อ่านไม่ออก ลองพิมพ์ใหม่ / Could not parse, try again.');
       return res.status(200).json({ ok: false, reason: 'parse failed' });
@@ -223,8 +224,8 @@ Rules:
   }
 }
 
-// ── Parse free text -> structured task. Claude first if available, else Groq. ──
-async function parseMessage(prompt, { ANTHROPIC_KEY, GROQ_KEY }) {
+// ── Parse free text -> structured task. Claude first, then OpenCode Go, then Groq. ──
+async function parseMessage(prompt, { ANTHROPIC_KEY, OPENCODE_GO_KEY, GROQ_KEY }) {
   const tryParse = (raw) => {
     try { return JSON.parse(String(raw).replace(/```json|```/g, '').trim()); }
     catch { return null; }
@@ -248,6 +249,26 @@ async function parseMessage(prompt, { ANTHROPIC_KEY, GROQ_KEY }) {
       if (r.ok) {
         const d = await r.json();
         const out = tryParse(d.content?.find(c => c.type === 'text')?.text || '');
+        if (out) return out;
+      }
+    } catch (e) { /* fall through to Groq */ }
+  }
+
+  if (OPENCODE_GO_KEY) {
+    try {
+      const r = await fetch('https://opencode.ai/zen/go/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${OPENCODE_GO_KEY}` },
+        body: JSON.stringify({
+          model: 'mimo-v2.5',
+          max_tokens: 512,
+          temperature: 0.1,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+      if (r.ok) {
+        const d = await r.json();
+        const out = tryParse(d.choices?.[0]?.message?.content || '');
         if (out) return out;
       }
     } catch (e) { /* fall through to Groq */ }
