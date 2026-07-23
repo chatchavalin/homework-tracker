@@ -19,9 +19,7 @@ export default async function handler(req, res) {
   const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
   const BOT_TOKEN    = process.env.TELEGRAM_BOT_TOKEN;
   const SECRET       = process.env.TELEGRAM_WEBHOOK_SECRET || '';      // optional
-  const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
   const OPENCODE_GO_KEY = process.env.OPENCODE_GO_API_KEY;
-  const GROQ_KEY      = process.env.GROQ_API_KEY;
 
   // Sender -> kid mapping (set these in Vercel once each kid /starts the bot).
   const CHAT_RYUJI = (process.env.TELEGRAM_CHAT_RYUJI || '').trim();
@@ -133,7 +131,7 @@ Rules:
 - type "homework" if it's schoolwork with/needing a due date, else "todo".
 - priority "high" only if it says urgent/ด่วน/พรุ่งนี้, else "med".`;
 
-    const parsed = await parseMessage(PROMPT, { ANTHROPIC_KEY, OPENCODE_GO_KEY, GROQ_KEY });
+    const parsed = await parseMessage(PROMPT, { OPENCODE_GO_KEY });
     if (!parsed) {
       await reply(chatId, '❓ อ่านไม่ออก ลองพิมพ์ใหม่ / Could not parse, try again.');
       return res.status(200).json({ ok: false, reason: 'parse failed' });
@@ -224,35 +222,12 @@ Rules:
   }
 }
 
-// ── Parse free text -> structured task. Claude first, then OpenCode Go, then Groq. ──
-async function parseMessage(prompt, { ANTHROPIC_KEY, OPENCODE_GO_KEY, GROQ_KEY }) {
+// ── Parse free text -> structured task via OpenCode Go only. ──
+async function parseMessage(prompt, { OPENCODE_GO_KEY }) {
   const tryParse = (raw) => {
     try { return JSON.parse(String(raw).replace(/```json|```/g, '').trim()); }
     catch { return null; }
   };
-
-  if (ANTHROPIC_KEY) {
-    try {
-      const r = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': ANTHROPIC_KEY,
-          'anthropic-version': '2023-06-01'
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 512,
-          messages: [{ role: 'user', content: prompt }]
-        })
-      });
-      if (r.ok) {
-        const d = await r.json();
-        const out = tryParse(d.content?.find(c => c.type === 'text')?.text || '');
-        if (out) return out;
-      }
-    } catch (e) { /* fall through to Groq */ }
-  }
 
   if (OPENCODE_GO_KEY) {
     try {
@@ -271,26 +246,7 @@ async function parseMessage(prompt, { ANTHROPIC_KEY, OPENCODE_GO_KEY, GROQ_KEY }
         const out = tryParse(d.choices?.[0]?.message?.content || '');
         if (out) return out;
       }
-    } catch (e) { /* fall through to Groq */ }
-  }
-
-  if (GROQ_KEY) {
-    try {
-      const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_KEY}` },
-        body: JSON.stringify({
-          model: 'qwen/qwen3.6-27b',
-          max_tokens: 512,
-          temperature: 0.1,
-          messages: [{ role: 'user', content: prompt }]
-        })
-      });
-      if (r.ok) {
-        const d = await r.json();
-        return tryParse(d.choices?.[0]?.message?.content || '');
-      }
-    } catch (e) { /* give up */ }
+    } catch (e) { return null; }
   }
   return null;
 }
