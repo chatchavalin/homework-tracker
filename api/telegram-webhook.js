@@ -259,7 +259,7 @@ async function parseMessage(prompt, { ANTHROPIC_KEY, GROQ_KEY }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_KEY}` },
         body: JSON.stringify({
-          model: 'llama-4-scout-17b-16e-instruct',
+          model: 'qwen/qwen3.6-27b',
           max_tokens: 512,
           temperature: 0.1,
           messages: [{ role: 'user', content: prompt }]
