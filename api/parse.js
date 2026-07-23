@@ -51,7 +51,7 @@ export default async function handler(req, res) {
     }
   }
 
-  // ── Fallback: Groq Llama 4 Scout ──
+  // ── Fallback: Groq Qwen 3.6 27B ──
   if (!GROQ_API_KEY) {
     return res.status(500).json({ error: 'No AI API key configured' });
   }
@@ -63,7 +63,7 @@ export default async function handler(req, res) {
         'Authorization': `Bearer ${GROQ_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'llama-4-scout-17b-16e-instruct',
+        model: 'qwen/qwen3.6-27b',
         max_tokens: 4096,
         temperature: 0.1,
         messages: [{
