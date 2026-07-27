@@ -1918,6 +1918,21 @@ const today   = () => { const d = new Date(); d.setHours(0,0,0,0); return d; };
 const parseD  = s  => { if (!s) return null; const d = new Date(s+'T00:00:00'); d.setHours(0,0,0,0); return d; };
 const diffD   = d  => Math.round((d - today()) / 86400000);
 
+// A task counts as "urgent" if it's still open and either:
+//  - high priority, or
+//  - due within 1 day (today/tomorrow) or already OVERDUE.
+// Covers homework AND exam/quiz/event types — quizzes are imported as type 'exam'
+// and must surface as urgent here too (not just show in the exams tab).
+function isUrgentTask(t) {
+  if (!t || t.is_done) return false;
+  const ty = t.type;
+  if (ty !== 'homework' && ty !== 'exam' && ty !== 'event') return false;
+  if (t.priority === 'high') return true;
+  const d = parseD(t.due_date);
+  if (d) { const diff = diffD(d); if (diff <= 1) return true; }
+  return false;
+}
+
 function dueLabel(due) {
   if (!due) return null;
   const L = t();
@@ -1965,8 +1980,7 @@ function renderHeader() {
       `วัน${days[d.getDay()]} ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()+543}`;
   }
 
-  const hw      = STATE.tasks.filter(t => t.type==='homework');
-  const urgent  = hw.filter(t => !t.is_done && t.priority==='high').length;
+  const urgent  = STATE.tasks.filter(t => isUrgentTask(t)).length;
   const pending = STATE.tasks.filter(t => !t.is_done).length;
   const done    = STATE.tasks.filter(t => t.is_done).length;
   const total   = STATE.tasks.length;
@@ -2843,7 +2857,7 @@ function buildLineMessage() {
   const todayEvs = getEventsForDate(todayStr).filter(e => e.type==='holiday'||e.type==='break');
   const uniforms = getUniformForDate(todayStr);
 
-  const urgent    = STATE.tasks.filter(t=>!t.is_done&&t.type==='homework'&&t.priority==='high');
+  const urgent    = STATE.tasks.filter(t=>isUrgentTask(t));
   const todayTodo = STATE.tasks.filter(t=>!t.is_done&&t.type==='todo');
   const done      = STATE.tasks.filter(t=>t.is_done).length;
   const total     = STATE.tasks.length;
@@ -4771,10 +4785,7 @@ function renderRightNow() {
   if (!wrap) return;
   const h = new Date().getHours();
   const urgent = STATE.tasks
-    .filter(t => !t.is_done && t.type === 'homework' && (
-      (t.due_date && diffD(parseD(t.due_date)) <= 1) ||
-      t.priority === 'high'
-    ))
+    .filter(t => isUrgentTask(t))
     .sort((a,b) => {
       const da = a.due_date ? diffD(parseD(a.due_date)) : 999;
       const db = b.due_date ? diffD(parseD(b.due_date)) : 999;
