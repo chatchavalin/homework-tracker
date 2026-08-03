@@ -1196,6 +1196,18 @@ html[data-theme="dbz"] .nav-btn.active{color:#ea580c}
         <button class="settings-btn success" onclick="testTelegram()" id="settings-test-btn">📨 ทดสอบส่งข้อความตอนนี้</button>
       </div>
 
+      <!-- AI Key (Gemini) -->
+      <div class="settings-card">
+        <div class="settings-title" id="settings-ai-title">🔑 AI Key (Gemini)</div>
+        <div class="info-box" style="margin-bottom:10px" id="settings-ai-info">
+          ใช้รูปภาพการบ้าน → อ่านด้วย AI (Gemini vision). วาง Gemini API Key ของคุณที่นี่
+          (ได้จาก aistudio.google.com/apikey). คีย์เก็บในเบราว์เซอร์นี้ และส่งตรงไป Google Gemini เท่านั้น
+        </div>
+        <input class="settings-input" id="aikey-input" type="password" placeholder="Gemini API Key (AIza...)" autocomplete="off">
+        <button class="settings-btn primary" onclick="saveApiKey()" id="settings-ai-save">💾 บันทึกคีย์</button>
+        <div id="aikey-status" style="font-size:0.7rem;font-weight:700;margin-top:6px"></div>
+      </div>
+
       <!-- Connection -->
       <div class="settings-card">
         <div class="settings-title" id="settings-conn-title">🗄️ การเชื่อมต่อข้อมูล
@@ -1750,6 +1762,7 @@ let currentImgB64 = null;
 let isSyncing = false;
 
 const APIKEY  = () => localStorage.getItem('ht_apikey') || '';
+const GEMINI_MODEL = 'gemini-2.5-flash';
 const LINETOKEN = () => localStorage.getItem('ht_linetoken') || '';
 const LINETIME  = () => localStorage.getItem('ht_linetime') || '07:00';
 
@@ -1765,6 +1778,7 @@ async function init() {
   updateAppTitle();
   updateMusicBtn();
   renderThemePicker();
+  loadApiKeyInput();
   // Load music player (won't auto-play until user taps 🎵 due to browser autoplay rules)
   setTimeout(() => { try { loadMusic(currentKid); } catch(e) { console.warn('music:', e); } }, 1500);
 
@@ -1994,9 +2008,9 @@ function renderHeader() {
   const pf = document.getElementById('prog-fill'); if (pf) pf.style.width = pct + '%';
   const pp = document.getElementById('prog-pct'); if (pp) pp.textContent = pct + '%';
 
-  // AI is server-side — hide button, only show if missing key
+  // Keep the AI settings shortcut available; parsing uses the browser's saved Gemini key.
   const apiBtn = document.getElementById('api-btn');
-  if (apiBtn) apiBtn.style.display = 'none';
+  if (apiBtn) apiBtn.style.display = '';
 }
 
 /* ═══════════════════════════════════════
@@ -2583,6 +2597,15 @@ async function parseImage() {
   const spin = document.getElementById('parse-spinner');
   btn.disabled = true; spin.classList.remove('hidden');
 
+  const key = APIKEY();
+  if (!key) {
+    btn.disabled = false; spin.classList.add('hidden');
+    txt.textContent = '✨ อ่านการบ้านด้วย AI';
+    toast('🔑 กรุณาใส่ Gemini API Key ในตั้งค่า (Settings) ก่อน');
+    showTab('settings');
+    return;
+  }
+
   const PROMPT = getParseSystemPrompt();
 
   parsedResults = [];
@@ -2592,22 +2615,47 @@ async function parseImage() {
     for (let i = 0; i < total; i++) {
       txt.textContent = total > 1 ? `กำลังอ่านรูป ${i+1}/${total}...` : 'กำลังอ่าน...';
       const img = pendingImages[i];
-      // Call our secure Vercel API route — key never touches browser
-      const res = await fetch('/api/parse', {
+      // Call Gemini vision directly from the browser using the user's own key
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': key
+        },
         body: JSON.stringify({
-          imageBase64: img.b64,
-          mimeType: 'image/jpeg',
-          prompt: getParseSystemPrompt()
+          contents: [{
+            parts: [
+              { text: PROMPT },
+              { inline_data: { mime_type: 'image/jpeg', data: img.b64 } }
+            ]
+          }],
+          generationConfig: {
+            temperature: 0.1,
+            maxOutputTokens: 4096,
+            responseMimeType: 'application/json'
+          }
         })
       });
       if (!res.ok) {
         const e = await res.json().catch(()=>({}));
-        throw new Error(e.error || `HTTP ${res.status}`);
+        const msg = e?.error?.message || `HTTP ${res.status}`;
+        if (res.status === 400 || res.status === 401 || res.status === 403) {
+          throw new Error(`Gemini API key rejected: ${msg}`);
+        }
+        if (res.status === 404) {
+          throw new Error(`Gemini model ${GEMINI_MODEL} is unavailable for this key`);
+        }
+        throw new Error(msg);
       }
-      const data  = await res.json();
-      const items = data.tasks || [];
+      const data = await res.json();
+      const raw = data?.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '[]';
+      const clean = raw.replace(/```json|```/g, '').trim();
+      let items = [];
+      try { items = JSON.parse(clean); } catch (_) {
+        // Fallback: extract first JSON array in the response
+        const m = clean.match(/\[[\s\S]*\]/);
+        if (m) items = JSON.parse(m[0]);
+      }
       if (Array.isArray(items)) {
         items.forEach(it => { it._srcB64 = img.b64; });   // keep original photo for this item
         parsedResults.push(...items);
@@ -2632,6 +2680,43 @@ async function parseImage() {
     btn.disabled = false;
     txt.textContent = '✨ อ่านการบ้านด้วย AI';
     spin.classList.add('hidden');
+  }
+}
+
+function saveApiKey() {
+  const input = document.getElementById('aikey-input');
+  const status = document.getElementById('aikey-status');
+  const existing = APIKEY();
+  const v = (input.value || '').trim();
+  if (!v) {
+    if (existing) {
+      status.textContent = '✅ คีย์เดิมยังใช้งานอยู่';
+      status.style.color = '#065f46';
+    } else {
+      status.textContent = '⚠️ กรุณาใส่คีย์';
+      status.style.color = 'var(--high)';
+    }
+    return;
+  }
+  localStorage.setItem('ht_apikey', v);
+  input.value = '';
+  status.textContent = '✅ บันทึกแล้ว — คีย์จะถูกส่งตรงไป Google Gemini';
+  status.style.color = '#065f46';
+  // Keep the AI shortcut available so the key can be changed later.
+  const apiBtn = document.getElementById('api-btn');
+  if (apiBtn) apiBtn.style.display = '';
+  toast('🔑 บันทึก Gemini API Key แล้ว');
+}
+
+function loadApiKeyInput() {
+  const input = document.getElementById('aikey-input');
+  const status = document.getElementById('aikey-status');
+  if (!input) return;
+  // Never put the real key or a fake masked value into the editable field.
+  input.value = '';
+  if (status && APIKEY()) {
+    status.textContent = '✅ มีคีย์ที่บันทึกไว้แล้ว — วางคีย์ใหม่เพื่อเปลี่ยน';
+    status.style.color = '#065f46';
   }
 }
 
@@ -2893,7 +2978,7 @@ async function sendLineMessage(token, msg) { /* deprecated - using Telegram via 
 /* ═══════════════════════════════════════
    SETTINGS ACTIONS
 ═══════════════════════════════════════ */
-// saveApiKey removed — AI key is server-side on Vercel now
+// Gemini API key is stored locally in the browser; parseImage uses it directly.
 
 function saveLineSettings() {}
 
