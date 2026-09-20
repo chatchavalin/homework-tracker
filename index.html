@@ -1008,6 +1008,12 @@ body{background:#e9edf5}
 .bottom-nav{max-width:760px;padding-top:10px;background:rgba(255,255,255,.96);backdrop-filter:blur(16px);border-top-color:rgba(148,163,184,.35)}
 .nav-btn{min-height:48px;font-size:.68rem}
 .nav-btn .icon{font-size:1.2rem}
+/* Default theme: keep upcoming-exam rows readable on the dark countdown surface. */
+html[data-theme="default"] .a-exam-banner.a-exam-banner-list{background:#183b56;color:#f8fafc}
+html[data-theme="default"] .a-exam-row{border-bottom-color:rgba(248,250,252,.18)}
+html[data-theme="default"] .a-exam-row .a-exam-name{color:#f8fafc}
+html[data-theme="default"] .a-exam-row .a-exam-sub{color:rgba(248,250,252,.72)}
+html[data-theme="default"] .a-exam-row.soon .a-exam-name{color:#f8fafc!important}
 button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid rgba(59,130,246,.42);outline-offset:2px}
 @media (min-width:760px){
   #app{min-height:100vh;box-shadow:0 0 36px rgba(31,45,74,.12)}
