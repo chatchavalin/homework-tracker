@@ -200,7 +200,8 @@ input,textarea,select{font-family:inherit}
 .parsed-header{font-size:0.75rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px}
 .parsed-item{background:var(--surface);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:7px;border:1.5px solid var(--border);display:flex;gap:8px;align-items:flex-start}
 .parsed-item input[type=checkbox]{margin-top:3px;accent-color:var(--navy)}
-.parsed-item-body{flex:1}
+.parsed-item-body{flex:1;min-width:0}
+.parsed-source-thumb{width:48px;height:48px;object-fit:cover;border-radius:7px;border:1px solid var(--border);float:right;margin:0 0 4px 8px}
 .parsed-item-title{font-size:0.83rem;font-weight:700}
 .parsed-item-orig{font-size:0.72rem;color:var(--muted);font-style:italic;margin-top:2px}
 .parsed-item-tags{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap}
@@ -647,8 +648,10 @@ input,textarea,select{font-family:inherit}
 .confirm-ok{background:#dc2626;color:#fff}
 .task-file-chip{display:inline-flex;align-items:center;gap:5px;margin-top:6px;padding:6px 10px;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;font-size:0.78rem;font-weight:600;color:#374151;text-decoration:none;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .img-thumbs{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 0}
-.img-thumb{position:relative;width:72px;height:72px;border-radius:10px;overflow:hidden;border:1px solid var(--border)}
+.img-thumb{position:relative;width:72px;height:72px;border-radius:10px;overflow:hidden;border:1.5px solid var(--border);flex-shrink:0}
+.img-thumb.failed{border:2px solid var(--high);box-shadow:0 0 0 2px rgba(224,82,82,.15)}
 .img-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.img-thumb-retry{position:absolute;bottom:2px;left:2px;width:18px;height:18px;border:none;border-radius:50%;background:rgba(22,101,52,.9);color:#fff;font-size:.75rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .img-thumb-x{position:absolute;top:2px;right:2px;width:18px;height:18px;border:none;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font-size:.6rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .up-btn.add-more{width:100%;margin-top:10px;background:var(--surface);color:var(--primary-dk);border:1.5px dashed var(--primary);border-radius:12px;padding:10px;font-weight:700}
 
@@ -932,17 +935,30 @@ html[data-theme="dbz"] .fab{
 html[data-theme="dbz"] .nav-btn.active{color:#ea580c}
 
 
-.a-exam-banner.a-exam-banner-list{display:block!important;padding:0!important;width:100%}
-.a-exam-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;min-height:58px;border-bottom:1px solid rgba(255,255,255,0.12);cursor:pointer;transition:opacity 0.2s,background 0.2s}
+.a-exam-banner.a-exam-banner-list{display:block!important;padding:0!important;width:auto;max-width:100%;box-sizing:border-box}
+.a-exam-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;min-height:58px;border-bottom:1px solid rgba(255,255,255,0.12);cursor:pointer;transition:background 0.2s,box-shadow 0.2s}
 .a-exam-row:last-child{border-bottom:none}
 .a-exam-row:active{opacity:0.85}
-.a-exam-row.soon{background:rgba(251,191,36,0.1);border-left:4px solid #fbbf24;animation:examSoonPulse 1.2s ease-in-out infinite}
-.a-exam-row.soon .a-exam-name{color:#fde68a!important}
-.a-exam-row.soon .a-exam-days{color:#fbbf24!important}
+.a-exam-row.soon{background:rgba(251,191,36,0.1);border-left:4px solid #fbbf24;animation:examSoonPulse 1.4s ease-in-out infinite}
+.a-exam-row.soon .a-exam-name{color:inherit!important;font-weight:800}
+.a-exam-row.soon .a-exam-days{color:#fbbf24!important;font-weight:900}
 .a-exam-row .a-exam-banner-left{min-width:0;flex:1}
 .a-exam-row .a-exam-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-@keyframes examSoonPulse{0%,100%{opacity:1;box-shadow:inset 0 0 0 rgba(251,191,36,0)}50%{opacity:.72;box-shadow:inset 0 0 18px rgba(251,191,36,0.18)}}
-@media (prefers-reduced-motion:reduce){.a-exam-row.soon{animation:none}}
+@keyframes examSoonPulse{0%,100%{box-shadow:inset 0 0 0 rgba(251,191,36,0)}50%{box-shadow:inset 0 0 16px rgba(251,191,36,0.22)}}
+.ai-progress{display:none;margin-top:8px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);font-size:0.78rem;font-weight:700;color:var(--text)}
+.ai-progress.show{display:block}
+.ai-progress-line{display:flex;align-items:center;gap:8px}
+.ai-progress-bar{height:5px;margin-top:8px;border-radius:8px;background:var(--border);overflow:hidden}
+.ai-progress-fill{height:100%;width:0;background:var(--primary);transition:width .2s ease}
+.ai-progress-actions{display:flex;gap:8px;margin-top:8px}
+.ai-progress-actions button{flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:8px;font-size:.72rem;font-weight:800;background:var(--surface2);color:var(--text)}
+.ai-progress-actions button.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+.sync-detail{display:block;margin-top:6px;font-size:.72rem;font-weight:700;color:var(--muted)}
+.sync-detail.pending{color:var(--med)}
+.sync-detail.failed{color:var(--high)}
+.sync-detail.saved{color:var(--low)}
+.backup-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media (prefers-reduced-motion:reduce){.a-exam-row.soon{animation:none}.ai-progress-fill{transition:none}}
 </style>
 </head>
 <body>
@@ -1044,6 +1060,14 @@ html[data-theme="dbz"] .nav-btn.active{color:#ea580c}
         <span id="parse-btn-txt">✨ อ่านการบ้านด้วย AI</span>
         <div class="spinner hidden" id="parse-spinner"></div>
       </button>
+      <div class="ai-progress" id="ai-progress" aria-live="polite">
+        <div class="ai-progress-line"><span id="ai-progress-icon">✨</span><span id="ai-progress-text">พร้อมอ่านรูป</span></div>
+        <div class="ai-progress-bar"><div class="ai-progress-fill" id="ai-progress-fill"></div></div>
+        <div class="ai-progress-actions">
+          <button type="button" onclick="cancelParse()" id="ai-cancel-btn">หยุดการอ่าน</button>
+          <button type="button" class="primary" onclick="retryFailedParse()" id="ai-retry-btn" style="display:none">ลองรูปที่ล้มเหลว</button>
+        </div>
+      </div>
       <div class="parsed-preview" id="parsed-preview">
         <div class="parsed-header">✅ ตรวจสอบก่อนบันทึก</div>
         <div id="parsed-list"></div>
@@ -1216,6 +1240,7 @@ html[data-theme="dbz"] .nav-btn.active{color:#ea580c}
         </div>
         <input class="settings-input" id="aikey-input" type="password" placeholder="Gemini API Key (AIza...)" autocomplete="off">
         <button class="settings-btn primary" onclick="saveApiKey()" id="settings-ai-save">💾 บันทึกคีย์</button>
+        <button class="settings-btn success" onclick="testGeminiKey()" id="settings-ai-test">🧪 ทดสอบคีย์กับ Gemini</button>
         <div id="aikey-status" style="font-size:0.7rem;font-weight:700;margin-top:6px"></div>
       </div>
 
@@ -1228,6 +1253,7 @@ html[data-theme="dbz"] .nav-btn.active{color:#ea580c}
         <div class="info-box" style="margin-bottom:10px" id="settings-conn-info">
           ข้อมูลซิงค์อัตโนมัติทุกอุปกรณ์ในครอบครัว
         </div>
+        <div id="sync-detail" class="sync-detail saved" aria-live="polite">บันทึกข้อมูลแล้ว</div>
         <button class="settings-btn success" onclick="retrySupabase()" id="settings-retry-btn">🔄 ลองเชื่อมต่อใหม่</button>
       </div>
 
@@ -1236,6 +1262,17 @@ html[data-theme="dbz"] .nav-btn.active{color:#ea580c}
         <div class="settings-title" id="settings-update-title">🔄 อัปเดตแอป</div>
         <div class="info-box" style="margin-bottom:10px" id="settings-update-info">กดเพื่อโหลดโค้ดล่าสุดจาก server — ใช้เมื่อมีการอัปเดตใหม่</div>
         <button class="settings-btn success" onclick="forceUpdateApp()" id="settings-update-btn">⬆️ โหลดเวอร์ชันล่าสุด</button>
+      </div>
+
+      <!-- Local backup -->
+      <div class="settings-card">
+        <div class="settings-title" id="settings-backup-title">💾 สำรองข้อมูลในเครื่อง / Local backup</div>
+        <div class="info-box" style="margin-bottom:10px" id="settings-backup-info">ส่งออกโน้ต งาน สอบ และรายการรอซิงค์ เพื่อกู้คืนได้หากอุปกรณ์มีปัญหา</div>
+        <div class="backup-actions">
+          <button class="settings-btn success" onclick="exportLocalData()" id="settings-export-btn">⬇️ ส่งออก</button>
+          <button class="settings-btn primary" onclick="document.getElementById('backup-input').click()" id="settings-import-btn">⬆️ นำเข้า</button>
+        </div>
+        <input type="file" id="backup-input" accept="application/json" class="hidden" onchange="importLocalData(this)">
       </div>
 
       <!-- Danger zone -->
@@ -1650,14 +1687,30 @@ function updateMusicBtn() {
   }
 }
 
+let loadGeneration = 0;
+
 function switchKid(id) {
+  if (!KIDS[id] || id === currentKid) return;
+  const generation = ++loadGeneration;
   currentKid = id;
   localStorage.setItem('ht_current_kid', id);
   applyKidTheme(id);
   updateAppTitle();
   renderKidSwitcher();
-  loadMusic(id);   // switch to this kid's song
-  loadAll();
+  loadMusic(id);
+  remoteLoadAllowed = true;
+  // Immediately replace actionable rows with this kid's cached state.
+  loadFromLocal();
+  renderAll();
+  setSyncStatus(false);
+  loadAll(id, generation).catch(error => {
+    if (generation !== loadGeneration || id !== currentKid) return;
+    console.warn('Kid switch load failed:', error);
+    setSyncing(false);
+    setSyncStatus(false);
+    updateSyncStatusUI();
+    toast(currentLang === 'en' ? '⚠️ Could not refresh this child — showing saved cache' : '⚠️ โหลดข้อมูลเด็กคนนี้ไม่ได้ — แสดงข้อมูลที่บันทึกไว้');
+  });
 }
 
 function renderKidSwitcher() {
@@ -1781,6 +1834,7 @@ const LINETIME  = () => localStorage.getItem('ht_linetime') || '07:00';
    INIT
 ═══════════════════════════════════════ */
 let USE_LOCAL = false;
+let remoteLoadAllowed = true;
 
 async function init() {
   try {
@@ -1806,6 +1860,8 @@ async function init() {
     setupRealtime();
   } catch(e) {
     console.warn('Supabase unavailable:', e);
+    setSyncing(false);
+    remoteLoadAllowed = false;
     USE_LOCAL = true;
     setSyncStatus(false);
     loadFromLocal();
@@ -1834,20 +1890,209 @@ async function init() {
 /* ═══════════════════════════════════════
    LOCALSTORAGE FALLBACK
 ═══════════════════════════════════════ */
+function safeReadArray(key, fallback = []) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallback;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : fallback;
+  } catch (e) {
+    console.warn('Local data read failed:', key, e);
+    return fallback;
+  }
+}
+
+function safeWrite(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  } catch (e) {
+    console.error('Local data write failed:', key, e);
+    toast(currentLang === 'en' ? '⚠️ Local storage is full or unavailable' : '⚠️ พื้นที่เก็บข้อมูลเต็มหรือใช้ไม่ได้');
+    return false;
+  }
+}
+
+function belongsToKid(record, kidId) {
+  return record && (record.kid_id === kidId || (!record.kid_id && kidId === 'ryuji'));
+}
+
+function mergeKidScopedRecords(existing, currentRecords, kidId) {
+  const otherKids = (existing || []).filter(record => !belongsToKid(record, kidId));
+  const current = (currentRecords || []).map(record => record.kid_id ? record : { ...record, kid_id: kidId });
+  return [...otherKids, ...current];
+}
+
+function getPendingMutations() {
+  return safeReadArray('ht_pending_mutations');
+}
+
+function savePendingMutations(items) {
+  safeWrite('ht_pending_mutations', items);
+  updateSyncStatusUI();
+}
+
+function parsedItemKey(item) {
+  const normalize = value => String(value || '').toLowerCase().replace(/\s+/g, ' ').trim();
+  return [
+    normalize(item.original_text || item.parsed_title),
+    normalize(item.parsed_title),
+    item.due_date || item.date || '',
+    normalize(item.subject),
+    normalize(item.parsed_tag || item.tag || item.type),
+    item.record_type || 'task'
+  ].join('|');
+}
+
+function dedupeParsedResults(items) {
+  const seen = new Set();
+  return (items || []).filter(item => {
+    const key = parsedItemKey(item);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function applyPendingMutation(records, mutation) {
+  const list = Array.isArray(records) ? [...records] : [];
+  const id = mutation.entity_id || mutation.payload?.id;
+  if (mutation.op === 'insert') {
+    if (!list.some(item => item.id === id)) list.push({ ...mutation.payload });
+  } else if (mutation.op === 'update') {
+    return list.map(item => item.id === id ? { ...item, ...mutation.payload } : item);
+  } else if (mutation.op === 'delete') {
+    return list.filter(item => item.id !== id);
+  }
+  return list;
+}
+
+function applyPendingOverlay() {
+  const pending = getPendingMutations().filter(item => item.status !== 'done');
+  pending.filter(item => item.table === 'tasks').forEach(item => {
+    STATE.allTasks = applyPendingMutation(STATE.allTasks || [], item);
+  });
+  STATE.tasks = filterByKid(STATE.allTasks || []);
+  pending.filter(item => item.table === 'exams').forEach(item => {
+    STATE.exams = applyPendingMutation(STATE.exams || [], item);
+  });
+  pending.filter(item => item.table === 'exam_topics').forEach(item => {
+    STATE.topics = applyPendingMutation(STATE.topics || [], item);
+  });
+}
+
+function queueMutation(table, op, payload, entityId, previous) {
+  const item = {
+    op_id: uid(), table, op, entity_id: entityId || payload?.id || null,
+    payload: payload || {}, previous: previous || null, kid_id: currentKid,
+    status: 'pending', created_at: new Date().toISOString()
+  };
+  const pending = getPendingMutations();
+  pending.push(item);
+  savePendingMutations(pending);
+  renderAll();
+  return item;
+}
+
+function updateSyncStatusUI() {
+  const pending = getPendingMutations();
+  const pendingCount = pending.filter(item => item.status === 'pending').length;
+  const failedCount = pending.filter(item => item.status === 'failed').length;
+  const detail = document.getElementById('sync-detail');
+  const isEn = currentLang === 'en';
+  if (detail) {
+    detail.textContent = failedCount
+      ? (isEn ? `${failedCount} sync failure(s) — retry` : `ซิงค์ล้มเหลว ${failedCount} รายการ — ลองใหม่`)
+      : pendingCount
+        ? (isEn ? `${pendingCount} change(s) waiting to sync` : `รอซิงค์ ${pendingCount} รายการ`)
+        : (isEn ? 'All changes saved' : 'บันทึกข้อมูลแล้ว');
+    detail.className = failedCount ? 'sync-detail failed' : pendingCount ? 'sync-detail pending' : 'sync-detail saved';
+  }
+  updateOfflineChip();
+}
+
+async function replayPendingMutations() {
+  if (USE_LOCAL || !sb) return { sent: 0, failed: 0 };
+  let pending = getPendingMutations();
+  let sent = 0, failed = 0;
+  for (const item of pending) {
+    if (item.status === 'done') continue;
+    let result;
+    if (item.op === 'insert') result = await sb.from(item.table).insert(item.payload);
+    else if (item.op === 'update') result = await sb.from(item.table).update(item.payload).eq('id', item.entity_id);
+    else if (item.op === 'delete') result = await sb.from(item.table).delete().eq('id', item.entity_id);
+    if (result?.error) {
+      item.status = 'failed'; item.error = result.error.message || 'sync failed'; failed++;
+    } else {
+      item.status = 'done'; sent++;
+    }
+  }
+  pending = pending.filter(item => item.status !== 'done');
+  savePendingMutations(pending);
+  return { sent, failed };
+}
+
 function loadFromLocal() {
-  const allTasks  = JSON.parse(localStorage.getItem('ht_tasks')  || '[]');
-  STATE.tasks  = allTasks.filter(t => !t.kid_id || t.kid_id === currentKid);
-  STATE.exams  = JSON.parse(localStorage.getItem('ht_exams')  || '[]').filter(e => e.kid_id === currentKid || (!e.kid_id && currentKid === 'miki'));
-  STATE.topics = JSON.parse(localStorage.getItem('ht_topics') || '[]');
-  const allNotes = JSON.parse(localStorage.getItem('ht_notes') || '[]');
+  const cachedTasks = safeReadArray('ht_tasks_all', safeReadArray('ht_tasks'));
+  STATE.allTasks = cachedTasks;
+  STATE.tasks  = filterByKid(cachedTasks);
+  const cachedExams = safeReadArray('ht_exams_all', safeReadArray('ht_exams'));
+  STATE.exams  = cachedExams.filter(e => e.kid_id === currentKid || (!e.kid_id && currentKid === 'miki'));
+  STATE.topics = safeReadArray('ht_topics');
+  const allNotes = safeReadArray('ht_notes');
   STATE.notes  = allNotes.filter(n => !n.kid_id || n.kid_id === currentKid);
+  applyPendingOverlay();
+  updateSyncStatusUI();
 }
 
 function saveLocal() {
-  localStorage.setItem('ht_tasks',  JSON.stringify(STATE.tasks));
-  localStorage.setItem('ht_exams',  JSON.stringify(STATE.exams));
-  localStorage.setItem('ht_topics', JSON.stringify(STATE.topics));
-  localStorage.setItem('ht_notes',  JSON.stringify(STATE.notes));
+  const previousTasks = safeReadArray('ht_tasks_all', safeReadArray('ht_tasks'));
+  const allTasks = mergeKidScopedRecords(previousTasks, STATE.tasks, currentKid);
+  STATE.allTasks = allTasks;
+  safeWrite('ht_tasks_all', allTasks);
+  safeWrite('ht_tasks', allTasks);
+  const previousExams = safeReadArray('ht_exams_all', safeReadArray('ht_exams'));
+  const allExams = mergeKidScopedRecords(previousExams, STATE.exams, currentKid);
+  safeWrite('ht_exams_all', allExams);
+  safeWrite('ht_exams', allExams);
+  safeWrite('ht_topics', STATE.topics || []);
+  updateSyncStatusUI();
+}
+
+function exportLocalData() {
+  const payload = { version: 2, exported_at: new Date().toISOString(), tasks: safeReadArray('ht_tasks_all', safeReadArray('ht_tasks')), exams: safeReadArray('ht_exams_all', safeReadArray('ht_exams')), topics: safeReadArray('ht_topics'), notes: safeReadArray('ht_notes'), pending: getPendingMutations() };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `homework-backup-${new Date().toISOString().slice(0,10)}.json`; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  toast(currentLang === 'en' ? '⬇️ Backup exported' : '⬇️ ส่งออกไฟล์สำรองแล้ว');
+}
+
+function importLocalData(input) {
+  const file = input.files?.[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      if (!data || !Array.isArray(data.tasks) || !Array.isArray(data.notes)) throw new Error('invalid backup');
+      const mergeById = (key, incoming) => {
+        const map = new Map(safeReadArray(key).map(item => [item.id, item]));
+        incoming.forEach(item => { if (item?.id) map.set(item.id, item); });
+        return [...map.values()];
+      };
+      safeWrite('ht_tasks_all', mergeById('ht_tasks_all', data.tasks));
+      safeWrite('ht_tasks', safeReadArray('ht_tasks_all'));
+      safeWrite('ht_exams_all', mergeById('ht_exams_all', data.exams || []));
+      safeWrite('ht_exams', safeReadArray('ht_exams_all'));
+      safeWrite('ht_topics', mergeById('ht_topics', data.topics || []));
+      safeWrite('ht_notes', mergeById('ht_notes', data.notes));
+      loadFromLocal(); renderAll();
+      toast(currentLang === 'en' ? '✅ Backup merged' : '✅ รวมข้อมูลสำรองแล้ว');
+    } catch (e) {
+      toast(currentLang === 'en' ? '❌ Invalid backup file' : '❌ ไฟล์สำรองไม่ถูกต้อง');
+    }
+  };
+  reader.readAsText(file);
+  input.value = '';
 }
 
 /* ═══════════════════════════════════════
@@ -1888,15 +2133,21 @@ function processRecurringTasks() {
     if (USE_LOCAL) { saveLocal(); }
     else {
       changed.forEach(t => {
-        sb.from('tasks').update({ recurring_weekly: true, due_date: t.due_date, is_done: t.is_done, done_at: t.done_at||null }).eq('id', t.id)
-          .then(({error}) => { if (error) console.warn('recurring rollover failed', t.id, error.message); });
+        const payload = { recurring_weekly: true, due_date: t.due_date, is_done: t.is_done, done_at: t.done_at||null };
+        sb.from('tasks').update(payload).eq('id', t.id)
+          .then(({error}) => {
+            if (error) {
+              queueMutation('tasks', 'update', payload, t.id);
+              console.warn('recurring rollover queued', t.id, error.message);
+            }
+          });
       });
     }
   }
   return changed.length;
 }
 
-async function loadAll() {
+async function loadAll(requestKid = currentKid, requestGeneration = ++loadGeneration) {
   setSyncing(true);
   const [tasksRes, examsRes, topicsRes] = await Promise.all([
     sb.from('tasks').select('*').order('created_at', { ascending: false }),
@@ -1906,14 +2157,18 @@ async function loadAll() {
   if (tasksRes.error)  throw tasksRes.error;
   if (examsRes.error)  throw examsRes.error;
   if (topicsRes.error) throw topicsRes.error;
+  if (!remoteLoadAllowed && USE_LOCAL) { setSyncing(false); return false; }
+  if (requestKid !== currentKid || requestGeneration !== loadGeneration) { setSyncing(false); return false; }
   STATE.allTasks = tasksRes.data || [];
   STATE.tasks  = filterByKid(tasksRes.data);
   STATE.exams  = (examsRes.data || []).filter(e => e.kid_id === currentKid || (!e.kid_id && currentKid === 'miki'));
   STATE.topics = topicsRes.data || [];
+  applyPendingOverlay();
   processRecurringTasks();
   saveLocal();
   setSyncing(false);
   renderAll();
+  return true;
 }
 
 /* ═══════════════════════════════════════
@@ -1923,15 +2178,15 @@ function setupRealtime() {
   sb.channel('homework-changes')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, async () => {
       const r = await sb.from('tasks').select('*').order('created_at', { ascending: false });
-      if (!r.error) { STATE.allTasks = r.data || []; STATE.tasks = filterByKid(r.data); renderAll(); }
+      if (!r.error) { STATE.allTasks = r.data || []; applyPendingOverlay(); saveLocal(); renderAll(); }
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'exams' }, async () => {
       const r = await sb.from('exams').select('*').order('created_at', { ascending: true });
-      if (!r.error) { STATE.exams = (r.data||[]).filter(e => e.kid_id === currentKid || (!e.kid_id && currentKid === 'miki')); renderExams(); }
+      if (!r.error) { STATE.exams = (r.data||[]).filter(e => e.kid_id === currentKid || (!e.kid_id && currentKid === 'miki')); applyPendingOverlay(); saveLocal(); renderExams(); }
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'exam_topics' }, async () => {
       const r = await sb.from('exam_topics').select('*').order('sort_order', { ascending: true });
-      if (!r.error) { STATE.topics = r.data; renderExams(); }
+      if (!r.error) { STATE.topics = r.data; applyPendingOverlay(); saveLocal(); renderExams(); }
     })
     .subscribe();
 }
@@ -2369,40 +2624,55 @@ function fireConfetti() {
    TASK ACTIONS (Supabase)
 ═══════════════════════════════════════ */
 async function toggleTask(id) {
-  const t = STATE.tasks.find(x=>x.id===id); if (!t) return;
-  const prevDone = t.is_done;
-  const newVal = !t.is_done;
-  // Save undo state BEFORE changing
+  const task = STATE.tasks.find(x=>x.id===id); if (!task) return;
+  const prevDone = task.is_done;
+  const previous = { is_done: prevDone, done_at: task.done_at || null };
+  const newVal = !task.is_done;
   clearTimeout(undoTimer);
-  undoStack = { action: newVal ? 'complete' : 'uncomplete', task: { ...t }, prevDone };
+  undoStack = { action: newVal ? 'complete' : 'uncomplete', task: { ...task }, prevDone };
   const undoLabel = newVal
     ? (currentLang==='en' ? `✅ Done — tap to undo` : `✅ เสร็จแล้ว — แตะเพื่อยกเลิก`)
     : (currentLang==='en' ? `↩ Marked pending` : `↩ ยกเลิกเครื่องหมาย`);
   showUndoToast(undoLabel);
   undoTimer = setTimeout(() => { undoStack = null; hideUndoToast(); }, 5000);
 
-  // Track done_at for ALL tasks — used to sort done section by most recently completed
-  t.done_at = newVal ? new Date().toISOString() : null;
-  t.is_done = newVal; renderAll();
+  task.done_at = newVal ? new Date().toISOString() : null;
+  task.is_done = newVal; renderAll();
   attachSwipeListeners();
   if (newVal) checkCelebration();
-  if (USE_LOCAL) { saveLocal(); }
-  else {
-    const updatePayload = { is_done: newVal, done_at: t.done_at || null };
+  const updatePayload = { is_done: newVal, done_at: task.done_at || null };
+  if (USE_LOCAL) {
+    saveLocal();
+    queueMutation('tasks', 'update', updatePayload, id, previous);
+  } else {
     const { error } = await sb.from('tasks').update(updatePayload).eq('id', id);
-    if (error) { t.is_done = !newVal; renderAll(); toast('❌ ซิงค์ไม่ได้'); return; }
+    if (error) {
+      queueMutation('tasks', 'update', updatePayload, id, previous);
+      toast('⚠️ บันทึกไว้แล้ว — จะซิงค์ใหม่เมื่อเชื่อมต่อได้');
+      return;
+    }
   }
   if (newVal) navigator.vibrate && navigator.vibrate(60);
-  const recurMsg = (newVal && isRecurring(t)) ? (currentLang==='en' ? ' (resets next week 🔁)' : ' (รีเซ็ตสัปดาห์หน้า 🔁)') : '';
+  const recurMsg = (newVal && isRecurring(task)) ? (currentLang==='en' ? ' (resets next week 🔁)' : ' (รีเซ็ตสัปดาห์หน้า 🔁)') : '';
   toast(newVal ? '✅ เสร็จแล้ว!' + recurMsg : '↩ ยกเลิกเครื่องหมาย');
 }
 
 async function deleteTask(id) {
-  const prev = [...STATE.tasks];
+  const task = STATE.tasks.find(x => x.id === id);
+  if (!task) return;
   STATE.tasks = STATE.tasks.filter(x=>x.id!==id); renderAll();
-  if (USE_LOCAL) { saveLocal(); toast('🗑 ลบงานแล้ว'); return; }
+  if (USE_LOCAL) {
+    saveLocal();
+    queueMutation('tasks', 'delete', {}, id, task);
+    toast('🗑 ลบงานแล้ว — รอซิงค์');
+    return;
+  }
   const { error } = await sb.from('tasks').delete().eq('id', id);
-  if (error) { STATE.tasks = prev; renderAll(); toast('❌ ลบไม่ได้'); return; }
+  if (error) {
+    queueMutation('tasks', 'delete', {}, id, task);
+    toast('⚠️ ลบไว้แล้ว — จะซิงค์ใหม่เมื่อเชื่อมต่อได้');
+    return;
+  }
   toast('🗑 ลบงานแล้ว');
 }
 
@@ -2465,21 +2735,23 @@ async function addManual() {
   STATE.tasks.unshift(task); renderAll();
   if (USE_LOCAL) {
     saveLocal();
+    queueMutation('tasks', 'insert', task, task.id);
   } else {
     setBtnLoading('add-btn','add-btn-txt','add-spinner', true);
     const { error } = await sb.from('tasks').insert(task);
     setBtnLoading('add-btn','add-btn-txt','add-spinner', false);
     if (error) {
-      STATE.tasks = STATE.tasks.filter(x=>x.id!==task.id); renderAll();
-      toast('❌ บันทึกไม่ได้: ' + error.message); return;
+      queueMutation('tasks', 'insert', task, task.id);
+      toast('⚠️ เพิ่มงานไว้แล้ว — จะซิงค์ใหม่เมื่อเชื่อมต่อได้');
     }
   }
   document.getElementById('f-title').value  = '';
   document.getElementById('f-due').value    = '';
+  const wasRepeat = manualRepeat;
   manualRepeat = false;
   const rpBtn = document.getElementById('btn-repeat-weekly');
   if (rpBtn) rpBtn.classList.remove('active');
-  toast(manualRepeat ? '✅ เพิ่มงาน (ทำซ้ำทุกสัปดาห์)' : '✅ เพิ่มงานแล้ว');
+  toast(wasRepeat ? '✅ เพิ่มงาน (ทำซ้ำทุกสัปดาห์)' : '✅ เพิ่มงานแล้ว');
 }
 
 /* ═══════════════════════════════════════
@@ -2489,12 +2761,17 @@ async function addExam() {
   const name = document.getElementById('exam-name-inp').value.trim();
   const date = document.getElementById('exam-date-inp').value || null;
   if (!name) { toast('⚠️ กรุณาใส่ชื่อการสอบ'); return; }
-  const exam = { id: uid(), name, exam_date: date, created_at: new Date().toISOString() };
+  const exam = { id: uid(), kid_id: currentKid, name, exam_date: date, created_at: new Date().toISOString() };
   STATE.exams.push(exam); renderExams();
-  if (USE_LOCAL) { saveLocal(); }
-  else {
+  if (USE_LOCAL) {
+    saveLocal();
+    queueMutation('exams', 'insert', exam, exam.id);
+  } else {
     const { error } = await sb.from('exams').insert(exam);
-    if (error) { STATE.exams = STATE.exams.filter(e=>e.id!==exam.id); renderExams(); toast('❌ ' + error.message); return; }
+    if (error) {
+      queueMutation('exams', 'insert', exam, exam.id);
+      toast('⚠️ สร้างรายการสอบไว้แล้ว — จะซิงค์ใหม่');
+    }
   }
   document.getElementById('exam-name-inp').value = '';
   document.getElementById('exam-date-inp').value = '';
@@ -2502,14 +2779,24 @@ async function addExam() {
 }
 
 async function deleteExam(id) {
-  const prev = [...STATE.exams], prevT = [...STATE.topics];
+  const exam = STATE.exams.find(e => e.id === id);
+  if (!exam) return;
+  const prevT = [...STATE.topics];
   STATE.exams  = STATE.exams.filter(e=>e.id!==id);
   STATE.topics = STATE.topics.filter(t=>t.exam_id!==id);
   renderExams();
-  if (USE_LOCAL) { saveLocal(); toast('🗑 ลบรายการสอบแล้ว'); return; }
+  if (USE_LOCAL) {
+    saveLocal();
+    queueMutation('exams', 'delete', {}, id, exam);
+    prevT.filter(t => t.exam_id === id).forEach(t => queueMutation('exam_topics', 'delete', {}, t.id, t));
+    toast('🗑 ลบรายการสอบแล้ว — รอซิงค์');
+    return;
+  }
   const { error } = await sb.from('exams').delete().eq('id', id);
-  if (error) { STATE.exams = prev; STATE.topics = prevT; renderExams(); toast('❌ ลบไม่ได้'); }
-  else toast('🗑 ลบรายการสอบแล้ว');
+  if (error) {
+    queueMutation('exams', 'delete', {}, id, exam);
+    toast('⚠️ ลบรายการสอบไว้แล้ว — จะซิงค์ใหม่');
+  } else toast('🗑 ลบรายการสอบแล้ว');
 }
 
 async function addTopic(examId) {
@@ -2520,37 +2807,56 @@ async function addTopic(examId) {
     is_done: false, sort_order: STATE.topics.filter(t=>t.exam_id===examId).length
   };
   STATE.topics.push(topic); renderExams();
-  if (USE_LOCAL) { saveLocal(); inp.value = ''; return; }
+  if (USE_LOCAL) {
+    saveLocal(); inp.value = '';
+    queueMutation('exam_topics', 'insert', topic, topic.id);
+    return;
+  }
   const { error } = await sb.from('exam_topics').insert(topic);
-  if (error) { STATE.topics = STATE.topics.filter(t=>t.id!==topic.id); renderExams(); toast('❌ ' + error.message); return; }
+  if (error) {
+    queueMutation('exam_topics', 'insert', topic, topic.id);
+    toast('⚠️ เพิ่มหัวข้อไว้แล้ว — จะซิงค์ใหม่');
+  }
   inp.value = '';
 }
 
 async function toggleTopic(topicId, examId, newVal) {
   const tp = STATE.topics.find(t=>t.id===topicId); if (!tp) return;
+  const previous = { is_done: tp.is_done };
   tp.is_done = newVal; renderExams();
-  if (USE_LOCAL) { saveLocal(); return; }
-  const { error } = await sb.from('exam_topics').update({ is_done: newVal }).eq('id', topicId);
-  if (error) { tp.is_done = !newVal; renderExams(); toast('❌ ซิงค์ไม่ได้'); }
+  const payload = { is_done: newVal };
+  if (USE_LOCAL) {
+    saveLocal();
+    queueMutation('exam_topics', 'update', payload, topicId, previous);
+    return;
+  }
+  const { error } = await sb.from('exam_topics').update(payload).eq('id', topicId);
+  if (error) {
+    queueMutation('exam_topics', 'update', payload, topicId, previous);
+    toast('⚠️ หัวข้อถูกบันทึกไว้ — จะซิงค์ใหม่');
+  }
 }
 
 /* ═══════════════════════════════════════
    AI IMAGE PARSE
 ═══════════════════════════════════════ */
-let pendingImages = []; // [{b64, name}]
+let pendingImages = []; // [{b64, name, id}]
+let parseAbortController = null;
+let parseFailedIndexes = [];
+let parseCancelled = false;
 
 function renderPendingThumbs() {
   const wrap = document.getElementById('img-thumbs');
   if (!wrap) return;
   wrap.innerHTML = pendingImages.map((im, i) => im && im.b64
-    ? `<div class="img-thumb"><img src="data:image/jpeg;base64,${im.b64}"><button class="img-thumb-x" onclick="removePendingImg(${i})">✕</button></div>`
+    ? `<div class="img-thumb ${im.status === 'failed' ? 'failed' : ''}"><img src="data:image/jpeg;base64,${im.b64}" alt="${escHtml(im.name || `photo ${i+1}`)}">${im.status === 'failed' ? `<button class="img-thumb-retry" onclick="retrySingleParse(${i})" aria-label="Retry photo ${i+1}">↻</button>` : ''}<button class="img-thumb-x" onclick="removePendingImg(${i})">✕</button></div>`
     : '').join('');
   const addMore = document.getElementById('add-more-btn');
   if (addMore) addMore.style.display = pendingImages.length ? 'block' : 'none';
   const pb = document.getElementById('parse-btn');
   const txt = document.getElementById('parse-btn-txt');
-  if (pb) { pb.style.display = pendingImages.length ? 'flex' : 'none'; pb.disabled = !pendingImages.length; }
-  if (txt && pendingImages.length) {
+  if (pb) { pb.style.display = pendingImages.length ? 'flex' : 'none'; pb.disabled = !pendingImages.length || !!parseAbortController; }
+  if (txt && pendingImages.length && !parseAbortController) {
     const L = t();
     txt.textContent = pendingImages.length > 1
       ? (currentLang==='en' ? `✨ Read ${pendingImages.length} photos with AI` : `✨ อ่าน ${pendingImages.length} รูปด้วย AI`)
@@ -2558,8 +2864,42 @@ function renderPendingThumbs() {
   }
 }
 
+function setParseProgress(done, total, text, failedCount = 0) {
+  const panel = document.getElementById('ai-progress');
+  const label = document.getElementById('ai-progress-text');
+  const fill = document.getElementById('ai-progress-fill');
+  const retry = document.getElementById('ai-retry-btn');
+  if (!panel) return;
+  panel.classList.add('show');
+  if (label) label.textContent = text;
+  if (fill) fill.style.width = `${total ? Math.round(done / total * 100) : 0}%`;
+  if (retry) retry.style.display = failedCount ? 'block' : 'none';
+}
+
+function cancelParse() {
+  if (!parseAbortController) return;
+  parseCancelled = true;
+  parseAbortController.abort();
+  setParseProgress(0, 1, currentLang === 'en' ? 'Stopping… successful results are kept' : 'กำลังหยุด — ผลลัพธ์ที่อ่านสำเร็จยังอยู่');
+}
+
+function retrySingleParse(index) {
+  if (parseAbortController || !pendingImages[index]) return;
+  pendingImages[index].status = undefined;
+  parseFailedIndexes = parseFailedIndexes.filter(i => i !== index);
+  parseImage([index]);
+}
+
+function retryFailedParse() {
+  if (!parseFailedIndexes.length) return;
+  const retryIndexes = [...parseFailedIndexes];
+  parseFailedIndexes = [];
+  parseImage(retryIndexes);
+}
+
 function removePendingImg(i) {
   pendingImages.splice(i, 1);
+  parseFailedIndexes = parseFailedIndexes.filter(index => index !== i).map(index => index > i ? index - 1 : index);
   renderPendingThumbs();
 }
 
@@ -2568,11 +2908,14 @@ function handleImgs(input) {
   if (!files.length) return;
   document.getElementById('parsed-preview').classList.remove('visible');
 
-  // Resize to max 1200px / 0.80q to stay well under Vercel's 4MB body limit, APPEND to pending
   files.forEach(file => {
     const r = new FileReader();
     r.onload = e => {
       const img = new Image();
+      const addFallback = () => {
+        pendingImages.push({ id: uid(), b64: e.target.result.split(',')[1], name: file.name });
+        renderPendingThumbs();
+      };
       img.onload = () => {
         const MAX = 1200;
         let w = img.width, h = img.height;
@@ -2587,13 +2930,10 @@ function handleImgs(input) {
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(img, 0, 0, w, h);
-        pendingImages.push({ b64: cv.toDataURL('image/jpeg', 0.80).split(',')[1], name: file.name });
+        pendingImages.push({ id: uid(), b64: cv.toDataURL('image/jpeg', 0.80).split(',')[1], name: file.name });
         renderPendingThumbs();
       };
-      img.onerror = () => {
-        pendingImages.push({ b64: e.target.result.split(',')[1], name: file.name });
-        renderPendingThumbs();
-      };
+      img.onerror = addFallback;
       img.src = e.target.result;
     };
     r.readAsDataURL(file);
@@ -2601,115 +2941,139 @@ function handleImgs(input) {
   input.value = '';
 }
 
-async function parseImage() {
+function extractGeminiItems(data) {
+  const candidate = data?.candidates?.[0];
+  const raw = candidate?.content?.parts
+    ?.map(p => typeof p.text === 'string' ? p.text : '')
+    .join('')
+    .trim();
+  if (!raw) {
+    const reason = data?.promptFeedback?.blockReason || candidate?.finishReason || 'empty response';
+    throw new Error(`Gemini returned no readable text (${reason})`);
+  }
+  const clean = raw.replace(/```json|```/g, '').trim();
+  let parsed;
+  try { parsed = JSON.parse(clean); } catch (_) {
+    const m = clean.match(/(?:\[[\s\S]*\]|\{[\s\S]*\})/);
+    if (!m) throw new Error('Gemini returned malformed or truncated JSON');
+    try { parsed = JSON.parse(m[0]); }
+    catch (_) { throw new Error('Gemini returned malformed or truncated JSON'); }
+  }
+  const items = Array.isArray(parsed)
+    ? parsed
+    : Array.isArray(parsed?.tasks) ? parsed.tasks
+    : Array.isArray(parsed?.records) ? parsed.records
+    : parsed && typeof parsed === 'object' && (parsed.original_text || parsed.parsed_title) ? [parsed]
+    : [];
+  if (!items.length && parsed !== undefined) throw new Error('Gemini returned JSON, but no homework records were found');
+  return items;
+}
+
+
+async function parseImage(retryIndexes = null) {
   if (!pendingImages.length) {
     toast('📷 กรุณาเลือกรูปการบ้านก่อน');
     return;
   }
+  if (parseAbortController) return;
   const btn  = document.getElementById('parse-btn');
   const txt  = document.getElementById('parse-btn-txt');
   const spin = document.getElementById('parse-spinner');
-  btn.disabled = true; spin.classList.remove('hidden');
-
   const key = APIKEY();
   if (!key) {
-    btn.disabled = false; spin.classList.add('hidden');
-    txt.textContent = '✨ อ่านการบ้านด้วย AI';
     toast('🔑 กรุณาใส่ Gemini API Key ในตั้งค่า (Settings) ก่อน');
     showTab('settings');
     return;
   }
 
+  const indexes = Array.isArray(retryIndexes) && retryIndexes.length
+    ? retryIndexes.filter(i => pendingImages[i])
+    : pendingImages.map((_, i) => i);
+  if (!indexes.length) return;
+  const isRetry = Array.isArray(retryIndexes) && retryIndexes.length > 0;
+  if (!isRetry) parsedResults = [];
+  parseFailedIndexes = [];
+  parseCancelled = false;
+  parseAbortController = new AbortController();
+  btn.disabled = true; spin.classList.remove('hidden');
+  const total = indexes.length;
   const PROMPT = getParseSystemPrompt();
+  setParseProgress(0, total, currentLang === 'en' ? `Preparing ${total} photo(s)…` : `เตรียมอ่าน ${total} รูป…`);
 
-  parsedResults = [];
-  const total = pendingImages.length;
-
+  let completed = 0;
+  const errors = [];
   try {
-    for (let i = 0; i < total; i++) {
-      txt.textContent = total > 1 ? `กำลังอ่านรูป ${i+1}/${total}...` : 'กำลังอ่าน...';
-      const img = pendingImages[i];
-      // Call Gemini vision directly from the browser using the user's own key
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': key
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [
-              { text: PROMPT },
-              { inline_data: { mime_type: 'image/jpeg', data: img.b64 } }
-            ]
-          }],
-          generationConfig: {
-            temperature: 0.1,
-            maxOutputTokens: 2048,
-            responseMimeType: 'application/json',
-            thinkingConfig: { thinkingBudget: 0 }
-          }
-        })
-      });
-      if (!res.ok) {
-        const e = await res.json().catch(()=>({}));
-        const msg = e?.error?.message || `HTTP ${res.status}`;
-        if (res.status === 400 || res.status === 401 || res.status === 403) {
-          throw new Error(`Gemini API key rejected: ${msg}`);
+    for (const index of indexes) {
+      if (parseCancelled) break;
+      const img = pendingImages[index];
+      txt.textContent = total > 1 ? `กำลังอ่านรูป ${completed+1}/${total}...` : 'กำลังอ่าน...';
+      setParseProgress(completed, total, currentLang === 'en' ? `Reading photo ${completed+1} of ${total}` : `กำลังอ่านรูป ${completed+1} จาก ${total}`, parseFailedIndexes.length);
+      img.status = 'reading'; renderPendingThumbs();
+      const timeout = setTimeout(() => requestController.abort(), 60000);
+      const requestController = new AbortController();
+      const cancelRequest = () => requestController.abort();
+      parseAbortController.signal.addEventListener('abort', cancelRequest, { once: true });
+      try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+          signal: requestController.signal,
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: PROMPT }, { inline_data: { mime_type: 'image/jpeg', data: img.b64 } }] }],
+            generationConfig: { temperature: 0.1, maxOutputTokens: 4096, responseMimeType: 'application/json', thinkingConfig: { thinkingBudget: 0 } }
+          })
+        });
+        if (!res.ok) {
+          const e = await res.json().catch(()=>({}));
+          const msg = e?.error?.message || `HTTP ${res.status}`;
+          if ([400,401,403].includes(res.status)) throw new Error(`Gemini API key rejected: ${msg}`);
+          if (res.status === 404) throw new Error(`Gemini model ${GEMINI_MODEL} is unavailable for this key`);
+          throw new Error(msg);
         }
-        if (res.status === 404) {
-          throw new Error(`Gemini model ${GEMINI_MODEL} is unavailable for this key`);
-        }
-        throw new Error(msg);
+        const items = extractGeminiItems(await res.json());
+        items.forEach(item => { item._srcB64 = img.b64; item._srcId = img.id || index; });
+        parsedResults = dedupeParsedResults([...parsedResults, ...items]);
+        img.status = 'done';
+        if (parsedResults.length) showParsedPreview(parsedResults);
+      } catch (error) {
+        if (error.name === 'AbortError' && parseCancelled) break;
+        const message = error.name === 'AbortError' ? 'Timed out after 60 seconds' : (error.message || 'Unknown error');
+        img.status = 'failed';
+        parseFailedIndexes.push(index);
+        errors.push(`${img.name || `photo ${index+1}`}: ${message}`);
+      } finally {
+        clearTimeout(timeout);
+        parseAbortController?.signal.removeEventListener('abort', cancelRequest);
       }
-      const data = await res.json();
-      const candidate = data?.candidates?.[0];
-      const raw = candidate?.content?.parts
-        ?.map(p => typeof p.text === 'string' ? p.text : '')
-        .join('')
-        .trim();
-      if (!raw) {
-        const reason = data?.promptFeedback?.blockReason || candidate?.finishReason || 'empty response';
-        throw new Error(`Gemini returned no readable text (${reason})`);
-      }
-      const clean = raw.replace(/```json|```/g, '').trim();
-      let parsed;
-      try { parsed = JSON.parse(clean); } catch (_) {
-        // Fallback: extract the first JSON array/object in the response.
-        const m = clean.match(/(?:\[[\s\S]*\]|\{[\s\S]*\})/);
-        if (m) parsed = JSON.parse(m[0]);
-      }
-      const items = Array.isArray(parsed)
-        ? parsed
-        : Array.isArray(parsed?.tasks) ? parsed.tasks
-        : Array.isArray(parsed?.records) ? parsed.records
-        : parsed && typeof parsed === 'object' && (parsed.original_text || parsed.parsed_title) ? [parsed]
-        : [];
-      if (!items.length && parsed !== undefined) {
-        throw new Error('Gemini returned JSON, but no homework records were found');
-      }
-      items.forEach(it => { it._srcB64 = img.b64; });   // keep original photo for this item
-      parsedResults.push(...items);
+      completed++;
+      renderPendingThumbs();
+      setParseProgress(completed, total, errors.length
+        ? (currentLang === 'en' ? `${completed}/${total} processed · ${errors.length} failed` : `อ่านแล้ว ${completed}/${total} · ล้มเหลว ${errors.length} รูป`)
+        : (currentLang === 'en' ? `${completed}/${total} processed` : `อ่านแล้ว ${completed}/${total}`), errors.length);
     }
 
-    if (!parsedResults.length) { toast('⚠️ ไม่พบงานในรูปนี้'); return; }
-
-    // Deduplicate by original_text
-    const seen = new Set();
-    parsedResults = parsedResults.filter(t => {
-      if (seen.has(t.original_text)) return false;
-      seen.add(t.original_text); return true;
-    });
-
-    showParsedPreview(parsedResults);
-    toast(`🎉 พบ ${parsedResults.length} งาน จาก ${total} รูป!`);
-  } catch(e) {
-    console.error(e);
-    toast('❌ ' + (e.message || 'ลองใหม่อีกครั้ง'));
+    if (parsedResults.length) {
+      showParsedPreview(parsedResults);
+      if (errors.length) toast(`⚠️ อ่านสำเร็จ ${parsedResults.length} รายการ แต่มี ${errors.length} รูปที่ล้มเหลว — กดลองใหม่ได้`);
+      else if (!parseCancelled) toast(`🎉 พบ ${parsedResults.length} งาน จาก ${total} รูป!`);
+    } else if (parseCancelled) {
+      toast('⏹ หยุดการอ่านแล้ว — ยังไม่มีผลลัพธ์');
+    } else if (errors.length) {
+      toast('❌ อ่านรูปไม่สำเร็จ — ตรวจสอบคีย์หรือกดลองใหม่');
+    } else {
+      toast('⚠️ ไม่พบงานในรูปนี้');
+    }
   } finally {
-    btn.disabled = false;
+    parseAbortController = null;
+    btn.disabled = !pendingImages.length;
     txt.textContent = '✨ อ่านการบ้านด้วย AI';
     spin.classList.add('hidden');
+    const cancel = document.getElementById('ai-cancel-btn');
+    if (cancel) cancel.textContent = currentLang === 'en' ? 'Stop reading' : 'หยุดการอ่าน';
+    setParseProgress(completed, total, parseFailedIndexes.length
+      ? (currentLang === 'en' ? `${completed}/${total} complete — retry failed photos` : `เสร็จ ${completed}/${total} — ลองรูปที่ล้มเหลวได้`)
+      : (currentLang === 'en' ? `${completed}/${total} complete` : `เสร็จ ${completed}/${total}`), parseFailedIndexes.length);
+    renderPendingThumbs();
   }
 }
 
@@ -2738,6 +3102,38 @@ function saveApiKey() {
   toast('🔑 บันทึก Gemini API Key แล้ว');
 }
 
+async function testGeminiKey() {
+  const input = document.getElementById('aikey-input');
+  const status = document.getElementById('aikey-status');
+  const btn = document.getElementById('settings-ai-test');
+  const key = (input?.value || '').trim() || APIKEY();
+  if (!key) {
+    status.textContent = '⚠️ กรุณาใส่หรือบันทึกคีย์ก่อน';
+    status.style.color = 'var(--high)';
+    return;
+  }
+  if (btn) btn.disabled = true;
+  if (status) { status.textContent = '⏳ กำลังทดสอบคีย์…'; status.style.color = 'var(--muted)'; }
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}`, {
+      headers: { 'x-goog-api-key': key }
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      const message = String(data?.error?.message || `HTTP ${res.status}`).replaceAll(key, '[redacted]');
+      throw new Error(message);
+    }
+    if (input?.value.trim()) localStorage.setItem('ht_apikey', input.value.trim());
+    if (status) { status.textContent = '✅ คีย์ใช้งานได้กับ Gemini'; status.style.color = '#065f46'; }
+    toast('✅ ทดสอบ Gemini API Key สำเร็จ');
+  } catch (error) {
+    if (status) { status.textContent = `❌ คีย์ใช้ไม่ได้: ${error.message}`; status.style.color = 'var(--high)'; }
+    toast('❌ Gemini API Key ใช้งานไม่ได้');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
 function loadApiKeyInput() {
   const input = document.getElementById('aikey-input');
   const status = document.getElementById('aikey-status');
@@ -2751,18 +3147,19 @@ function loadApiKeyInput() {
 }
 
 function isDuplicate(task) {
-  // Check if a very similar task already exists
-  const norm = s => (s||'').toLowerCase().replace(/\s+/g,' ').trim();
-  const incoming = norm(task.original_text);
+  const norm = s => String(s||'').toLowerCase().replace(/\s+/g,' ').trim();
+  const incomingTitle = norm(task.original_text || task.parsed_title);
+  const incomingDate = task.due_date || task.date || '';
+  const incomingSubject = norm(task.subject);
   return STATE.tasks.some(existing => {
-    const existing_norm = norm(existing.original_text);
-    // Exact match
-    if (existing_norm === incoming) return true;
-    // High similarity: one contains the other (>80% length match)
-    const shorter = incoming.length < existing_norm.length ? incoming : existing_norm;
-    const longer  = incoming.length < existing_norm.length ? existing_norm : incoming;
-    if (shorter.length > 10 && longer.includes(shorter)) return true;
-    return false;
+    const existingTitle = norm(existing.original_text || existing.parsed_title);
+    const sameDate = (existing.due_date || '') === incomingDate;
+    const sameSubject = !incomingSubject || !norm(existing.subject) || norm(existing.subject) === incomingSubject;
+    if (!sameDate || !sameSubject || !incomingTitle || !existingTitle) return false;
+    if (existingTitle === incomingTitle) return true;
+    const shorter = incomingTitle.length < existingTitle.length ? incomingTitle : existingTitle;
+    const longer  = incomingTitle.length < existingTitle.length ? existingTitle : incomingTitle;
+    return shorter.length > 10 && longer.includes(shorter);
   });
 }
 
@@ -2804,6 +3201,7 @@ function showParsedPreview(items) {
     <div class="parsed-item" style="${dup?'opacity:0.6;border-color:#fca5a5':''}">
       <input type="checkbox" ${dup?'':'checked'} id="pi-${i}">
       <div class="parsed-item-body">
+        ${task._srcB64 ? `<img class="parsed-source-thumb" src="data:image/jpeg;base64,${task._srcB64}" alt="Source photo">` : ''}
         <div class="parsed-item-title-row" style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
           <input type="text" class="parsed-title-input" id="pi-title-${i}" value="${escHtml(task.parsed_title)}"
             style="flex:1;min-width:80px;font-size:0.83rem;font-weight:700;font-family:inherit;color:var(--text);background:transparent;border:1.5px solid transparent;border-radius:6px;padding:2px 4px;outline:none"
@@ -2859,7 +3257,7 @@ async function confirmParsed() {
   // Save info notes to localStorage (merge multiple text fragments from the SAME photo into ONE note)
   const infoItems = selected.filter(r => r.record_type === 'info');
   if (infoItems.length) {
-    const existing = JSON.parse(localStorage.getItem('ht_notes') || '[]');
+    const existing = safeReadArray('ht_notes');
     const infoGroups = new Map();
     infoItems.forEach(n => {
       const key = n._srcB64 || n.id || Math.random();
@@ -2882,8 +3280,8 @@ async function confirmParsed() {
       });
       noteCount++;
     });
-    localStorage.setItem('ht_notes', JSON.stringify(existing));
-    STATE.notes = existing;
+    safeWrite('ht_notes', existing);
+    STATE.notes = existing.filter(n => !n.kid_id || n.kid_id === currentKid);
     toast(`📝 บันทึก ${noteCount} โน้ตแล้ว`);
   }
 
@@ -2923,28 +3321,30 @@ async function confirmParsed() {
   STATE.tasks.unshift(...newTasks);
   STATE.exams.push(...newExams);
   renderAll();
-  if (!USE_LOCAL) {
+  if (USE_LOCAL) {
+    saveLocal();
+    newTasks.forEach(task => queueMutation('tasks', 'insert', task, task.id));
+    newExams.forEach(exam => queueMutation('exams', 'insert', exam, exam.id));
+  } else {
     let taskError = null;
     if (newTasks.length) {
       ({ error: taskError } = await sb.from('tasks').insert(newTasks));
     }
     if (taskError && /image_url/i.test(taskError.message || '')) {
-      // image_url column not added yet — strip it so saving still works
       const stripped = newTasks.map(({ image_url, ...rest }) => rest);
       ({ error: taskError } = await sb.from('tasks').insert(stripped));
+      if (!taskError) newTasks.forEach((task, i) => Object.assign(task, stripped[i]));
     }
     let examError = null;
     if (newExams.length) {
       ({ error: examError } = await sb.from('exams').insert(newExams));
     }
     if (taskError || examError) {
-      if (taskError) newTasks.forEach(t => { STATE.tasks = STATE.tasks.filter(x=>x.id!==t.id); });
-      if (examError) newExams.forEach(ex => { STATE.exams = STATE.exams.filter(x=>x.id!==ex.id); });
-      btn.disabled = false; txt.textContent = '💾 บันทึกที่เลือก'; spin.classList.add('hidden');
-      renderAll(); toast('❌ บันทึกไม่ได้: ' + (taskError || examError).message); return;
+      saveLocal();
+      if (taskError) newTasks.forEach(task => queueMutation('tasks', 'insert', task, task.id));
+      if (examError) newExams.forEach(exam => queueMutation('exams', 'insert', exam, exam.id));
+      toast('⚠️ บันทึกไว้แล้ว — รายการที่ล้มเหลวจะซิงค์ใหม่เมื่อเชื่อมต่อได้');
     }
-  } else {
-    saveLocal();
   }
   btn.disabled = false; txt.textContent = '💾 บันทึกที่เลือก'; spin.classList.add('hidden');
   document.getElementById('parsed-preview').classList.remove('visible');
@@ -3014,7 +3414,14 @@ function saveLineSettings() {}
 
 async function clearAllData() {
   if (!confirm(t().confirmClear)) return;
-  STATE = { tasks:[], exams:[], topics:[] };
+  STATE = { tasks:[], allTasks:[], exams:[], topics:[], notes:[] };
+  safeWrite('ht_tasks_all', []);
+  safeWrite('ht_tasks', []);
+  safeWrite('ht_exams_all', []);
+  safeWrite('ht_exams', []);
+  safeWrite('ht_topics', []);
+  safeWrite('ht_notes', []);
+  safeWrite('ht_pending_mutations', []);
   saveLocal();
   if (!USE_LOCAL) {
     setSyncing(true);
@@ -3242,6 +3649,7 @@ function setSyncStatus(ok) {
     btn.className = 'hdr-btn ' + (ok?'sync-ok':'sync-err');
     btn.textContent = ok ? '⚡ Live' : '⚡ Error';
   }
+  updateSyncStatusUI();
 }
 
 /* ═══════════════════════════════════════
@@ -3330,16 +3738,22 @@ async function mergeTasksConfirm(sourceId, targetId) {
                             .filter(t => t.id !== sourceId);
   renderAll();
 
-  if (!USE_LOCAL) {
-    await sb.from('tasks').update({
-      parsed_title: merged.parsed_title,
-      original_text: merged.original_text,
-      priority: merged.priority,
-      points: merged.points
-    }).eq('id', targetId);
-    await sb.from('tasks').delete().eq('id', sourceId);
-  } else {
+  const mergePayload = {
+    parsed_title: merged.parsed_title,
+    original_text: merged.original_text,
+    priority: merged.priority,
+    points: merged.points
+  };
+  if (USE_LOCAL) {
     saveLocal();
+    queueMutation('tasks', 'update', mergePayload, targetId, tgt);
+    queueMutation('tasks', 'delete', {}, sourceId, src);
+  } else {
+    const updated = await sb.from('tasks').update(mergePayload).eq('id', targetId);
+    const deleted = await sb.from('tasks').delete().eq('id', sourceId);
+    if (updated.error) queueMutation('tasks', 'update', mergePayload, targetId, tgt);
+    if (deleted.error) queueMutation('tasks', 'delete', {}, sourceId, src);
+    if (updated.error || deleted.error) toast('⚠️ รวมงานไว้แล้ว — ส่วนที่ล้มเหลวจะซิงค์ใหม่');
   }
   showMergeToast(currentLang === 'en' ? '🔗 Tasks merged!' : '🔗 รวมงานแล้ว!', 2000);
 }
@@ -3398,9 +3812,9 @@ function saveQuickNote() {
     created_at: new Date().toISOString()
   };
   STATE.notes = [note, ...(STATE.notes || [])];
-  const all = JSON.parse(localStorage.getItem('ht_notes') || '[]');
+  const all = safeReadArray('ht_notes');
   all.unshift(note);
-  localStorage.setItem('ht_notes', JSON.stringify(all));
+  safeWrite('ht_notes', all);
   input.value = '';
   renderNotes();
   toast(currentLang === 'en' ? '📝 Note saved!' : '📝 บันทึกแล้ว!');
@@ -4342,22 +4756,29 @@ async function saveEdit() {
   const title  = document.getElementById('edit-title').value.trim();
   const due    = document.getElementById('edit-due').value || null;
   if (!title) { toast('⚠️ กรุณาใส่ชื่องาน'); return; }
+  const previous = { parsed_title: task.parsed_title, original_text: task.original_text, subject: task.subject, due_date: task.due_date, type: task.type, priority: task.priority };
+  const originalMatchedTitle = task.original_text === task.parsed_title;
 
   task.parsed_title  = title;
-  task.original_text = task.original_text === task.parsed_title ? title : task.original_text;
+  task.original_text = originalMatchedTitle ? title : task.original_text;
   task.subject  = editSubj;
   task.due_date = due;
   task.type     = editType;
   task.priority = calcPriority(due, task.points);
 
   renderAll(); attachSwipeListeners();
-  if (USE_LOCAL) saveLocal();
-  else {
-    const { error } = await sb.from('tasks').update({
-      parsed_title: task.parsed_title, subject: editSubj,
-      due_date: due, type: editType, priority: task.priority
-    }).eq('id', editingTaskId);
-    if (error) { toast('❌ บันทึกไม่ได้: ' + error.message); return; }
+  const payload = { parsed_title: task.parsed_title, subject: editSubj, due_date: due, type: editType, priority: task.priority };
+  if (USE_LOCAL) {
+    saveLocal();
+    queueMutation('tasks', 'update', payload, editingTaskId, previous);
+  } else {
+    const { error } = await sb.from('tasks').update(payload).eq('id', editingTaskId);
+    if (error) {
+      Object.assign(task, previous);
+      renderAll();
+      toast('❌ บันทึกไม่ได้ — การแก้ไขถูกยกเลิก: ' + error.message);
+      return;
+    }
   }
   closeEditSheetDirect();
   navigator.vibrate && navigator.vibrate(40);
@@ -4541,15 +4962,17 @@ async function saveAssessmentExam() {
   exam.name = name;
   exam.exam_date = examDate;
   renderAll();
+  const payload = { name, exam_date: examDate };
   if (USE_LOCAL) {
     saveLocal();
+    queueMutation('exams', 'update', payload, exam.id, previous);
   } else {
-    const { error } = await sb.from('exams').update({ name, exam_date: examDate }).eq('id', exam.id);
+    const { error } = await sb.from('exams').update(payload).eq('id', exam.id);
     if (error) {
       exam.name = previous.name;
       exam.exam_date = previous.exam_date;
       renderAll();
-      toast('❌ บันทึกไม่ได้: ' + error.message);
+      toast('❌ บันทึกไม่ได้ — การแก้ไขถูกยกเลิก: ' + error.message);
       return;
     }
   }
@@ -4665,13 +5088,20 @@ function updateFilterCounts() {
 async function markAllDone() {
   const hw = STATE.tasks.filter(t => !t.is_done);
   if (!hw.length) { toast('✅ ไม่มีงานค้างอยู่'); return; }
-  hw.forEach(t => { t.is_done = true; });
+  const ids = hw.map(t => t.id);
+  const payload = { is_done: true, done_at: new Date().toISOString() };
+  hw.forEach(t => { t.is_done = true; t.done_at = payload.done_at; });
   renderAll(); attachSwipeListeners();
   checkCelebration();
-  if (USE_LOCAL) { saveLocal(); }
-  else {
-    const ids = hw.map(t => t.id);
-    await sb.from('tasks').update({ is_done: true }).in('id', ids);
+  if (USE_LOCAL) {
+    saveLocal();
+    hw.forEach(t => queueMutation('tasks', 'update', payload, t.id));
+  } else {
+    const { error } = await sb.from('tasks').update(payload).in('id', ids);
+    if (error) {
+      hw.forEach(t => queueMutation('tasks', 'update', payload, t.id));
+      toast('⚠️ ทำเครื่องหมายไว้แล้ว — จะซิงค์ใหม่เมื่อเชื่อมต่อได้');
+    }
   }
   navigator.vibrate && navigator.vibrate([60,30,60,30,100]);
   toast(`✅ ทำเครื่องหมายเสร็จ ${hw.length} งาน`);
@@ -4741,15 +5171,28 @@ function forceUpdateApp() {
 async function retrySupabase() {
   toast('🔄 กำลังเชื่อมต่อ Supabase...');
   try {
-    await loadAll();
+    remoteLoadAllowed = true;
     USE_LOCAL = false;
+    await loadAll();
+    const result = await replayPendingMutations();
+    await loadAll();
     setSyncStatus(true);
     setupRealtime();
     renderAll();
-    toast('✅ เชื่อมต่อ Supabase แล้ว! ข้อมูลซิงค์แล้ว');
+    if (result.failed) {
+      toast(currentLang === 'en'
+        ? `⚠️ Connected, but ${result.failed} change(s) still need retry`
+        : `⚠️ เชื่อมต่อแล้ว แต่ยังซิงค์ไม่สำเร็จ ${result.failed} รายการ`);
+    } else {
+      toast(currentLang === 'en' ? `✅ Connected — ${result.sent} queued change(s) synced` : `✅ เชื่อมต่อแล้ว — ซิงค์ข้อมูลค้าง ${result.sent} รายการ`);
+    }
   } catch(e) {
     console.warn('Retry failed:', e);
+    setSyncing(false);
+    USE_LOCAL = true;
     setSyncStatus(false);
+    loadFromLocal();
+    renderAll();
     toast('❌ ยังเชื่อมต่อไม่ได้ — ใช้โหมดออฟไลน์ต่อไป');
   }
 }
@@ -4833,8 +5276,16 @@ async function fabAddTask() {
     created_at: new Date().toISOString()
   };
   STATE.tasks.unshift(task); renderAll();
-  if (USE_LOCAL) saveLocal();
-  else await sb.from('tasks').insert(task);
+  if (USE_LOCAL) {
+    saveLocal();
+    queueMutation('tasks', 'insert', task, task.id);
+  } else {
+    const { error } = await sb.from('tasks').insert(task);
+    if (error) {
+      queueMutation('tasks', 'insert', task, task.id);
+      toast('⚠️ เพิ่มงานไว้แล้ว — จะซิงค์ใหม่เมื่อเชื่อมต่อได้');
+    }
+  }
   document.getElementById('fab-title-inp').value = '';
   setQDate('none', document.getElementById('qd-none'));
   closeFab();
@@ -5016,9 +5467,18 @@ function softDeleteTask(id) {
 }
 
 async function commitDelete(id) {
+  const task = undoStack?.task;
   undoStack = null;
-  if (USE_LOCAL) saveLocal();
-  else await sb.from('tasks').delete().eq('id', id);
+  if (USE_LOCAL) {
+    saveLocal();
+    queueMutation('tasks', 'delete', {}, id, task);
+    return;
+  }
+  const { error } = await sb.from('tasks').delete().eq('id', id);
+  if (error) {
+    queueMutation('tasks', 'delete', {}, id, task);
+    toast('⚠️ ลบไว้แล้ว — จะซิงค์ใหม่เมื่อเชื่อมต่อได้');
+  }
 }
 
 async function undoDelete() {
@@ -5028,8 +5488,16 @@ async function undoDelete() {
 
   if (action === 'delete') {
     STATE.tasks.unshift(task);
-    if (USE_LOCAL) saveLocal();
-    else await sb.from('tasks').insert(task);
+    if (USE_LOCAL) {
+      saveLocal();
+      queueMutation('tasks', 'insert', task, task.id);
+    } else {
+      const { error } = await sb.from('tasks').insert(task);
+      if (error) {
+        queueMutation('tasks', 'insert', task, task.id);
+        toast('⚠️ คืนงานไว้แล้ว — จะซิงค์ใหม่เมื่อเชื่อมต่อได้');
+      }
+    }
     toast(currentLang === 'en' ? '↩ Task restored' : '↩ คืนงานแล้ว');
 
   } else if (action === 'deleteNote') {
@@ -5044,8 +5512,17 @@ async function undoDelete() {
     const t = STATE.tasks.find(x => x.id === task.id);
     if (t) {
       t.is_done = prevDone;
-      if (USE_LOCAL) saveLocal();
-      else await sb.from('tasks').update({ is_done: prevDone }).eq('id', task.id);
+      const payload = { is_done: prevDone };
+      if (USE_LOCAL) {
+        saveLocal();
+        queueMutation('tasks', 'update', payload, task.id);
+      } else {
+        const { error } = await sb.from('tasks').update(payload).eq('id', task.id);
+        if (error) {
+          queueMutation('tasks', 'update', payload, task.id);
+          toast('⚠️ ยกเลิกไว้แล้ว — จะซิงค์ใหม่เมื่อเชื่อมต่อได้');
+        }
+      }
     }
     toast(currentLang === 'en' ? '↩ Undone' : '↩ ยกเลิกแล้ว');
   }
