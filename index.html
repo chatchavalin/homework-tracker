@@ -320,7 +320,7 @@ input,textarea,select{font-family:inherit}
 
 /* ── FAB ─────────────────────────────── */
 .fab{
-  position:fixed;bottom:72px;right:calc(50% - 228px);
+  position:fixed;bottom:72px;right:max(12px,calc(50% - 380px));
   width:56px;height:56px;border-radius:50%;
   background:linear-gradient(135deg,var(--primary),var(--accent));
   color:white;font-size:1.6rem;font-weight:300;
@@ -960,6 +960,65 @@ html[data-theme="dbz"] .nav-btn.active{color:#ea580c}
 .backup-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 @media (prefers-reduced-motion:reduce){.a-exam-row.soon{animation:none}.ai-progress-fill{transition:none}}
 </style>
+<style id="calm-study-desk-overrides">
+/* Calm Study Desk UX layer — preserves the existing data/render contracts. */
+body{background:#e9edf5}
+#app{max-width:760px;background:var(--bg)}
+.header{padding:18px 22px 16px;background:linear-gradient(135deg,var(--navy),#1e3a5f 72%,#315d83);box-shadow:0 8px 24px rgba(30,58,95,.18)}
+.header-top{align-items:flex-start}
+.header h1{font-family:'Sarabun',sans-serif;font-size:1.35rem;letter-spacing:-.02em}
+.header-date{font-size:.8rem;opacity:.78;margin-top:4px}
+.hdr-btn{min-height:34px;border-radius:10px}
+.stats-strip{gap:8px;margin-top:16px}
+.stat-pill{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.12);padding:9px 7px;border-radius:12px}
+.stat-pill .n{font-size:1.35rem}
+.stat-pill .l{font-size:.66rem}
+.content{padding:18px 18px 112px}
+.search-wrap{margin-bottom:12px}
+.search-input{min-height:46px;border-radius:14px;padding-top:11px;padding-bottom:11px;box-shadow:0 2px 10px rgba(31,45,74,.06)}
+.task-toolbar{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:14px;margin:0 0 16px;box-shadow:var(--shadow)}
+.task-toolbar-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.eyebrow{font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.task-focus-title{font-size:1.05rem;font-weight:800;color:var(--text);margin-top:2px}
+.toolbar-add{display:inline-flex;align-items:center;gap:3px;min-height:38px;padding:0 13px;border-radius:11px;background:var(--primary);color:#fff;font-size:.8rem;font-weight:800;box-shadow:0 5px 12px rgba(22,101,52,.18)}
+.toolbar-add:hover{background:var(--primary-dk)}
+.focus-filters{margin:0;padding:0;gap:7px;display:flex;flex-wrap:nowrap;overflow-x:auto;max-width:100%;min-width:0;overscroll-behavior-x:contain;scrollbar-width:thin}
+.focus-filters .f-tab{padding:8px 12px;background:var(--surface2);border-color:transparent;min-height:36px;flex:0 0 auto}
+.focus-filters .f-tab.active{background:var(--navy);border-color:var(--navy);color:#fff}
+.task-section-heading{display:flex;justify-content:space-between;align-items:center;margin:20px 2px 9px;color:var(--muted);font-size:.76rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+.task-section-heading:first-child{margin-top:4px}
+.task-section-heading span:last-child{font-size:.7rem;padding:3px 8px;border-radius:999px;background:var(--surface);border:1px solid var(--border)}
+.task-section-heading.urgent-heading{color:var(--high)}
+.task-section-heading.done-heading{color:var(--primary-dk)}
+.task-card{padding:14px 13px;border-radius:15px;gap:12px;margin-bottom:9px;box-shadow:0 3px 14px rgba(31,45,74,.07)}
+.task-card:hover{box-shadow:0 5px 18px rgba(31,45,74,.12)}
+.task-card .check{width:28px;height:28px;min-width:28px;background:transparent}
+.task-card.is-done .check{background:var(--primary);color:#fff}
+.task-title{font-size:.96rem;line-height:1.42}
+.task-meta{margin-top:7px;gap:6px;display:flex;align-items:center;flex-wrap:wrap}
+.task-edit-btn,.task-delete{opacity:.55;min-width:30px;min-height:30px;border-radius:8px}
+.task-edit-btn:hover,.task-delete:hover{opacity:1;background:var(--surface2)}
+.completed-drawer{margin-top:20px;border-top:1px solid var(--border);padding-top:7px}
+.completed-drawer summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;padding:8px 2px;color:var(--muted);font-size:.78rem;font-weight:800}
+.completed-drawer summary::-webkit-details-marker{display:none}
+.completed-drawer summary span{padding:3px 8px;border-radius:999px;background:var(--surface);border:1px solid var(--border)}
+.task-empty{padding:42px 18px;background:var(--surface);border:1px dashed var(--border);border-radius:18px}
+.task-empty .empty-icon{font-size:2.2rem;margin-bottom:8px}
+.empty .msg{font-weight:800}
+.bottom-nav{max-width:760px;padding-top:10px;background:rgba(255,255,255,.96);backdrop-filter:blur(16px);border-top-color:rgba(148,163,184,.35)}
+.nav-btn{min-height:48px;font-size:.68rem}
+.nav-btn .icon{font-size:1.2rem}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid rgba(59,130,246,.42);outline-offset:2px}
+@media (min-width:760px){
+  #app{min-height:100vh;box-shadow:0 0 36px rgba(31,45,74,.12)}
+  .header{padding-left:30px;padding-right:30px}
+  .content{padding-left:30px;padding-right:30px}
+  .task-toolbar{padding:16px 18px}
+  .task-card{padding:15px 16px}
+  .task-title{font-size:1rem}
+  .fab{right:max(12px,calc(50% - 380px))}
+}
+</style>
 </head>
 <body>
 
@@ -1018,6 +1077,23 @@ html[data-theme="dbz"] .nav-btn.active{color:#ea580c}
         <input class="search-input" id="hw-search" placeholder="Search homework..." oninput="onSearch(this,'hw')" onkeydown="onSearchKey(event,'hw')">
         <button class="search-clear" id="hw-search-clear" onclick="clearSearch('hw')">✕</button>
         <div class="autocomplete-list" id="hw-ac-list"></div>
+      </div>
+      <div class="task-toolbar" aria-label="Task filters">
+        <div class="task-toolbar-top">
+          <div>
+            <div class="eyebrow" id="task-focus-eyebrow">โฟกัสวันนี้</div>
+            <div class="task-focus-title" id="task-focus-title">งานที่ค้างอยู่</div>
+          </div>
+          <button type="button" class="toolbar-add" onclick="showTab('add')" aria-label="เพิ่มงานใหม่">＋ <span>เพิ่มงาน</span></button>
+        </div>
+        <div class="filter-row focus-filters" role="tablist" aria-label="กรองงาน">
+          <button type="button" class="f-tab active" role="tab" aria-selected="true" onclick="setDateFilter('open',this)">ค้างอยู่</button>
+          <button type="button" class="f-tab" role="tab" aria-selected="false" onclick="setDateFilter('urgent',this)">ด่วน</button>
+          <button type="button" class="f-tab" role="tab" aria-selected="false" onclick="setDateFilter('week',this)">สัปดาห์นี้</button>
+          <button type="button" class="f-tab" role="tab" aria-selected="false" onclick="setDateFilter('undated',this)">ไม่มีวันส่ง</button>
+          <button type="button" class="f-tab" role="tab" aria-selected="false" onclick="setDateFilter('done',this)">เสร็จแล้ว</button>
+          <button type="button" class="f-tab" role="tab" aria-selected="false" onclick="setDateFilter('all',this)">ทั้งหมด</button>
+        </div>
       </div>
       <div id="hw-list"></div>
     </div>
@@ -1287,7 +1363,7 @@ html[data-theme="dbz"] .nav-btn.active{color:#ea580c}
   <!-- BOTTOM NAV -->
   <div class="bottom-nav">
     <button class="nav-btn active" id="nav-hw" onclick="showTab('hw')"><span class="icon">📋</span><span id="nav-hw-lbl">Tasks</span></button>
-    <button class="nav-btn" id="nav-nodate" onclick="showTab('nodate')"><span class="icon">📆</span><span id="nav-nodate-lbl">No Date</span></button>
+    <button class="nav-btn" id="nav-exam" onclick="showTab('exam')"><span class="icon">📅</span><span id="nav-exam-lbl">สอบ</span></button>
     <button class="nav-btn" id="nav-add" onclick="showTab('add')"><span class="icon">➕</span><span id="nav-add-lbl">Add</span></button>
     <button class="nav-btn" id="nav-notes" onclick="showTab('notes')"><span class="icon">📝</span><span id="nav-notes-lbl">Notes</span></button>
     <button class="nav-btn" id="nav-settings" onclick="showTab('settings')"><span class="icon">⚙️</span><span id="nav-settings-lbl">Settings</span></button>
@@ -1816,7 +1892,7 @@ function saveKidPhoto(e, kidId) {
   reader.readAsDataURL(file);
 }
 let currentTab   = 'hw';
-let dateFilter   = 'all';
+let dateFilter   = 'open';
 let todoFilter   = 'pending';
 let searchQuery  = { hw: '', todo: '' };
 let manualType   = 'homework';
@@ -2099,8 +2175,12 @@ function importLocalData(input) {
    SUPABASE LOAD
 ═══════════════════════════════════════ */
 // Tasks with no kid_id (legacy) belong to Ryuji
+function filterTasksForKid(tasks, kidId) {
+  return (tasks || []).filter(t => t && (t.kid_id === kidId || (!t.kid_id && kidId === 'ryuji')));
+}
+
 function filterByKid(tasks) {
-  return (tasks||[]).filter(t => t.kid_id === currentKid || (!t.kid_id && currentKid === 'ryuji'));
+  return filterTasksForKid(tasks, currentKid);
 }
 
 function processRecurringTasks() {
@@ -2242,6 +2322,43 @@ function calcPriority(due, points) {
   if (diff <= 1) return 'high';
   if (diff <= 7) return 'med';
   return 'low';
+}
+
+function taskPriorityRank(priority) {
+  return ({ high: 0, med: 1, low: 2 }[priority] ?? 2);
+}
+
+function taskMatchesFilter(task, filter, asOf = new Date()) {
+  if (!task) return false;
+  const filterId = filter || 'open';
+  const day = new Date(asOf);
+  day.setHours(0, 0, 0, 0);
+  const due = task.due_date ? new Date(`${task.due_date}T00:00:00`) : null;
+  const diff = due ? Math.round((due - day) / 86400000) : null;
+  const urgent = !task.is_done && (task.priority === 'high' || (diff !== null && diff <= 1));
+  if (filterId === 'all') return true;
+  if (filterId === 'done') return !!task.is_done;
+  if (filterId === 'urgent') return urgent;
+  if (filterId === 'undated') return !task.is_done && !task.due_date;
+  if (filterId === 'week') return !task.is_done && diff !== null && diff >= 0 && diff <= 7;
+  return !task.is_done;
+}
+
+function sortTasksForDisplay(tasks, asOf = new Date()) {
+  const day = new Date(asOf);
+  day.setHours(0, 0, 0, 0);
+  const dueDistance = task => {
+    if (!task.due_date) return Number.POSITIVE_INFINITY;
+    return Math.round((new Date(`${task.due_date}T00:00:00`) - day) / 86400000);
+  };
+  return [...(tasks || [])].sort((a, b) => {
+    if (!!a.is_done !== !!b.is_done) return a.is_done ? 1 : -1;
+    const priority = taskPriorityRank(a.priority) - taskPriorityRank(b.priority);
+    if (priority) return priority;
+    const due = dueDistance(a) - dueDistance(b);
+    if (due) return due;
+    return String(a.id || '').localeCompare(String(b.id || ''));
+  });
 }
 
 /* ═══════════════════════════════════════
@@ -2412,14 +2529,14 @@ function taskCardHTML(t) {
   <div class="${cardClass}" id="tc-${t.id}" ondblclick="openEditSheet('${t.id}')">
     <div class="swipe-hint right">✓ เสร็จแล้ว</div>
     <div class="swipe-hint left">🗑 ลบ</div>
-    <div class="check-wrap"><div class="check" onclick="toggleTask('${t.id}')">✓</div></div>
+    <div class="check-wrap"><button type="button" class="check" aria-pressed="${!!t.is_done}" aria-label="${t.is_done ? 'ทำเครื่องหมายว่ายังไม่เสร็จ' : 'ทำเครื่องหมายว่าเสร็จแล้ว'}" onclick="event.stopPropagation();toggleTask('${t.id}')">✓</button></div>
     <div class="task-body">
       <div class="task-title">${escHtml(title)}${recurBadge}</div>
       ${metaHTML}
       ${t.image_url ? `<span class="task-clip" onclick="event.stopPropagation();openPhoto('${t.image_url}')" title="Attachment" role="button" aria-label="Attachment">📎</span>` : ''}
     </div>
-    <button class="task-edit-btn" onclick="event.stopPropagation();openEditSheet('${t.id}')" title="Edit">✏️</button>
-    <button class="task-delete" onclick="confirmDeleteTask('${t.id}')">✕</button>
+    <button type="button" class="task-edit-btn" onclick="event.stopPropagation();openEditSheet('${t.id}')" title="Edit" aria-label="แก้ไขงาน">✏️</button>
+    <button type="button" class="task-delete" onclick="event.stopPropagation();confirmDeleteTask('${t.id}')" aria-label="ลบงาน" title="Delete">✕</button>
   </div>`;}
 
 /* ═══════════════════════════════════════
@@ -2427,60 +2544,57 @@ function taskCardHTML(t) {
 ═══════════════════════════════════════ */
 function renderHW() {
   const el = document.getElementById('hw-list');
+  if (!el) return;
   const q = searchQuery.hw || '';
-  let tasks;
+  const selectedFilter = ['open','urgent','week','undated','done','all'].includes(dateFilter) ? dateFilter : 'open';
+  let tasks = filterByKid(STATE.tasks).filter(t => t.type !== 'note');
+  const effectiveFilter = q === '__urgent__' ? 'urgent' : q === '__pending__' ? 'open' : selectedFilter;
 
-  if (q === '__urgent__') {
-    tasks = STATE.tasks.filter(t => !t.is_done && t.priority==='high');
-  } else if (q === '__pending__') {
-    tasks = STATE.tasks.filter(t => !t.is_done);
-  } else if (q.trim()) {
+  tasks = tasks.filter(t => taskMatchesFilter(t, effectiveFilter));
+  if (q.trim() && !q.startsWith('__')) {
     const ql = q.toLowerCase();
-    tasks = STATE.tasks.filter(t => (
-      (t.parsed_title||'').toLowerCase().includes(ql) ||
-      (t.original_text||'').toLowerCase().includes(ql)
+    tasks = tasks.filter(t => (
+      (t.parsed_title || '').toLowerCase().includes(ql) ||
+      (t.original_text || '').toLowerCase().includes(ql) ||
+      (t.subject || '').toLowerCase().includes(ql)
     ));
-  } else {
-    tasks = STATE.tasks.slice();
   }
-
-  // Exam-type tasks are shown in the dark green exam strip, not here
-  tasks = tasks.filter(t => t.type !== 'exam');
-
-  tasks.sort((a,b) => {
-    const po = {high:0,med:1,low:2};
-    const pd = (po[a.priority]||2)-(po[b.priority]||2);
-    if (pd) return pd;
-    if (a.due_date && b.due_date) return a.due_date.localeCompare(b.due_date);
-    return a.due_date ? -1 : b.due_date ? 1 : 0;
-  });
+  tasks = sortTasksForDisplay(tasks);
 
   if (!tasks.length) {
     const L = t();
-    const qLabel = q === '__pending__' ? (currentLang==='en'?'pending tasks':'งานค้าง')
-                 : q === '__urgent__' ? (currentLang==='en'?'urgent tasks':'งานด่วน') : q;
-    const msg = q.trim() ? (currentLang==='en'?`No ${q.startsWith('__')?qLabel:'results for "'+qLabel+'"'}`:`ไม่พบ${q.startsWith('__')?qLabel:' "'+qLabel+'"'}`) : (dateFilter==='today'?L.noHwToday:L.noHw);
-    el.innerHTML = `<div class="empty"><div class="emoji">${q.trim()?'🔍':'🎉'}</div>
-      <div class="msg">${msg}</div>
-      <div class="sub">${q.trim()?'':''+L.addNew}</div></div>`; return;
+    const searching = q.trim() && !q.startsWith('__');
+    const filterLabels = {
+      open: currentLang === 'en' ? 'open tasks' : 'งานที่ค้างอยู่',
+      urgent: currentLang === 'en' ? 'urgent tasks' : 'งานด่วน',
+      week: currentLang === 'en' ? 'tasks due this week' : 'งานที่ครบกำหนดสัปดาห์นี้',
+      undated: currentLang === 'en' ? 'tasks without a due date' : 'งานที่ยังไม่มีวันส่ง',
+      done: currentLang === 'en' ? 'completed tasks' : 'งานที่เสร็จแล้ว',
+      all: currentLang === 'en' ? 'tasks' : 'งาน'
+    };
+    const msg = searching
+      ? (currentLang === 'en' ? `No results for “${escHtml(q)}”` : `ไม่พบ “${escHtml(q)}”`)
+      : (effectiveFilter === 'open' ? (currentLang === 'en' ? 'You are all caught up' : 'ไม่มีงานค้างแล้ว 🎉') : `${currentLang === 'en' ? 'No' : 'ไม่มี'} ${filterLabels[effectiveFilter]}`);
+    el.innerHTML = `<div class="empty task-empty"><div class="empty-icon">${searching ? '🔍' : effectiveFilter === 'done' ? '🌱' : '✨'}</div><div class="msg">${msg}</div><div class="sub">${searching ? '' : L.addNew}</div></div>`;
+    return;
   }
 
-  // Show search result count
-  let header = '';
-  if (q.trim() && q !== '__urgent__' && q !== '__pending__') {
-    header = `<div class="search-results-label">🔍 ${tasks.length} result${tasks.length!==1?'s':''}</div>`;
-  }
+  const header = q.trim() && !q.startsWith('__')
+    ? `<div class="search-results-label">🔍 ${tasks.length} ${currentLang === 'en' ? 'matches' : 'รายการที่พบ'}</div>` : '';
+  const open = tasks.filter(task => !task.is_done);
+  const done = tasks.filter(task => task.is_done);
+  const urgent = open.filter(task => taskMatchesFilter(task, 'urgent'));
+  const later = open.filter(task => !taskMatchesFilter(task, 'urgent'));
+  let html = header;
 
-  const pending = tasks.filter(t=>!t.is_done);
-  const done    = tasks.filter(t=>t.is_done).sort((a,b)=>(b.done_at||b.created_at||'').localeCompare(a.done_at||a.created_at||''));
-  const _t0 = new Date(); _t0.setHours(0,0,0,0);
-      const _isUrg = t => { if (t.priority === 'high') return true; if (!t.due_date) return false; const d = new Date(t.due_date + 'T00:00:00'); return (d - _t0) / 86400000 <= 1; };
-      const _urg = pending.filter(_isUrg);
-      const _later = pending.filter(t => !_isUrg(t));
-      let html = header;
-      if (_urg.length) html += `<div class="sec-label" style="color:var(--high)">🔥 ${currentLang === 'en' ? 'Urgent' : 'ด่วน'} (${_urg.length})</div>` + _urg.map(taskCardHTML).join('');
-      if (_later.length) html += (_urg.length ? `<div class="sec-label">📅 ${currentLang === 'en' ? 'Coming up' : 'ต่อไป'} (${_later.length})</div>` : '') + _later.map(taskCardHTML).join('');
-  if (done.length) html += `<div class="sec-label">✅ ${t().doneSection} (${done.length})</div>` + done.map(taskCardHTML).join('');
+  if (effectiveFilter === 'done') {
+    html += `<div class="task-section-heading done-heading"><span>✅ ${currentLang === 'en' ? 'Completed' : 'เสร็จแล้ว'}</span><span>${done.length}</span></div>`;
+    html += done.map(taskCardHTML).join('');
+  } else {
+    if (urgent.length) html += `<div class="task-section-heading urgent-heading"><span>🔥 ${currentLang === 'en' ? 'Needs attention' : 'ควรทำก่อน'}</span><span>${urgent.length}</span></div>${urgent.map(taskCardHTML).join('')}`;
+    if (later.length) html += `<div class="task-section-heading"><span>📚 ${currentLang === 'en' ? 'Coming up' : 'งานถัดไป'}</span><span>${later.length}</span></div>${later.map(taskCardHTML).join('')}`;
+    if (done.length && effectiveFilter === 'all') html += `<details class="completed-drawer" open><summary>✅ ${currentLang === 'en' ? 'Completed' : 'เสร็จแล้ว'} <span>${done.length}</span></summary>${done.map(taskCardHTML).join('')}</details>`;
+  }
   el.innerHTML = html;
   attachSwipeListeners();
   initMerge();
@@ -3453,31 +3567,11 @@ function showTab(tab) {
 
 function statPillClick(type) {
   showTab('hw');
-
-  if (type === 'done') {
-    clearSearch('hw');
-    setTimeout(() => {
-      const doneSec = document.querySelector('#hw-list .sec-label');
-      if (doneSec) {
-        const content = document.querySelector('.content');
-        if (content) content.scrollTo({ top: doneSec.offsetTop - 60, behavior: 'smooth' });
-      }
-    }, 150);
-    toast(currentLang==='en' ? `Showing all done tasks` : `แสดงงานที่เสร็จทั้งหมด`);
-  } else if (type === 'urgent') {
-    clearSearch('hw');
-    searchQuery.hw = '__urgent__';
-    renderHW();
-    toast(currentLang==='en' ? 'Showing urgent tasks' : 'แสดงงานด่วน');
-  } else if (type === 'pending') {
-    clearSearch('hw');
-    searchQuery.hw = '__pending__';
-    renderHW();
-    toast(currentLang==='en' ? 'Showing pending tasks' : 'แสดงงานที่ค้างอยู่');
-  } else {
-    clearSearch('hw');
-    toast(currentLang==='en' ? 'Showing all tasks' : 'แสดงงานทั้งหมด');
-  }
+  clearSearch('hw');
+  const filter = type === 'urgent' ? 'urgent' : type === 'pending' ? 'open' : type === 'done' ? 'done' : 'all';
+  const btn = document.querySelector(`#tab-hw .focus-filters .f-tab[onclick*="'${filter}'"]`);
+  setDateFilter(filter, btn);
+  toast(currentLang === 'en' ? `Showing ${filter === 'open' ? 'open' : filter} tasks` : `แสดง${filter === 'open' ? 'งานที่ค้าง' : filter === 'urgent' ? 'งานด่วน' : filter === 'done' ? 'งานที่เสร็จ' : 'งานทั้งหมด'}`);
 }
 
 /* ═══════════════════════════════════════
@@ -3610,8 +3704,27 @@ document.addEventListener('click', e => {
 
 function setDateFilter(f, btn) {
   dateFilter = f;
-  document.querySelectorAll('#tab-hw .f-tab').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active'); renderHW();
+  document.querySelectorAll('#tab-hw .focus-filters .f-tab').forEach(b => {
+    const active = b === btn || (b.getAttribute('onclick') || '').includes(`setDateFilter('${f}'`);
+    b.classList.toggle('active', active);
+    b.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+  renderHW();
+  updateTaskFocusUI();
+}
+
+function updateTaskFocusUI() {
+  const title = document.getElementById('task-focus-title');
+  if (!title) return;
+  const labels = {
+    open: currentLang === 'en' ? 'Open tasks' : 'งานที่ค้างอยู่',
+    urgent: currentLang === 'en' ? 'Needs attention' : 'ควรทำก่อน',
+    week: currentLang === 'en' ? 'Due this week' : 'ครบกำหนดสัปดาห์นี้',
+    undated: currentLang === 'en' ? 'No due date yet' : 'ยังไม่มีวันส่ง',
+    done: currentLang === 'en' ? 'Completed' : 'เสร็จแล้ว',
+    all: currentLang === 'en' ? 'All tasks' : 'งานทั้งหมด'
+  };
+  title.textContent = labels[dateFilter] || labels.open;
 }
 
 function setTodoFilter(f, btn) {
@@ -4100,14 +4213,15 @@ function applyLang() {
   // Header
   updateAppTitle();
 
-  // Filter tabs - hw (5 tabs: today, week, month, undated, all)
-  const hwTabs = document.querySelectorAll('#tab-hw .f-tab');
-  if (hwTabs.length >= 5) {
-    hwTabs[0].childNodes[0].textContent = L.today;
-    hwTabs[1].childNodes[0].textContent = L.week;
-    hwTabs[2].childNodes[0].textContent = L.month;
+  // Filter tabs - task focus
+  const hwTabs = document.querySelectorAll('#tab-hw .focus-filters .f-tab');
+  if (hwTabs.length >= 6) {
+    hwTabs[0].childNodes[0].textContent = L.pending;
+    hwTabs[1].childNodes[0].textContent = L.urgent;
+    hwTabs[2].childNodes[0].textContent = L.week;
     hwTabs[3].childNodes[0].textContent = L.undated;
-    hwTabs[4].childNodes[0].textContent = L.all;
+    hwTabs[4].childNodes[0].textContent = L.done;
+    hwTabs[5].childNodes[0].textContent = L.all;
   }
 
   // Filter tabs - todo
@@ -4128,6 +4242,7 @@ function applyLang() {
   const navHwLbl = document.getElementById('nav-hw-lbl');       if (navHwLbl) navHwLbl.textContent = L.hwTab;
   const navTodoLbl = document.getElementById('nav-todo-lbl');   if (navTodoLbl) navTodoLbl.textContent = L.todoTab;
   const navNodateLbl = document.getElementById('nav-nodate-lbl'); if (navNodateLbl) navNodateLbl.textContent = L.nodateTab;
+  const navExamLbl = document.getElementById('nav-exam-lbl');     if (navExamLbl) navExamLbl.textContent = L.examTab;
   const navAddLbl = document.getElementById('nav-add-lbl');     if (navAddLbl) navAddLbl.textContent = L.addTab;
   const navNotesLbl = document.getElementById('nav-notes-lbl'); if (navNotesLbl) navNotesLbl.textContent = L.infoTab;
   const navSetLbl = document.getElementById('nav-settings-lbl');if (navSetLbl) navSetLbl.textContent = L.settingsTab;
@@ -4271,6 +4386,11 @@ function applyLang() {
   if (hwSearch) hwSearch.placeholder = currentLang==='en' ? 'Search homework...' : 'ค้นหาการบ้าน...';
   const todoSearch = document.getElementById('todo-search');
   if (todoSearch) todoSearch.placeholder = currentLang==='en' ? 'Search to-dos...' : 'ค้นหาสิ่งที่ต้องทำ...';
+  const focusEyebrow = document.getElementById('task-focus-eyebrow');
+  if (focusEyebrow) focusEyebrow.textContent = currentLang === 'en' ? 'Today’s focus' : 'โฟกัสวันนี้';
+  const toolbarAdd = document.querySelector('.toolbar-add span');
+  if (toolbarAdd) toolbarAdd.textContent = currentLang === 'en' ? 'Add task' : 'เพิ่มงาน';
+  updateTaskFocusUI();
 } catch(e) { console.warn("applyLang:", e); }
 }
 

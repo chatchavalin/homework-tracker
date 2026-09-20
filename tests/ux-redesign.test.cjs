@@ -1,0 +1,84 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const vm = require('node:vm');
+
+const SOURCE = fs.readFileSync('C:/Users/chatc/Git/homework-tracker/index.html', 'utf8');
+
+function extractFunction(name) {
+  const start = SOURCE.indexOf(`function ${name}(`);
+  assert.notEqual(start, -1, `${name} must be defined`);
+  const brace = SOURCE.indexOf('{', start);
+  let depth = 0;
+  let quote = null;
+  let escaped = false;
+  for (let i = brace; i < SOURCE.length; i += 1) {
+    const ch = SOURCE[i];
+    if (quote) {
+      if (escaped) escaped = false;
+      else if (ch === '\\') escaped = true;
+      else if (ch === quote) quote = null;
+      continue;
+    }
+    if (ch === '"' || ch === "'" || ch === '`') { quote = ch; continue; }
+    if (ch === '{') depth += 1;
+    if (ch === '}' && --depth === 0) return SOURCE.slice(start, i + 1);
+  }
+  throw new Error(`Could not extract ${name}`);
+}
+
+function loadFunctions(names, globals = {}) {
+  const context = { ...globals };
+  vm.createContext(context);
+  vm.runInContext(`${names.map(extractFunction).join('\n')}; this.result = { ${names.join(', ')} };`, context);
+  return context.result;
+}
+
+const fixtures = [
+  { id: 'high', kid_id: 'ryuji', parsed_title: 'High priority', priority: 'high', due_date: '2026-09-22', is_done: false, type: 'homework' },
+  { id: 'today', kid_id: 'ryuji', parsed_title: 'Today quiz', priority: 'low', due_date: '2026-09-20', is_done: false, type: 'exam' },
+  { id: 'later', kid_id: 'ryuji', parsed_title: 'Later', priority: 'med', due_date: '2026-09-24', is_done: false, type: 'homework' },
+  { id: 'nodate', kid_id: 'ryuji', parsed_title: 'No date', priority: 'low', due_date: null, is_done: false, type: 'homework' },
+  { id: 'miki', kid_id: 'miki', parsed_title: 'Miki task', priority: 'high', due_date: '2026-09-20', is_done: false, type: 'homework' },
+  { id: 'done', kid_id: 'ryuji', parsed_title: 'Done', priority: 'high', due_date: '2026-09-20', is_done: true, type: 'homework' },
+  { id: 'legacy', kid_id: null, parsed_title: 'Legacy Ryuji', priority: 'low', due_date: '2026-09-23', is_done: false, type: 'homework' },
+];
+
+const now = new Date('2026-09-20T09:00:00');
+
+test('priority rank keeps high priority ahead of medium and low', () => {
+  const { taskPriorityRank, sortTasksForDisplay } = loadFunctions(['taskPriorityRank', 'sortTasksForDisplay']);
+  assert.equal(taskPriorityRank('high'), 0);
+  assert.equal(taskPriorityRank('med'), 1);
+  assert.equal(taskPriorityRank('low'), 2);
+  assert.deepEqual(Array.from(sortTasksForDisplay([fixtures[2], fixtures[0], fixtures[3]], now), t => t.id), ['high', 'later', 'nodate']);
+});
+
+test('urgent scope includes open exam tasks and overdue items', () => {
+  const { taskMatchesFilter, filterTasksForKid } = loadFunctions(['taskMatchesFilter', 'filterTasksForKid']);
+  const ryuji = filterTasksForKid(fixtures, 'ryuji');
+  assert.deepEqual(Array.from(ryuji.filter(t => taskMatchesFilter(t, 'urgent', now)), t => t.id), ['high', 'today']);
+  assert.equal(taskMatchesFilter(fixtures[5], 'urgent', now), false);
+});
+
+test('filter scopes compose open, this-week, no-date, done, and all', () => {
+  const { taskMatchesFilter } = loadFunctions(['taskMatchesFilter']);
+  assert.deepEqual(fixtures.filter(t => taskMatchesFilter(t, 'open', now)).map(t => t.id), ['high', 'today', 'later', 'nodate', 'miki', 'legacy']);
+  assert.deepEqual(fixtures.filter(t => taskMatchesFilter(t, 'week', now)).map(t => t.id), ['high', 'today', 'later', 'miki', 'legacy']);
+  assert.deepEqual(fixtures.filter(t => taskMatchesFilter(t, 'undated', now)).map(t => t.id), ['nodate']);
+  assert.deepEqual(fixtures.filter(t => taskMatchesFilter(t, 'done', now)).map(t => t.id), ['done']);
+  assert.equal(fixtures.filter(t => taskMatchesFilter(t, 'all', now)).length, fixtures.length);
+});
+
+test('child scope keeps legacy rows with Ryuji and excludes them for Miki', () => {
+  const { filterTasksForKid } = loadFunctions(['filterTasksForKid']);
+  assert.deepEqual(filterTasksForKid(fixtures, 'ryuji').map(t => t.id), ['high', 'today', 'later', 'nodate', 'done', 'legacy']);
+  assert.deepEqual(filterTasksForKid(fixtures, 'miki').map(t => t.id), ['miki']);
+});
+
+test('task cards expose visible accessible completion and edit actions', () => {
+  assert.match(SOURCE, /<button[^>]+class="check"[^>]+aria-pressed=/);
+  assert.match(SOURCE, /aria-label="[^"]*edit/i);
+});
+
+console.log('homework UX regression tests loaded');
