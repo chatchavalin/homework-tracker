@@ -1044,7 +1044,6 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
         <div id="kid-switcher" style="position:relative;display:flex;align-items:center;background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;padding:4px 8px;color:white"></div>
         <span class="offline-chip" id="offline-chip">📴 Offline</span>
         <button class="hdr-btn" id="sync-btn" onclick="showTab('settings')" style="display:none">⚡ Live</button>
-        <button class="hdr-btn" id="music-btn" onclick="toggleMusic()">🎵</button>
         <button class="hdr-btn" id="api-btn" onclick="showTab('settings')" style="display:none">🔑 AI</button>
       </div>
     </div>
@@ -1072,12 +1071,6 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
       <div id="verdict-wrap"></div>
       <div id="rightnow-wrap"></div>
       <div id="install-wrap"></div>
-      <div class="search-wrap" id="hw-search-wrap">
-        <span class="search-icon">🔍</span>
-        <input class="search-input" id="hw-search" placeholder="Search homework..." oninput="onSearch(this,'hw')" onkeydown="onSearchKey(event,'hw')">
-        <button class="search-clear" id="hw-search-clear" onclick="clearSearch('hw')">✕</button>
-        <div class="autocomplete-list" id="hw-ac-list"></div>
-      </div>
       <div class="task-toolbar" aria-label="Task filters">
         <div class="task-toolbar-top">
           <div>
@@ -1094,6 +1087,12 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
           <button type="button" class="f-tab" role="tab" aria-selected="false" onclick="setDateFilter('done',this)">เสร็จแล้ว</button>
           <button type="button" class="f-tab" role="tab" aria-selected="false" onclick="setDateFilter('all',this)">ทั้งหมด</button>
         </div>
+      </div>
+      <div class="search-wrap" id="hw-search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" id="hw-search" placeholder="Search homework..." oninput="onSearch(this,'hw')" onkeydown="onSearchKey(event,'hw')">
+        <button class="search-clear" id="hw-search-clear" onclick="clearSearch('hw')">✕</button>
+        <div class="autocomplete-list" id="hw-ac-list"></div>
       </div>
       <div id="hw-list"></div>
     </div>
@@ -1471,9 +1470,6 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 <div class="toast" id="toast"></div>
 
 <div class="merge-toast" id="merge-toast"></div>
-<!-- Background music player -->
-<audio id="bg-music" loop preload="none" crossorigin="anonymous" style="display:none"></audio>
-
 <script>
 /* ═══════════════════════════════════════
    SUPABASE CONFIG
@@ -1492,7 +1488,6 @@ let STATE = { tasks: [], exams: [], topics: [], notes: [] };
 const KIDS = {
   ryuji: {
     id: 'ryuji', name: 'Ryuji', emoji: '👦',
-    music: '/music/ryuji.mp3',
     theme: {
       '--navy':      '#166534',
       '--primary':   '#16a34a',
@@ -1503,7 +1498,6 @@ const KIDS = {
   },
   miki: {
     id: 'miki', name: 'Miki', emoji: '👧',
-    music: '/music/miki.mp3',
     theme: {
       '--navy':      '#6b21a8',
       '--primary':   '#9333ea',
@@ -1680,89 +1674,6 @@ function renderThemePicker() {
 
 let currentKid = localStorage.getItem('ht_current_kid') || 'ryuji';
 
-/* ═══════════════════════════════════════
-   BACKGROUND MUSIC (local MP3)
-═══════════════════════════════════════ */
-let musicOn = localStorage.getItem('ht_music_on') === '1';
-const MUSIC_VOLUME = 0.15; // background level (0.0 - 1.0)
-
-// Web Audio API — mobile browsers ignore audio.volume, but respect GainNode
-let audioCtx = null, gainNode = null, audioSourceConnected = false;
-
-function setupAudioGain() {
-  const audio = document.getElementById('bg-music');
-  if (!audio || audioSourceConnected) return;
-  try {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const source = audioCtx.createMediaElementSource(audio);
-    gainNode = audioCtx.createGain();
-    gainNode.gain.value = MUSIC_VOLUME;
-    source.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-    audioSourceConnected = true;
-  } catch(e) {
-    console.warn('WebAudio setup failed, fallback to audio.volume:', e);
-  }
-}
-
-function applyVolume() {
-  const audio = document.getElementById('bg-music');
-  if (gainNode) gainNode.gain.value = MUSIC_VOLUME;
-  if (audio) audio.volume = MUSIC_VOLUME; // fallback for desktop
-}
-
-function loadMusic(kidId) {
-  const kid = KIDS[kidId];
-  const audio = document.getElementById('bg-music');
-  if (!kid || !kid.music || !audio) return;
-  const newSrc = kid.music;
-  if (!audio.src.endsWith(newSrc)) {
-    audio.src = newSrc;
-    audio.load();
-  }
-  applyVolume();
-  if (musicOn) {
-    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-    audio.play().catch(e => console.warn('Autoplay blocked:', e));
-  }
-}
-
-function toggleMusic() {
-  const audio = document.getElementById('bg-music');
-  if (!audio) return;
-  musicOn = !musicOn;
-  localStorage.setItem('ht_music_on', musicOn ? '1' : '0');
-  updateMusicBtn();
-  if (musicOn) {
-    if (!audio.src) {
-      const kid = KIDS[currentKid];
-      if (kid && kid.music) { audio.src = kid.music; audio.load(); }
-    }
-    setupAudioGain();             // must be created after user gesture
-    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-    applyVolume();
-    audio.play().then(() => {
-      applyVolume();
-      toast(currentLang==='en' ? '🎵 Music on (quiet)' : '🎵 เปิดเพลง (เบาๆ)');
-    }).catch(e => {
-      toast(currentLang==='en' ? '❌ Cannot play: ' + e.message : '❌ เล่นไม่ได้');
-      musicOn = false;
-      updateMusicBtn();
-    });
-  } else {
-    audio.pause();
-    toast(currentLang==='en' ? '🔇 Music off' : '🔇 ปิดเพลง');
-  }
-}
-
-function updateMusicBtn() {
-  const btn = document.getElementById('music-btn');
-  if (btn) {
-    btn.textContent = musicOn ? '🎵' : '🔇';
-    btn.classList.toggle('set', musicOn);
-  }
-}
-
 let loadGeneration = 0;
 
 function switchKid(id) {
@@ -1773,7 +1684,6 @@ function switchKid(id) {
   applyKidTheme(id);
   updateAppTitle();
   renderKidSwitcher();
-  loadMusic(id);
   remoteLoadAllowed = true;
   // Immediately replace actionable rows with this kid's cached state.
   loadFromLocal();
@@ -1917,12 +1827,8 @@ async function init() {
   // Apply kid + app theme immediately on load
   applyAppTheme(getCurrentThemeId(), currentKid);
   updateAppTitle();
-  updateMusicBtn();
   renderThemePicker();
   loadApiKeyInput();
-  // Load music player (won't auto-play until user taps 🎵 due to browser autoplay rules)
-  setTimeout(() => { try { loadMusic(currentKid); } catch(e) { console.warn('music:', e); } }, 1500);
-
   document.getElementById('loading-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
 
