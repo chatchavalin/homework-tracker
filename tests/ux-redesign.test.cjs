@@ -118,4 +118,9 @@ test('quiet task rows use a three-dot menu for secondary actions', () => {
   assert.match(SOURCE, /function closeTaskMenus\(/);
 });
 
+test('quiet homework rows stay in one vertical list on wide screens', () => {
+  const quietStyles = SOURCE.slice(SOURCE.indexOf('/* Quiet list:'), SOURCE.indexOf('</style>', SOURCE.indexOf('/* Quiet list:')));
+  assert.match(quietStyles, /#hw-list\{display:block\}/);
+});
+
 console.log('homework UX regression tests loaded');
