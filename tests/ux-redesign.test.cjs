@@ -81,4 +81,12 @@ test('task cards expose visible accessible completion and edit actions', () => {
   assert.match(SOURCE, /aria-label="[^"]*edit/i);
 });
 
+test('exam area uses one compact summary and the existing popup for detail', () => {
+  assert.match(SOURCE, /<div id="exam-banner-wrap"><\/div>/);
+  assert.match(SOURCE, /class="exam-summary\$\{first\.diff <= 5 \? ' soon' : ''\}"/);
+  assert.match(extractFunction('renderExamBanner'), /Math\.min\(allItems\.length, 3\)/);
+  assert.match(extractFunction('renderExamBanner'), /openAssessmentPopup\(\)/);
+  assert.doesNotMatch(SOURCE, /id="exam-strip-wrap"|function renderExamStrip|class="a-exam-row/);
+});
+
 console.log('homework UX regression tests loaded');
