@@ -4794,16 +4794,17 @@ function renderExamBanner() {
     return;
   }
 
-  const first = allItems[0];
-  const visibleCount = Math.min(allItems.length, 3);
+  const visibleItems = limitUpcomingAssessments(allItems);
+  const first = visibleItems[0];
+  const visibleCount = visibleItems.length;
   const isEnglish = currentLang === 'en';
   const relative = first.diff === 0
     ? (isEnglish ? 'today' : 'วันนี้')
     : (isEnglish ? `in ${first.diff}d` : `ใน ${first.diff} วัน`);
   const kicker = isEnglish ? `Next assessment · ${relative}` : `สอบถัดไป · ${relative}`;
   const countLabel = isEnglish
-    ? `View ${visibleCount}${allItems.length > 3 ? '+' : ''} item${visibleCount === 1 ? '' : 's'}`
-    : `ดู ${visibleCount}${allItems.length > 3 ? '+' : ''} รายการ`;
+    ? `View ${visibleCount} item${visibleCount === 1 ? '' : 's'}`
+    : `ดู ${visibleCount} รายการ`;
   const ariaLabel = isEnglish
     ? `${kicker}. ${first.name}. ${countLabel}`
     : `${kicker} ${first.name} · ${countLabel}`;
@@ -4816,6 +4817,15 @@ function renderExamBanner() {
     </span>
     <span class="exam-summary-action"><span>${escHtml(countLabel)}</span><span aria-hidden="true">›</span></span>
   </button>`;
+}
+
+function limitUpcomingAssessments(items, maxItems = 3, windowDays = 7) {
+  const list = Array.isArray(items) ? items : [];
+  const nearTerm = list.filter(item => {
+    const days = item && item.days != null ? item.days : item && item.diff;
+    return Number.isFinite(days) && days >= 0 && days <= windowDays;
+  });
+  return (nearTerm.length ? nearTerm : list).slice(0, maxItems);
 }
 
 function getAssessmentPopupItems(exams, tasks, todayIso) {
@@ -4854,7 +4864,7 @@ function openAssessmentPopup() {
   sub.textContent = 'รายการสอบและควิซที่กำลังจะมาถึง · แตะรายการเพื่อแก้ไข';
   action.textContent = 'เปิดหน้ารายการสอบ';
   action.onclick = () => { closeAssessmentPopup(); showTab('exam'); };
-  const items = getAssessmentPopupItems(STATE.exams, STATE.tasks);
+  const items = limitUpcomingAssessments(getAssessmentPopupItems(STATE.exams, STATE.tasks));
   if (!items.length) {
     list.innerHTML = '<div class="assessment-empty">ยังไม่มีรายการสอบหรือควิซที่กำลังจะมาถึง</div>';
   } else {

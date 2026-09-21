@@ -84,9 +84,19 @@ test('task cards expose visible accessible completion and edit actions', () => {
 test('exam area uses one compact summary and the existing popup for detail', () => {
   assert.match(SOURCE, /<div id="exam-banner-wrap"><\/div>/);
   assert.match(SOURCE, /class="exam-summary\$\{first\.diff <= 5 \? ' soon' : ''\}"/);
-  assert.match(extractFunction('renderExamBanner'), /Math\.min\(allItems\.length, 3\)/);
+  assert.match(extractFunction('renderExamBanner'), /limitUpcomingAssessments\(allItems\)/);
+  assert.match(extractFunction('openAssessmentPopup'), /limitUpcomingAssessments\(getAssessmentPopupItems/);
   assert.match(extractFunction('renderExamBanner'), /openAssessmentPopup\(\)/);
   assert.doesNotMatch(SOURCE, /id="exam-strip-wrap"|function renderExamStrip|class="a-exam-row/);
+});
+
+test('near-term assessments are capped at the three nearest within seven days', () => {
+  const { limitUpcomingAssessments } = loadFunctions(['limitUpcomingAssessments']);
+  const near = [0, 2, 5, 6, 8].map((days) => ({ name: `exam-${days}`, days }));
+  assert.deepEqual(limitUpcomingAssessments(near).map(item => item.name), ['exam-0', 'exam-2', 'exam-5']);
+
+  const later = [8, 14, 21, 30].map((days) => ({ name: `exam-${days}`, days }));
+  assert.deepEqual(limitUpcomingAssessments(later).map(item => item.name), ['exam-8', 'exam-14', 'exam-21']);
 });
 
 console.log('homework UX regression tests loaded');
