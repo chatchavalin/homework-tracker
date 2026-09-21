@@ -81,6 +81,15 @@ test('task cards expose visible accessible completion and edit actions', () => {
   assert.match(SOURCE, /aria-label="[^"]*edit/i);
 });
 
+test('task completion and deletion require confirmation', () => {
+  const toggleSource = SOURCE.slice(SOURCE.indexOf('async function toggleTask'), SOURCE.indexOf('async function toggleTaskConfirmed'));
+  assert.match(toggleSource, /askConfirm\(/);
+  assert.match(toggleSource, /Mark this task as done/);
+  const deleteSource = SOURCE.slice(SOURCE.indexOf('function confirmDeleteTask'), SOURCE.indexOf('function handleAttach'));
+  assert.match(deleteSource, /askConfirm\(/);
+  assert.match(deleteSource, /Delete this task/);
+});
+
 test('exam area uses one compact summary and the existing popup for detail', () => {
   assert.match(SOURCE, /<div id="exam-banner-wrap"><\/div>/);
   assert.match(SOURCE, /class="exam-summary\$\{first\.diff <= 5 \? ' soon' : ''\}"/);

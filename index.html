@@ -2654,6 +2654,19 @@ function fireConfetti() {
 ═══════════════════════════════════════ */
 async function toggleTask(id) {
   const task = STATE.tasks.find(x=>x.id===id); if (!task) return;
+  if (!task.is_done) {
+    const name = task.parsed_title || task.original_text || '';
+    askConfirm(name, () => { toggleTaskConfirmed(id); }, {
+      title: currentLang==='en' ? 'Mark this task as done?' : 'ทำเครื่องหมายว่างานนี้เสร็จแล้ว?',
+      okLabel: currentLang==='en' ? 'Mark done' : 'เสร็จแล้ว'
+    });
+    return;
+  }
+  return toggleTaskConfirmed(id);
+}
+
+async function toggleTaskConfirmed(id) {
+  const task = STATE.tasks.find(x=>x.id===id); if (!task) return;
   const prevDone = task.is_done;
   const previous = { is_done: prevDone, done_at: task.done_at || null };
   const newVal = !task.is_done;
