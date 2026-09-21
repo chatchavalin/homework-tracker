@@ -106,4 +106,16 @@ test('task filters remain available without the removed focus card shell', () =>
   assert.match(SOURCE, /id="nav-add"/);
 });
 
+test('quiet task rows use a three-dot menu for secondary actions', () => {
+  const cardSource = SOURCE.slice(SOURCE.indexOf('function taskCardHTML'), SOURCE.indexOf('function closeTaskMenus'));
+  assert.match(cardSource, /const cardClass = `task-card quiet-task-row/);
+  assert.match(cardSource, /class="task-menu-btn"[^>]+aria-haspopup="menu"/);
+  assert.match(cardSource, /class="task-menu"[^>]+role="menu"/);
+  assert.doesNotMatch(cardSource, /class="task-edit-btn" onclick=/);
+  assert.doesNotMatch(cardSource, /class="task-delete" onclick=/);
+  assert.match(SOURCE, /function toggleTaskMenu\(/);
+  assert.match(SOURCE, /function taskMenuAction\(/);
+  assert.match(SOURCE, /function closeTaskMenus\(/);
+});
+
 console.log('homework UX regression tests loaded');
