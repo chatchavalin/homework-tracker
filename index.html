@@ -955,9 +955,12 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .quiet-task-row:hover{box-shadow:none!important;background:var(--surface2)!important}
 .quiet-task-row.is-done{opacity:.55}
 .quiet-task-row .check{width:25px;height:25px;min-width:25px}
-.quiet-task-row .task-title{font-size:.94rem;font-weight:650;line-height:1.4}
-.quiet-task-row .task-meta{margin-top:5px;gap:5px}
+.quiet-task-row .task-title{min-width:0;overflow:hidden;flex:1;font-size:.94rem;font-weight:650;line-height:1.4;text-overflow:ellipsis;white-space:nowrap}
+.quiet-task-row .task-meta{display:flex;min-width:0;flex:0 0 auto;flex-wrap:nowrap;align-items:center;gap:5px;margin:0}
+.quiet-task-row .task-meta .type-chip,.quiet-task-row .task-meta .overdue-badge,.quiet-task-row .task-meta .due-chip{flex-shrink:0}
+.quiet-task-row .due-chip{margin-left:0}
 .quiet-task-row .task-body{padding-right:2px}
+.quiet-task-row .task-body{display:flex;min-width:0;align-items:center;gap:6px}
 .task-row-actions{position:static;flex-shrink:0;align-self:flex-start}
 .task-menu-btn{width:36px;height:36px;border-radius:10px;color:var(--muted);font-size:1.35rem;line-height:1;font-weight:800;display:flex;align-items:center;justify-content:center}
 .task-menu-btn:hover,.task-row-actions.is-open .task-menu-btn{background:var(--surface2);color:var(--text)}

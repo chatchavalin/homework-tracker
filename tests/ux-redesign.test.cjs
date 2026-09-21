@@ -142,6 +142,14 @@ test('quiet task rows use a three-dot menu for secondary actions', () => {
   assert.match(SOURCE, /function closeTaskMenus\(/);
 });
 
+test('quiet task rows keep the title, exam badge, and due label on one line', () => {
+  const quietStyles = SOURCE.slice(SOURCE.indexOf('/* Quiet list:'), SOURCE.indexOf('</style>', SOURCE.indexOf('/* Quiet list:')));
+  assert.match(quietStyles, /\.quiet-task-row \.task-body\{display:flex/);
+  assert.match(quietStyles, /\.quiet-task-row \.task-title\{[^}]*white-space:nowrap/);
+  assert.match(quietStyles, /\.quiet-task-row \.task-meta\{[^}]*flex-wrap:nowrap/);
+  assert.match(SOURCE, /class="type-chip chip-exam">📅 \$\{L\.examType/);
+});
+
 test('quiet homework rows stay in one vertical list on wide screens', () => {
   const quietStyles = SOURCE.slice(SOURCE.indexOf('/* Quiet list:'), SOURCE.indexOf('</style>', SOURCE.indexOf('/* Quiet list:')));
   assert.match(quietStyles, /#hw-list\{display:block\}/);
