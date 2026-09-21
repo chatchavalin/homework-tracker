@@ -444,7 +444,6 @@ input,textarea,select{font-family:inherit}
   opacity:0;transition:opacity 0.15s;pointer-events:none;
 }
 .swipe-hint.right{background:var(--primary);color:white;justify-content:flex-start}
-.swipe-hint.left{background:var(--high);color:white;justify-content:flex-end}
 
 /* ── CELEBRATION ─────────────────────── */
 .celebration-overlay{
@@ -2379,7 +2378,7 @@ function taskCardHTML(t) {
   return `
   <div class="${cardClass}" id="tc-${t.id}" ondblclick="openEditSheet('${t.id}')">
     <div class="swipe-hint right">✓ เสร็จแล้ว</div>
-    <div class="swipe-hint left">🗑 ลบ</div>
+
     <div class="check-wrap"><button type="button" class="check" aria-pressed="${!!t.is_done}" aria-label="${t.is_done ? 'ทำเครื่องหมายว่ายังไม่เสร็จ' : 'ทำเครื่องหมายว่าเสร็จแล้ว'}" onclick="event.stopPropagation();toggleTask('${t.id}')">✓</button></div>
     <div class="task-body">
       <div class="task-title">${escHtml(title)}${recurBadge}</div>
@@ -5372,7 +5371,7 @@ function isOverdue(task) {
 }
 
 /* ═══════════════════════════════════════
-   SWIPE TO COMPLETE / DELETE
+   SWIPE TO COMPLETE
 ═══════════════════════════════════════ */
 function addSwipeListeners(el, taskId) {
   let startX = 0, startY = 0, dx = 0;
@@ -5390,25 +5389,20 @@ function addSwipeListeners(el, taskId) {
     if (Math.abs(dx) < 8 && !swiping) return;
     if (dy > Math.abs(dx) && !swiping) return; // vertical scroll
     swiping = true;
-    const capped = Math.max(0, Math.min(100, dx)); // swipe-to-delete disabled: no leftward pull
+    const capped = Math.max(0, Math.min(100, dx));
     el.style.transform = `translateX(${capped}px)`;
     el.style.transition = 'none';
     // Show hints (only right-swipe-to-complete remains)
     const rHint = el.querySelector('.swipe-hint.right');
-    const lHint = el.querySelector('.swipe-hint.left');
     if (rHint) rHint.style.opacity = dx > 20 ? Math.min(1, (dx-20)/60) : 0;
-    if (lHint) lHint.style.opacity = 0;
   }, { passive: true });
 
   el.addEventListener('touchend', () => {
     el.style.transition = 'transform 0.3s ease';
     el.style.transform = 'translateX(0)';
     const rHint = el.querySelector('.swipe-hint.right');
-    const lHint = el.querySelector('.swipe-hint.left');
     if (rHint) rHint.style.opacity = 0;
-    if (lHint) lHint.style.opacity = 0;
     if (dx > 55) { toggleTask(taskId); navigator.vibrate && navigator.vibrate(50); }
-    // swipe-to-delete disabled per user request; use the ✕ button instead
     swiping = false;
   });
 }

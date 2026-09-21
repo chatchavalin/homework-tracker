@@ -90,6 +90,14 @@ test('task completion and deletion require confirmation', () => {
   assert.match(deleteSource, /Delete this task/);
 });
 
+test('task swipe keeps completion only and has no delete gesture', () => {
+  const cardSource = SOURCE.slice(SOURCE.indexOf('function taskCardHTML'), SOURCE.indexOf('function closeTaskMenus'));
+  const swipeSource = SOURCE.slice(SOURCE.indexOf('SWIPE TO COMPLETE'), SOURCE.indexOf('UNDO DELETE'));
+  assert.doesNotMatch(cardSource, /swipe-hint left/);
+  assert.doesNotMatch(swipeSource, /swipe-hint\.left|lHint|swipe-to-delete/);
+  assert.match(swipeSource, /if \(dx > 55\) \{ toggleTask\(taskId\)/);
+});
+
 test('exam area uses one compact summary and the existing popup for detail', () => {
   assert.match(SOURCE, /<div id="exam-banner-wrap"><\/div>/);
   assert.match(SOURCE, /class="exam-summary\$\{first\.diff <= 5 \? ' soon' : ''\}"/);
