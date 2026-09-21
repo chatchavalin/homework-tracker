@@ -133,13 +133,17 @@ test('quiet task rows use a three-dot menu for secondary actions', () => {
   assert.match(cardSource, /const cardClass = `task-card quiet-task-row/);
   assert.match(cardSource, /class="task-menu-btn"[^>]+aria-haspopup="menu"/);
   assert.match(cardSource, /class="task-menu"[^>]+role="menu"/);
-  assert.doesNotMatch(cardSource, /class="task-clip"/);
+  assert.match(cardSource, /const sourcePhotoHTML = t\.image_url/);
+  assert.match(cardSource, /class="task-clip"/);
   assert.match(cardSource, /taskMenuAction\(event,'\$\{t\.id\}','attach'\)/);
   assert.doesNotMatch(cardSource, /class="task-edit-btn" onclick=/);
   assert.doesNotMatch(cardSource, /class="task-delete" onclick=/);
   assert.match(SOURCE, /function toggleTaskMenu\(/);
   assert.match(SOURCE, /function taskMenuAction\(/);
   assert.match(SOURCE, /function closeTaskMenus\(/);
+  const menuSource = SOURCE.slice(SOURCE.indexOf('function toggleTaskMenu'), SOURCE.indexOf('function taskMenuAction'));
+  assert.match(menuSource, /if \(wasOpen\) \{ closeTaskMenu\(actions\); return; \}/);
+  assert.doesNotMatch(menuSource, /closeTaskMenus\(\);/);
 });
 
 test('quiet task rows keep the title, exam badge, and due label on one line', () => {
@@ -159,6 +163,31 @@ test('CUDSS homework gets a source tag from the OnSmart URL', () => {
   const cardSource = SOURCE.slice(SOURCE.indexOf('function taskCardHTML'), SOURCE.indexOf('function closeTaskMenus'));
   assert.match(cardSource, /const cudssChip = isCudssHomework\(t\)/);
   assert.match(cardSource, /chip-cudss/);
+});
+
+test('composite scan schedules split into separate dated items and retain source image', () => {
+  const { splitCompositeParsedItems } = loadFunctions(['inferCompositeDueDate', 'splitCompositeParsedItems']);
+  const source = 'source-image-b64';
+  const result = splitCompositeParsedItems([{
+    record_type: 'task',
+    parsed_title: 'Tue. 22 Sep 13:10-14:00 Math | Fri 25 Sep 11.20-12:10 Social | Mon 29 Sep 09:00-10:00 Thai',
+    original_text: 'Tue. 22 Sep 13:10-14:00 Math | Fri 25 Sep 11.20-12:10 Social | Mon 29 Sep 09:00-10:00 Thai',
+    due_date: '2026-09-22',
+    _srcB64: source,
+  }]);
+  assert.deepEqual(result.map(item => item.parsed_title), [
+    'Tue. 22 Sep 13:10-14:00 Math',
+    'Fri 25 Sep 11.20-12:10 Social',
+    'Mon 29 Sep 09:00-10:00 Thai',
+  ]);
+  assert.deepEqual(result.map(item => item.due_date), ['2026-09-22', '2026-09-25', '2026-09-29']);
+  assert.ok(result.every(item => item._srcB64 === source));
+  assert.equal(splitCompositeParsedItems([{ record_type: 'task', parsed_title: 'Parent | indented detail' }]).length, 1);
+  assert.equal(splitCompositeParsedItems([{ record_type: 'task', parsed_title: 'Schedule', original_text: 'Tue 22 Sep 13:10-14:00 Math | Fri 25 Sep 11:20-12:10 Social' }]).length, 2);
+  assert.match(SOURCE, /const photoUrlFor = r => \{/);
+  assert.match(SOURCE, /image_url: photoUrlFor\(t\)/);
+  assert.match(SOURCE, /const sourcePhotoHTML = t\.image_url/);
+  assert.match(SOURCE, /openPhoto\('\$\{t\.image_url\}'\)/);
 });
 
 test('quiet homework rows stay in one vertical list on wide screens', () => {

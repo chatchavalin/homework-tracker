@@ -2390,6 +2390,9 @@ function taskCardHTML(t) {
   const editLabel = currentLang === 'en' ? 'Edit task' : 'แก้ไขงาน';
   const attachLabel = currentLang === 'en' ? 'Attach photo' : 'แนบรูป';
   const deleteLabel = currentLang === 'en' ? 'Delete task' : 'ลบงาน';
+  const sourcePhotoHTML = t.image_url
+    ? `<button type="button" class="task-clip" onclick="event.stopPropagation();openPhoto('${t.image_url}')" title="${currentLang === 'en' ? 'Original scan' : 'รูปต้นฉบับ'}" aria-label="${currentLang === 'en' ? 'Open original scan' : 'เปิดรูปต้นฉบับ'}">📎</button>`
+    : '';
   return `
   <div class="${cardClass}" id="tc-${t.id}" ondblclick="openEditSheet('${t.id}')">
     <div class="swipe-hint right">✓ เสร็จแล้ว</div>
@@ -2398,6 +2401,7 @@ function taskCardHTML(t) {
     <div class="task-body">
       <div class="task-title">${escHtml(title)}${recurBadge}</div>
       ${metaHTML}
+      ${sourcePhotoHTML}
     </div>
     <div class="task-row-actions" data-task-id="${t.id}">
       <button type="button" class="task-menu-btn" aria-haspopup="menu" aria-expanded="false" aria-label="${currentLang === 'en' ? 'Task actions' : 'ตัวเลือกงาน'}" title="${currentLang === 'en' ? 'Task actions' : 'ตัวเลือกงาน'}" onclick="toggleTaskMenu(event,'${t.id}')">⋮</button>
@@ -2411,18 +2415,23 @@ function taskCardHTML(t) {
 
 function closeTaskMenus() {
   document.querySelectorAll('.task-row-actions.is-open').forEach(actions => {
-    actions.classList.remove('is-open');
-    const button = actions.querySelector('.task-menu-btn');
-    const menu = actions.querySelector('.task-menu') || document.querySelector(`.task-menu[data-task-id="${actions.dataset.taskId}"]`);
-    if (button) button.setAttribute('aria-expanded', 'false');
-    if (menu) {
-      menu.classList.remove('is-open');
-      menu.style.left = '';
-      menu.style.top = '';
-      menu.style.visibility = 'hidden';
-      if (menu.parentElement === document.body) actions.appendChild(menu);
-    }
+    closeTaskMenu(actions);
   });
+}
+
+function closeTaskMenu(actions) {
+  if (!actions) return;
+  actions.classList.remove('is-open');
+  const button = actions.querySelector('.task-menu-btn');
+  const menu = actions.querySelector('.task-menu') || document.querySelector(`.task-menu[data-task-id="${actions.dataset.taskId}"]`);
+  if (button) button.setAttribute('aria-expanded', 'false');
+  if (menu) {
+    menu.classList.remove('is-open');
+    menu.style.left = '';
+    menu.style.top = '';
+    menu.style.visibility = 'hidden';
+    if (menu.parentElement === document.body) actions.appendChild(menu);
+  }
 }
 
 function toggleTaskMenu(event, id) {
@@ -2434,8 +2443,7 @@ function toggleTaskMenu(event, id) {
   const menu = actions && (actions.querySelector('.task-menu') || document.querySelector(`.task-menu[data-task-id="${id}"]`));
   if (!actions || !button || !menu) return;
   const wasOpen = actions.classList.contains('is-open');
-  closeTaskMenus();
-  if (wasOpen) return;
+  if (wasOpen) { closeTaskMenu(actions); return; }
   actions.classList.add('is-open');
   menu.classList.add('is-open');
   if (menu.parentElement !== document.body) document.body.appendChild(menu);
@@ -3025,6 +3033,57 @@ function extractGeminiItems(data) {
   return items;
 }
 
+function inferCompositeDueDate(text, fallback) {
+  const value = String(text || '');
+  const months = {
+    jan:1, january:1, feb:2, february:2, mar:3, march:3, apr:4, april:4,
+    may:5, jun:6, june:6, jul:7, july:7, aug:8, august:8,
+    sep:9, sept:9, september:9, oct:10, october:10, nov:11, november:11,
+    dec:12, december:12
+  };
+  const named = value.match(/\b(\d{1,2})\s+([A-Za-z]{3,9})\b/);
+  if (named && months[named[2].toLowerCase()]) {
+    const year = fallback && /^\d{4}-\d{2}-\d{2}$/.test(fallback)
+      ? Number(fallback.slice(0, 4)) : new Date().getFullYear();
+    return `${year}-${String(months[named[2].toLowerCase()]).padStart(2,'0')}-${String(Number(named[1])).padStart(2,'0')}`;
+  }
+  const numeric = value.match(/\b(\d{1,2})[/.\-](\d{1,2})(?:[/.\-](\d{2,4}))?\b/);
+  if (numeric) {
+    const currentYear = new Date().getFullYear();
+    let year = numeric[3] ? Number(numeric[3]) : (fallback ? Number(String(fallback).slice(0, 4)) : currentYear);
+    if (year < 100) year += year >= 50 ? 1900 : 2000;
+    if (year > 2400) year -= 543;
+    return `${year}-${String(Number(numeric[2])).padStart(2,'0')}-${String(Number(numeric[1])).padStart(2,'0')}`;
+  }
+  return fallback || null;
+}
+
+function splitCompositeParsedItems(items) {
+  const splitField = value => String(value || '').split('|').flatMap(part => part.split(';')).flatMap(part => part.split(String.fromCharCode(10))).map(part => part.trim()).filter(Boolean);
+  const hasScheduleMarker = value =>
+    /\b\d{1,2}[.:]\d{2}\s*[-–]\s*\d{1,2}[.:]\d{2}\b/.test(value) ||
+    /\b\d{1,2}\s+[A-Za-z]{3,9}\b/.test(value) ||
+    /\b\d{1,2}[/.\-]\d{1,2}(?:[/.\-]\d{2,4})?\b/.test(value);
+
+  return (items || []).flatMap(item => {
+    if (!item || item.record_type !== 'task') return [item];
+    const titleParts = splitField(item.parsed_title);
+    const sourceParts = splitField(item.original_text);
+    const parts = titleParts.length >= 2 && titleParts.filter(hasScheduleMarker).length >= 2
+      ? titleParts
+      : sourceParts;
+    if (parts.length < 2 || parts.filter(hasScheduleMarker).length < 2) return [item];
+    const sourceMatchesTitle = sourceParts.length === parts.length;
+    return parts.map((part, index) => ({
+      ...item,
+      parsed_title: part,
+      original_text: sourceMatchesTitle ? sourceParts[index] : part,
+      due_date: inferCompositeDueDate(part, item.due_date || item.date),
+      date: inferCompositeDueDate(part, item.date || item.due_date)
+    }));
+  });
+}
+
 
 async function parseImage(retryIndexes = null) {
   if (!pendingImages.length) {
@@ -3298,7 +3357,11 @@ async function confirmParsed() {
       }
     }
   }
-  const photoUrlFor = r => (r._srcB64 ? (photoUrlCache.get(r._srcB64) || null) : null);
+  const photoUrlFor = r => {
+    if (!r?._srcB64) return null;
+    const uploaded = photoUrlCache.get(r._srcB64) || null;
+    return uploaded || (USE_LOCAL ? `data:image/jpeg;base64,${r._srcB64}` : null);
+  };
 
   // Split events, info, tasks
   const autoEvents = selected.filter(r => r.record_type === 'event');
@@ -3371,6 +3434,7 @@ async function confirmParsed() {
     id: uid(), kid_id: currentKid,
     name: t.parsed_title || t.original_text || (t.parsed_tag === 'quiz' ? 'Quiz' : 'Exam'),
     exam_date: t.due_date || t.date || null,
+    image_url: photoUrlFor(t),
     created_at: new Date().toISOString()
   }));
   // Optimistic
@@ -3394,6 +3458,11 @@ async function confirmParsed() {
     let examError = null;
     if (newExams.length) {
       ({ error: examError } = await sb.from('exams').insert(newExams));
+    }
+    if (examError && /image_url/i.test(examError.message || '')) {
+      const stripped = newExams.map(({ image_url, ...rest }) => rest);
+      ({ error: examError } = await sb.from('exams').insert(stripped));
+      if (!examError) newExams.forEach((exam, i) => Object.assign(exam, stripped[i]));
     }
     if (taskError || examError) {
       saveLocal();
@@ -4677,6 +4746,7 @@ SUB-ITEM MERGING — very important:
 - Merge them into ONE task. Put the parent as parsed_title and list sub-items in original_text.
 - Example: "5. Do Math ex 7 page 53-54" followed by indented "q② (1,2,4,5,6,8,9,10)" and "q③ (all except 17,19)" → ONE task: title="Do Math Ex 7 Page 53-54", original_text="5. Do Math ex 7 page 53-54 | q② (1,2,4,5,6,8,9,10) | q③ (all except 17,19)"
 - Do NOT create separate tasks for indented sub-items.
+- Independent schedule entries are different tasks, even when they appear on the same line. If a line contains multiple date/time/subject blocks separated by "|", a new line, or ";" (for example, "Tue. 22 Sep 13:10-14:00 Math | Fri 25 Sep 11.20-12:10 Social"), return one task record for EACH block. This can be 2, 3, or more tasks. Do not merge independent dates, times, or subjects into one task.
 
 COMPLETENESS RULES — extract EVERYTHING:
 - The page may have MULTIPLE sections separated by red/colored horizontal lines. Extract items from ALL sections, including above the first line and below the last.
