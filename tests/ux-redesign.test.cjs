@@ -99,4 +99,11 @@ test('near-term assessments are capped at the three nearest within seven days', 
   assert.deepEqual(limitUpcomingAssessments(later).map(item => item.name), ['exam-8', 'exam-14', 'exam-21']);
 });
 
+test('task filters remain available without the removed focus card shell', () => {
+  assert.doesNotMatch(SOURCE, /class="task-toolbar"/);
+  assert.doesNotMatch(SOURCE, /id="task-focus-title"/);
+  assert.match(SOURCE, /class="filter-row focus-filters"/);
+  assert.match(SOURCE, /id="nav-add"/);
+});
+
 console.log('homework UX regression tests loaded');
