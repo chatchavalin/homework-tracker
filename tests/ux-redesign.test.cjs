@@ -111,6 +111,8 @@ test('quiet task rows use a three-dot menu for secondary actions', () => {
   assert.match(cardSource, /const cardClass = `task-card quiet-task-row/);
   assert.match(cardSource, /class="task-menu-btn"[^>]+aria-haspopup="menu"/);
   assert.match(cardSource, /class="task-menu"[^>]+role="menu"/);
+  assert.doesNotMatch(cardSource, /class="task-clip"/);
+  assert.match(cardSource, /taskMenuAction\(event,'\$\{t\.id\}','attach'\)/);
   assert.doesNotMatch(cardSource, /class="task-edit-btn" onclick=/);
   assert.doesNotMatch(cardSource, /class="task-delete" onclick=/);
   assert.match(SOURCE, /function toggleTaskMenu\(/);

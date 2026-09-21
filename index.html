@@ -2384,7 +2384,6 @@ function taskCardHTML(t) {
     <div class="task-body">
       <div class="task-title">${escHtml(title)}${recurBadge}</div>
       ${metaHTML}
-      ${t.image_url ? `<span class="task-clip" onclick="event.stopPropagation();openPhoto('${t.image_url}')" title="Attachment" role="button" aria-label="Attachment">📎</span>` : ''}
     </div>
     <div class="task-row-actions" data-task-id="${t.id}">
       <button type="button" class="task-menu-btn" aria-haspopup="menu" aria-expanded="false" aria-label="${currentLang === 'en' ? 'Task actions' : 'ตัวเลือกงาน'}" title="${currentLang === 'en' ? 'Task actions' : 'ตัวเลือกงาน'}" onclick="toggleTaskMenu(event,'${t.id}')">⋮</button>
