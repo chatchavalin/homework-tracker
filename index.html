@@ -898,7 +898,9 @@ body{background:#e9edf5}
 .exam-summary{width:100%;min-height:58px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 14px;padding:10px 12px;border:1px solid var(--border);border-left:4px solid var(--primary);border-radius:14px;background:var(--surface);color:var(--text);font:inherit;text-align:left;box-shadow:0 3px 12px rgba(31,45,74,.06);cursor:pointer;appearance:none}
 .exam-summary:hover{border-color:var(--primary)}
 .exam-summary:active{transform:translateY(1px)}
-.exam-summary.soon{border-left-color:#d97706}
+.exam-summary.soon{border-left-color:#d97706;animation:examSummaryBlink 1.25s ease-in-out infinite}
+@keyframes examSummaryBlink{0%,100%{opacity:1;box-shadow:0 3px 12px rgba(217,119,6,.1)}50%{opacity:.58;box-shadow:0 3px 18px rgba(217,119,6,.34)}}
+@media (prefers-reduced-motion:reduce){.exam-summary.soon{animation:none}}
 .exam-summary-copy{display:grid;min-width:0;flex:1;gap:2px}
 .exam-summary-kicker{overflow:hidden;color:var(--muted);font-size:.68rem;font-weight:800;line-height:1.2;text-overflow:ellipsis;white-space:nowrap}
 .exam-summary-name{overflow:hidden;color:var(--text);font-size:.9rem;font-weight:800;line-height:1.35;text-overflow:ellipsis;white-space:nowrap}
@@ -4838,6 +4840,10 @@ function cardAttachPhoto(taskId) {
   inp.click();
 }
 
+let examRotationTimer = null;
+let examRotationIndex = 0;
+let examRotationSignature = '';
+
 function renderExamBanner() {
   const wrap = document.getElementById('exam-banner-wrap');
   if (!wrap) return;
@@ -4864,33 +4870,55 @@ function renderExamBanner() {
   const allItems = [...examItems, ...taskExamItems].sort((a, b) => a.diff - b.diff);
 
   if (!allItems.length) {
+    if (examRotationTimer) { clearInterval(examRotationTimer); examRotationTimer = null; }
+    examRotationIndex = 0;
+    examRotationSignature = '';
     wrap.innerHTML = '';
     return;
   }
 
   const visibleItems = limitUpcomingAssessments(allItems);
-  const first = visibleItems[0];
   const visibleCount = visibleItems.length;
-  const isEnglish = currentLang === 'en';
-  const relative = first.diff === 0
-    ? (isEnglish ? 'today' : 'วันนี้')
-    : (isEnglish ? `in ${first.diff}d` : `ใน ${first.diff} วัน`);
-  const kicker = isEnglish ? `Next assessment · ${relative}` : `สอบถัดไป · ${relative}`;
-  const countLabel = isEnglish
-    ? `View ${visibleCount} item${visibleCount === 1 ? '' : 's'}`
-    : `ดู ${visibleCount} รายการ`;
-  const ariaLabel = isEnglish
-    ? `${kicker}. ${first.name}. ${countLabel}`
-    : `${kicker} ${first.name} · ${countLabel}`;
+  const hasNearTerm = allItems.some(item => item.diff >= 0 && item.diff <= 7);
+  const rotationSignature = visibleItems.map(item => `${item.source}:${item.name}:${item.diff}`).join('|');
+  if (rotationSignature !== examRotationSignature) {
+    examRotationSignature = rotationSignature;
+    examRotationIndex = 0;
+  }
+  if (examRotationTimer) { clearInterval(examRotationTimer); examRotationTimer = null; }
 
-  wrap.innerHTML = `<button type="button" class="exam-summary${first.diff <= 5 ? ' soon' : ''}"
-    onclick="openAssessmentPopup()" aria-haspopup="dialog" aria-label="${escHtml(ariaLabel)}">
-    <span class="exam-summary-copy">
-      <span class="exam-summary-kicker">${escHtml(kicker)}</span>
-      <span class="exam-summary-name" title="${escHtml(first.name)}">${escHtml(first.name)}</span>
-    </span>
-    <span class="exam-summary-action"><span>${escHtml(countLabel)}</span><span aria-hidden="true">›</span></span>
-  </button>`;
+  const renderSummary = () => {
+    const position = examRotationIndex % visibleCount;
+    const current = visibleItems[position];
+    const isEnglish = currentLang === 'en';
+    const relative = current.diff === 0
+      ? (isEnglish ? 'today' : 'วันนี้')
+      : (isEnglish ? `in ${current.diff}d` : `ใน ${current.diff} วัน`);
+    const kicker = isEnglish ? `Next assessment · ${relative}` : `สอบถัดไป · ${relative}`;
+    const countLabel = visibleCount === 1
+      ? (isEnglish ? 'View details' : 'ดูรายละเอียด')
+      : (isEnglish ? `Item ${position + 1}/${visibleCount}` : `รายการ ${position + 1}/${visibleCount}`);
+    const ariaLabel = isEnglish
+      ? `${kicker}. ${current.name}. ${countLabel}`
+      : `${kicker} ${current.name} · ${countLabel}`;
+
+    wrap.innerHTML = `<button type="button" class="exam-summary${hasNearTerm ? ' soon' : ''}"
+      onclick="openAssessmentPopup()" aria-haspopup="dialog" aria-label="${escHtml(ariaLabel)}">
+      <span class="exam-summary-copy">
+        <span class="exam-summary-kicker">${escHtml(kicker)}</span>
+        <span class="exam-summary-name" title="${escHtml(current.name)}">${escHtml(current.name)}</span>
+      </span>
+      <span class="exam-summary-action"><span>${escHtml(countLabel)}</span><span aria-hidden="true">›</span></span>
+    </button>`;
+  };
+
+  renderSummary();
+  if (hasNearTerm && visibleCount > 1) {
+    examRotationTimer = setInterval(() => {
+      examRotationIndex = (examRotationIndex + 1) % visibleCount;
+      renderSummary();
+    }, 2500);
+  }
 }
 
 function limitUpcomingAssessments(items, maxItems = 3, windowDays = 7) {

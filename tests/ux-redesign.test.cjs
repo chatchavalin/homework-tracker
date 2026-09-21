@@ -100,8 +100,10 @@ test('task swipe keeps completion only and has no delete gesture', () => {
 
 test('exam area uses one compact summary and the existing popup for detail', () => {
   assert.match(SOURCE, /<div id="exam-banner-wrap"><\/div>/);
-  assert.match(SOURCE, /class="exam-summary\$\{first\.diff <= 5 \? ' soon' : ''\}"/);
+  assert.match(SOURCE, /class="exam-summary\$\{hasNearTerm \? ' soon' : ''\}"/);
   assert.match(extractFunction('renderExamBanner'), /limitUpcomingAssessments\(allItems\)/);
+  assert.match(extractFunction('renderExamBanner'), /setInterval\(/);
+  assert.match(extractFunction('renderExamBanner'), /2500/);
   assert.match(extractFunction('openAssessmentPopup'), /limitUpcomingAssessments\(getAssessmentPopupItems/);
   assert.match(extractFunction('renderExamBanner'), /openAssessmentPopup\(\)/);
   assert.doesNotMatch(SOURCE, /id="exam-strip-wrap"|function renderExamStrip|class="a-exam-row/);
