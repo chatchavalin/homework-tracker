@@ -895,15 +895,16 @@ body{background:#e9edf5}
 .content{padding:18px 18px 112px}
 .search-wrap{margin-bottom:12px}
 .search-input{min-height:46px;border-radius:14px;padding-top:11px;padding-bottom:11px;box-shadow:0 2px 10px rgba(31,45,74,.06)}
-.exam-summary{width:100%;min-height:58px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 14px;padding:10px 12px;border:1px solid var(--border);border-left:4px solid var(--primary);border-radius:14px;background:var(--surface);color:var(--text);font:inherit;text-align:left;box-shadow:0 3px 12px rgba(31,45,74,.06);cursor:pointer;appearance:none}
+.exam-summary{width:100%;min-height:46px;display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 14px;padding:8px 12px;border:1px solid var(--border);border-left:4px solid var(--primary);border-radius:14px;background:var(--surface);color:var(--text);font:inherit;text-align:left;box-shadow:0 3px 12px rgba(31,45,74,.06);cursor:pointer;appearance:none}
 .exam-summary:hover{border-color:var(--primary)}
 .exam-summary:active{transform:translateY(1px)}
 .exam-summary.soon{border-left-color:#d97706;animation:examSummaryBlink 1.25s ease-in-out infinite}
 @keyframes examSummaryBlink{0%,100%{opacity:1;box-shadow:0 3px 12px rgba(217,119,6,.1)}50%{opacity:.58;box-shadow:0 3px 18px rgba(217,119,6,.34)}}
 @media (prefers-reduced-motion:reduce){.exam-summary.soon{animation:none}}
-.exam-summary-copy{display:grid;min-width:0;flex:1;gap:2px}
-.exam-summary-kicker{overflow:hidden;color:var(--muted);font-size:.68rem;font-weight:800;line-height:1.2;text-overflow:ellipsis;white-space:nowrap}
-.exam-summary-name{overflow:hidden;color:var(--text);font-size:.9rem;font-weight:800;line-height:1.35;text-overflow:ellipsis;white-space:nowrap}
+.exam-summary-copy{display:flex;min-width:0;flex:1;align-items:baseline}
+.exam-summary-line{display:flex;min-width:0;flex:1;align-items:baseline;gap:8px}
+.exam-summary-name{min-width:0;overflow:hidden;flex:1;color:var(--text);font-size:.9rem;font-weight:800;line-height:1.35;text-overflow:ellipsis;white-space:nowrap}
+.exam-summary-relative{flex-shrink:0;color:var(--muted);font-size:.72rem;font-weight:800;line-height:1.2;white-space:nowrap}
 .exam-summary-action{display:inline-flex;align-items:center;flex-shrink:0;gap:4px;color:var(--text);font-size:.72rem;font-weight:800;white-space:nowrap}
 .exam-summary-action span:last-child{font-size:1.2rem;line-height:1}
 .eyebrow{font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
@@ -4893,20 +4894,22 @@ function renderExamBanner() {
     const isEnglish = currentLang === 'en';
     const relative = current.diff === 0
       ? (isEnglish ? 'today' : 'วันนี้')
-      : (isEnglish ? `in ${current.diff}d` : `ใน ${current.diff} วัน`);
-    const kicker = isEnglish ? `Next assessment · ${relative}` : `สอบถัดไป · ${relative}`;
+      : (isEnglish ? `in ${current.diff}d` : `อีก ${current.diff} วัน`);
+    const kicker = isEnglish ? 'Next assessment' : 'สอบถัดไป';
     const countLabel = visibleCount === 1
       ? (isEnglish ? 'View details' : 'ดูรายละเอียด')
       : (isEnglish ? `Item ${position + 1}/${visibleCount}` : `รายการ ${position + 1}/${visibleCount}`);
     const ariaLabel = isEnglish
-      ? `${kicker}. ${current.name}. ${countLabel}`
-      : `${kicker} ${current.name} · ${countLabel}`;
+      ? `${kicker}. ${current.name}. ${relative}. ${countLabel}`
+      : `${kicker} ${current.name} · ${relative} · ${countLabel}`;
 
     wrap.innerHTML = `<button type="button" class="exam-summary${hasNearTerm ? ' soon' : ''}"
       onclick="openAssessmentPopup()" aria-haspopup="dialog" aria-label="${escHtml(ariaLabel)}">
       <span class="exam-summary-copy">
-        <span class="exam-summary-kicker">${escHtml(kicker)}</span>
-        <span class="exam-summary-name" title="${escHtml(current.name)}">${escHtml(current.name)}</span>
+        <span class="exam-summary-line">
+          <span class="exam-summary-name" title="${escHtml(current.name)}">${escHtml(current.name)}</span>
+          <span class="exam-summary-relative">${escHtml(relative)}</span>
+        </span>
       </span>
       <span class="exam-summary-action"><span>${escHtml(countLabel)}</span><span aria-hidden="true">›</span></span>
     </button>`;
