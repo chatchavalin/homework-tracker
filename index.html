@@ -612,6 +612,7 @@ input,textarea,select{font-family:inherit}
 .type-chip{font-size:0.62rem;font-weight:800;padding:2px 8px;border-radius:6px;letter-spacing:.02em;text-transform:uppercase}
 .chip-exam{background:#fff3e0;color:#e65100}
 .chip-note{background:#ede9fe;color:#5b21b6}
+.chip-cudss{background:#e0f2fe;color:#075985}
 .due-chip{font-size:0.68rem;font-weight:600}
 .sec-label{margin:16px 0 8px 2px}
 .type-toggle.three .type-btn,.fab-type-toggle.three .fab-type-btn{flex:1}
@@ -2276,6 +2277,13 @@ function typeChip(type) {
   return '';
 }
 
+function isCudssHomework(task) {
+  const source = [task && task.source_url, task && task.url, task && task.link, task && task.href,
+    task && task.original_text, task && task.parsed_title, task && task.description, task && task.notes]
+    .filter(Boolean).join(' ');
+  return /https?:\/\/(?:www\.)?cud\.onsmart\.school(?:[/?#:]|$)/i.test(source);
+}
+
 /* AUTO-RULES: exam keyword + weekly-recurring detection from task text */
 function looksLikeExam(s){
   const x = String(s||'');
@@ -2374,9 +2382,10 @@ function taskCardHTML(t) {
   const overdueTag = overdue ? `<span class="overdue-badge">เกินกำหนด!</span>` : '';
   const title = cleanTitle(t.parsed_title || t.original_text);
   const chip = typeChip(effType(t));
+  const cudssChip = isCudssHomework(t) ? '<span class="type-chip chip-cudss" title="CUD OnSmart School">CUDSS</span>' : '';
   const cardClass = `task-card quiet-task-row p-${t.priority||'low'} ${t.is_done?'is-done':''} ${overdue?'overdue':''}`;
-  const metaHTML = (chip || overdueTag || dueHTML)
-    ? `<div class="task-meta">${chip}${overdueTag}${dueHTML}</div>` : '';
+  const metaHTML = (cudssChip || chip || overdueTag || dueHTML)
+    ? `<div class="task-meta">${cudssChip}${chip}${overdueTag}${dueHTML}</div>` : '';
   const recurBadge = isRecurring(t) ? ' <span title="Repeats every week" style="font-size:0.78rem;opacity:0.7">🔁</span>' : '';
   const editLabel = currentLang === 'en' ? 'Edit task' : 'แก้ไขงาน';
   const attachLabel = currentLang === 'en' ? 'Attach photo' : 'แนบรูป';

@@ -150,6 +150,17 @@ test('quiet task rows keep the title, exam badge, and due label on one line', ()
   assert.match(SOURCE, /class="type-chip chip-exam">📅 \$\{L\.examType/);
 });
 
+test('CUDSS homework gets a source tag from the OnSmart URL', () => {
+  const { isCudssHomework } = loadFunctions(['isCudssHomework']);
+  assert.equal(isCudssHomework({ original_text: 'https://cud.onsmart.school/lesson/123' }), true);
+  assert.equal(isCudssHomework({ source_url: 'https://www.cud.onsmart.school/' }), true);
+  assert.equal(isCudssHomework({ original_text: 'https://not-cud.onsmart.school.example/' }), false);
+  assert.equal(isCudssHomework({ parsed_title: 'Math homework' }), false);
+  const cardSource = SOURCE.slice(SOURCE.indexOf('function taskCardHTML'), SOURCE.indexOf('function closeTaskMenus'));
+  assert.match(cardSource, /const cudssChip = isCudssHomework\(t\)/);
+  assert.match(cardSource, /chip-cudss/);
+});
+
 test('quiet homework rows stay in one vertical list on wide screens', () => {
   const quietStyles = SOURCE.slice(SOURCE.indexOf('/* Quiet list:'), SOURCE.indexOf('</style>', SOURCE.indexOf('/* Quiet list:')));
   assert.match(quietStyles, /#hw-list\{display:block\}/);
