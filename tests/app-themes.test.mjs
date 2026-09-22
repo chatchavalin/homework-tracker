@@ -29,6 +29,7 @@ function extractConstObject(name) {
 
 const helpers = new Function(`
 ${extractConstObject('APP_THEMES')}
+const AVAILABLE_THEME_IDS = ['default', 'calm'];
 ${extractFunction('normalizeThemeId')}
 ${extractFunction('getThemeVars')}
 ${extractFunction('listThemeIds')}
@@ -37,23 +38,19 @@ return { APP_THEMES, normalizeThemeId, getThemeVars, listThemeIds };
 
 const { APP_THEMES, normalizeThemeId, getThemeVars, listThemeIds } = helpers;
 
-const required = ['default', 'calm', 'dense', 'playful', 'dark', 'hero', 'hermes', 'dbz'];
+const required = ['default', 'calm'];
 assert.deepEqual(listThemeIds().sort(), required.slice().sort());
 assert.equal(normalizeThemeId(null), 'default');
 assert.equal(normalizeThemeId('nope'), 'default');
-assert.equal(normalizeThemeId('dbz'), 'dbz');
-assert.equal(normalizeThemeId('hermes'), 'hermes');
+assert.equal(normalizeThemeId('dbz'), 'default');
+assert.equal(normalizeThemeId('hermes'), 'default');
 
 const def = getThemeVars('default');
 assert.equal(def['--primary'], '#16a34a');
 assert.equal(def['--navy'], '#166534');
 
-const hermes = getThemeVars('hermes');
-assert.ok(hermes['--bg']);
-assert.notEqual(hermes['--primary'], def['--primary']);
-
-const dbz = getThemeVars('dbz');
-assert.match(dbz['--primary'], /#|rgb|orange|ff/i);
-assert.ok(APP_THEMES.dbz.label);
+const calm = getThemeVars('calm');
+assert.ok(calm['--bg']);
+assert.notEqual(calm['--primary'], def['--primary']);
 
 console.log('app themes: passed');

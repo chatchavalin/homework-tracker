@@ -963,6 +963,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .quiet-task-row .task-body{padding-right:2px}
 .quiet-task-row .task-body{display:flex;min-width:0;align-items:center;gap:6px}
 .task-row-actions{position:static;flex-shrink:0;align-self:flex-start}
+.task-row-actions.is-open{position:relative;z-index:190}
 .task-menu-btn{width:36px;height:36px;border-radius:10px;color:var(--muted);font-size:1.35rem;line-height:1;font-weight:800;display:flex;align-items:center;justify-content:center}
 .task-menu-btn:hover,.task-row-actions.is-open .task-menu-btn{background:var(--surface2);color:var(--text)}
 .task-menu-btn:active{transform:scale(.94)}
@@ -1550,11 +1551,13 @@ const APP_THEMES = {
   }
 };
 
-function listThemeIds() { return Object.keys(APP_THEMES); }
+const AVAILABLE_THEME_IDS = ['default', 'calm'];
+
+function listThemeIds() { return AVAILABLE_THEME_IDS.slice(); }
 
 function normalizeThemeId(id) {
   const key = String(id || '').trim().toLowerCase();
-  return APP_THEMES[key] ? key : 'default';
+  return AVAILABLE_THEME_IDS.includes(key) ? key : 'default';
 }
 
 function getThemeVars(id) {
@@ -2388,6 +2391,7 @@ function taskCardHTML(t) {
     ? `<div class="task-meta">${cudssChip}${chip}${overdueTag}${dueHTML}</div>` : '';
   const recurBadge = isRecurring(t) ? ' <span title="Repeats every week" style="font-size:0.78rem;opacity:0.7">🔁</span>' : '';
   const editLabel = currentLang === 'en' ? 'Edit task' : 'แก้ไขงาน';
+  const duplicateLabel = currentLang === 'en' ? 'Duplicate' : 'ทำสำเนา';
   const attachLabel = currentLang === 'en' ? 'Attach photo' : 'แนบรูป';
   const deleteLabel = currentLang === 'en' ? 'Delete task' : 'ลบงาน';
   const sourcePhotoHTML = t.image_url
@@ -2407,6 +2411,7 @@ function taskCardHTML(t) {
       <button type="button" class="task-menu-btn" aria-haspopup="menu" aria-expanded="false" aria-label="${currentLang === 'en' ? 'Task actions' : 'ตัวเลือกงาน'}" title="${currentLang === 'en' ? 'Task actions' : 'ตัวเลือกงาน'}" onclick="toggleTaskMenu(event,'${t.id}')">⋮</button>
       <div class="task-menu" data-task-id="${t.id}" role="menu" aria-label="${currentLang === 'en' ? 'Task actions' : 'ตัวเลือกงาน'}">
         <button type="button" role="menuitem" onclick="taskMenuAction(event,'${t.id}','edit')"><span class="task-menu-icon">✏️</span>${editLabel}</button>
+        <button type="button" role="menuitem" onclick="taskMenuAction(event,'${t.id}','duplicate')"><span class="task-menu-icon">📋</span>${duplicateLabel}</button>
         <button type="button" role="menuitem" onclick="taskMenuAction(event,'${t.id}','attach')"><span class="task-menu-icon">📎</span>${attachLabel}</button>
         <button type="button" role="menuitem" class="task-menu-delete" onclick="taskMenuAction(event,'${t.id}','delete')"><span class="task-menu-icon">🗑</span>${deleteLabel}</button>
       </div>
@@ -2464,6 +2469,7 @@ function taskMenuAction(event, id, action) {
   event.stopPropagation();
   closeTaskMenus();
   if (action === 'edit') openEditSheet(id);
+  if (action === 'duplicate') duplicateTask(id);
   if (action === 'attach') cardAttachPhoto(id);
   if (action === 'delete') confirmDeleteTask(id);
 }
@@ -2738,6 +2744,35 @@ async function deleteTask(id) {
     return;
   }
   toast('🗑 ลบงานแล้ว');
+}
+
+async function duplicateTask(id) {
+  const source = STATE.tasks.find(x => x.id === id);
+  if (!source) return null;
+  const duplicate = {
+    ...source,
+    id: uid(),
+    is_done: false,
+    done_at: null,
+    created_at: new Date().toISOString()
+  };
+  STATE.tasks.unshift(duplicate);
+  renderAll();
+  attachSwipeListeners();
+  if (USE_LOCAL) {
+    saveLocal();
+    queueMutation('tasks', 'insert', duplicate, duplicate.id);
+    toast(currentLang === 'en' ? '📋 Task duplicated' : '📋 ทำสำเนางานแล้ว');
+    return duplicate;
+  }
+  const { error } = await sb.from('tasks').insert(duplicate);
+  if (error) {
+    queueMutation('tasks', 'insert', duplicate, duplicate.id);
+    toast(currentLang === 'en' ? '⚠️ Duplicate saved — will sync later' : '⚠️ ทำสำเนาไว้แล้ว — จะซิงค์ภายหลัง');
+    return duplicate;
+  }
+  toast(currentLang === 'en' ? '📋 Task duplicated' : '📋 ทำสำเนางานแล้ว');
+  return duplicate;
 }
 
 function toggleRepeatWeekly(btn) {

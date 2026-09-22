@@ -135,9 +135,12 @@ test('quiet task rows use a three-dot menu for secondary actions', () => {
   assert.match(cardSource, /class="task-menu"[^>]+role="menu"/);
   assert.match(cardSource, /const sourcePhotoHTML = t\.image_url/);
   assert.match(cardSource, /class="task-clip"/);
+  assert.match(cardSource, /const duplicateLabel = currentLang === 'en'/);
+  assert.match(cardSource, /taskMenuAction\(event,'\$\{t\.id\}','duplicate'\)/);
   assert.match(cardSource, /taskMenuAction\(event,'\$\{t\.id\}','attach'\)/);
   assert.doesNotMatch(cardSource, /class="task-edit-btn" onclick=/);
   assert.doesNotMatch(cardSource, /class="task-delete" onclick=/);
+  assert.match(SOURCE, /\.task-row-actions\.is-open\{position:relative;z-index:190\}/);
   assert.match(SOURCE, /function toggleTaskMenu\(/);
   assert.match(SOURCE, /function taskMenuAction\(/);
   assert.match(SOURCE, /function closeTaskMenus\(/);
