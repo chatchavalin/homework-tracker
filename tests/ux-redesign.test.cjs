@@ -81,6 +81,18 @@ test('task cards expose visible accessible completion and edit actions', () => {
   assert.match(SOURCE, /aria-label="[^"]*edit/i);
 });
 
+test('notes expose separate edit/delete controls and persist edits', () => {
+  const notesSource = extractFunction('renderNotes');
+  const saveSource = extractFunction('saveNoteEdit');
+  assert.match(notesSource, /class="note-actions"/);
+  assert.match(notesSource, /class="task-edit"/);
+  assert.match(notesSource, /class="task-delete"/);
+  assert.match(saveSource, /ht_notes/);
+  assert.match(saveSource, /parsed_title: text/);
+  assert.match(saveSource, /original_text: text/);
+});
+
+
 test('task completion and deletion require confirmation', () => {
   const toggleSource = SOURCE.slice(SOURCE.indexOf('async function toggleTask'), SOURCE.indexOf('async function toggleTaskConfirmed'));
   assert.match(toggleSource, /askConfirm\(/);

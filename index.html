@@ -175,6 +175,9 @@ input,textarea,select{font-family:inherit}
 .due-chip.urgent{color:var(--high)}
 .due-chip.soon{color:var(--med)}
 .task-delete{position:absolute;top:10px;right:10px;color:var(--muted);font-size:0.75rem;opacity:0;transition:opacity 0.15s;padding:4px}
+.note-actions{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.note-actions .task-edit,.note-actions .task-delete{position:static;opacity:1;margin:0;padding:6px;line-height:1}
+.note-actions .task-delete{color:var(--muted);font-size:0.85rem}
 .task-edit-btn{position:absolute;top:9px;right:32px;background:none;border:none;font-size:0.8rem;cursor:pointer;padding:4px;opacity:0.45}
 .task-edit-btn:active{opacity:1}
 .task-card:hover .task-delete{opacity:1}
@@ -3943,8 +3946,10 @@ function renderNotes() {
         ${n.file_url ? `<a class="task-file-chip" href="${n.file_url}" download="${n.file_name||'file'}" target="_blank" rel="noopener" onclick="event.stopPropagation()">📄 ${escHtml(n.file_name||'ไฟล์')}</a>` : ''}
         ${createdStamp(n.created_at)}
       </div>
-      <button class="task-edit" onclick="editNote('${n.id}')" aria-label="แก้ไขโน้ต / Edit note" style="background:none;border:none;color:#7c3aed;font-size:1rem;cursor:pointer;padding:4px;margin-right:2px">✎</button>
-      <button class="task-delete" onclick="confirmDeleteNote('${n.id}')">✕</button>
+      <div class="note-actions">
+        <button class="task-edit" onclick="editNote('${n.id}')" aria-label="แก้ไขโน้ต / Edit note" style="background:none;border:none;color:#7c3aed;font-size:1rem;cursor:pointer;padding:4px;margin-right:2px">✎</button>
+        <button class="task-delete" onclick="confirmDeleteNote('${n.id}')">✕</button>
+      </div>
     </div>`).join('');
   attachNoteHoldListeners();
 }
