@@ -2467,7 +2467,14 @@ function toggleTaskMenu(event, id) {
 function taskMenuAction(event, id, action) {
   event.preventDefault();
   event.stopPropagation();
+  const clickedMenu = event.currentTarget?.closest?.('.task-menu');
   closeTaskMenus();
+  if (clickedMenu) {
+    clickedMenu.classList.remove('is-open');
+    clickedMenu.style.visibility = 'hidden';
+    clickedMenu.style.left = '';
+    clickedMenu.style.top = '';
+  }
   if (action === 'edit') openEditSheet(id);
   if (action === 'duplicate') duplicateTask(id);
   if (action === 'attach') cardAttachPhoto(id);

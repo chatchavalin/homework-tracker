@@ -143,6 +143,9 @@ test('quiet task rows use a three-dot menu for secondary actions', () => {
   assert.match(SOURCE, /\.task-row-actions\.is-open\{position:relative;z-index:190\}/);
   assert.match(SOURCE, /function toggleTaskMenu\(/);
   assert.match(SOURCE, /function taskMenuAction\(/);
+  const actionSource = extractFunction('taskMenuAction');
+  assert.match(actionSource, /currentTarget.*closest.*task-menu/);
+  assert.match(actionSource, /clickedMenu\.style\.visibility = 'hidden'/);
   assert.match(SOURCE, /function closeTaskMenus\(/);
   const menuSource = SOURCE.slice(SOURCE.indexOf('function toggleTaskMenu'), SOURCE.indexOf('function taskMenuAction'));
   assert.match(menuSource, /if \(wasOpen\) \{ closeTaskMenu\(actions\); return; \}/);
